@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.trade.Entity;
 
+import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.user.Entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
