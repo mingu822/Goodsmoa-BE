@@ -83,6 +83,8 @@ dependencies {
 
 	// ✅ OAuth2 클라이언트 (카카오 로그인)
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 tasks.named('test') {
