@@ -1,5 +1,8 @@
 package com.goodsmoa.goodsmoa_BE.category.Entity;
 
+import jakarta.persistence.*;
+import lombok.*;
+
 @Entity
 @Getter
 @Builder
