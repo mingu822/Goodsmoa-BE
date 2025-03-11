@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.product.Entity;
 
+import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -55,7 +56,7 @@ public class ProductPost {
     @Column(name = "hashtag", length = 150)
     private String hashtag;
 
-    // 카테고리 만들면
-    //@Column(name = "category_id", nullable = false)
-    // private Integer categoryId;
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category categoryId;
 }

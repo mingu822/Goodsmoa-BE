@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.product.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.goodsmoa.goodsmoa_BE.user.Entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -13,7 +14,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "product_report")
+@Table(name = "product_report",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"post_id", "user_id"})
+        }
+)
 public class ProductReport {
 
     @Id
@@ -21,12 +26,14 @@ public class ProductReport {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "id", nullable = false) // 리뷰와의 관계
-    private User userId;
+    @JoinColumn(name = "post_id", nullable = false) // 리뷰와의 관계
+    @JsonBackReference
+    private ProductPost postId;
 
     @ManyToOne
-    @JoinColumn(name = "id", nullable = false) // 리뷰와의 관계
-    private ProductPost productId;
+    @JoinColumn(name = "user_id", nullable = false) // 리뷰와의 관계
+    @JsonBackReference
+    private User userId;
 
     @Column(name = "title", length = 30, nullable = false)
     private String title;
