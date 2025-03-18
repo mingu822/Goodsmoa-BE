@@ -42,10 +42,10 @@ public class CommissionPost {
     private boolean type; // true: 그림, false: 기타
 
     @Column(nullable = false)
-    private boolean status = true; // true: 신청 가능
+    private final boolean status = true; // true: 신청 가능
 
     @Column(name = "views", nullable = false)
-    private Long views = 0L;
+    private final Long views = 0L;
 
     @Column(length = 150)
     private String hashtag;
