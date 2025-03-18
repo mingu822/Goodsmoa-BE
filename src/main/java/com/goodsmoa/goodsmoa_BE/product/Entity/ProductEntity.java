@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "product")
-public class Product {
+public class ProductEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,10 +23,10 @@ public class Product {
     private String name;
 
     @Column(name = "price", nullable = false)
-    private int price;
+    private Integer price;
 
     @Column(name = "quantity", nullable = false)
-    private int quantity;
+    private Integer quantity;
 
     @Column(name = "image", length = 255, nullable = false)
     private String image;
@@ -36,11 +36,11 @@ public class Product {
     private AvailabilityStatus available;
 
     @Column(name = "max_quantity", nullable = false)
-    private int maxQuantity;
+    private Integer maxQuantity;
 
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
-    private ProductPost postId;
+    private ProductPostEntity productPostEntity;
 
     // enum
     public enum AvailabilityStatus{

@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
                 @UniqueConstraint(columnNames = {"post_id", "user_id"})
         }
 )
-public class ProductLike {
+public class ProductLikeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,11 +27,11 @@ public class ProductLike {
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false) // 리뷰와의 관계
     @JsonBackReference
-    private ProductPost postId;
+    private ProductPostEntity productPostEntity;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false) // 리뷰와의 관계
     @JsonBackReference
-    private User userId;
+    private User user;
 
 }

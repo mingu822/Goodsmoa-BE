@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "product_delivery")
-public class ProductDelivery {
+public class ProductDeliveryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,5 +27,5 @@ public class ProductDelivery {
 
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
-    private ProductPost postId;
+    private ProductPostEntity productPostEntity;
 }
