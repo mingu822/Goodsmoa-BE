@@ -43,10 +43,10 @@ public class JwtProvider {
     }
 
     /**
-     * ✅ JWT **엑세스 토큰 (5일)** 생성
+     * ✅ JWT **엑세스 토큰 (30분)** 생성
      */
     public String createAccessToken(User user) {
-        int exp = 1000 * 60 * 60 * 24 * 5;  // 5일 (밀리초 단위)
+        int exp = 1000 * 60 * 30;  // 30분 (밀리초 단위)
         SecretKey shaKey = getShaKey();
 
 
@@ -79,7 +79,7 @@ public class JwtProvider {
      * ✅ JWT **리프레시 토큰 (30일)** 생성
      */
     public String createRefreshToken(User user) {
-        int exp = 1000 * 60 * 60 * 24 * 30;  // 30일 (밀리초 단위)
+        long exp = 1000L * 60 * 60 * 24 * 30;  // ✅ `long`으로 변경
 
         SecretKey shaKey = getShaKey();
 
