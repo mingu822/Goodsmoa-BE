@@ -1,8 +1,5 @@
 package com.goodsmoa.goodsmoa_BE.user.Entity;
-/*
- ID, 비밀번호, 이메일, 닉네임은 not null임
-*
-* */
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,16 +21,14 @@ public class User {
     @Column(name = "name", length = 10) // 최대 길이 10 설정
     private String name; // 유저 이름
 
-    @Column(name = "password", length = 254, nullable = false) // NULL 허용 X
-    private String password; // 비밀번호
 
-    @Column(name = "email", length = 30, nullable = false) // NULL 허용 X
+    @Column(name = "email", length = 30) //
     private String email; // 이메일 주소
 
     @Column(name = "phone_number", length = 15) // 최대 길이 15 설정
     private String phoneNumber; // 전화번호
 
-    @Column(name = "nickname", length = 30, nullable = false) // NULL 허용 X
+    @Column(name = "nickname", length = 30 )
     private String nickname; // 닉네임
 
     @Column(name = "image", length = 254) // 최대 길이 254 설정
