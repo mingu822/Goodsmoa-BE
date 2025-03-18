@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,28 +20,37 @@ import java.time.LocalDateTime;
                 @UniqueConstraint(columnNames = {"post_id", "user_id"})
         }
 )
-public class ProductReport {
+public class ProductReviewEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "post_id", nullable = false) // 리뷰와의 관계
-    @JsonBackReference
-    private ProductPost postId;
-
-    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false) // 리뷰와의 관계
     @JsonBackReference
-    private User userId;
+    private User user;
 
-    @Column(name = "title", length = 30, nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "post_id", nullable = false) // 리뷰와의 관계
+    @JsonBackReference
+    private ProductPostEntity productPostEntity;
+
+    @Column(name = "title", length = 50, nullable = false)
     private String title;
 
-    @Column(name = "content", length = 255, nullable = false)
+    @Column(name = "file", length = 255)
+    private String file;
+
+    @Column(name = "rating", nullable = false)
+    private Double rating;
+
+    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private final LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "update_at")
+    private LocalDateTime updatedAt;
 }
