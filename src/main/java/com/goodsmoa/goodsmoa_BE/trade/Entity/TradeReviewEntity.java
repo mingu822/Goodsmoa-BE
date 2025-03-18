@@ -2,30 +2,30 @@ package com.goodsmoa.goodsmoa_BE.trade.Entity;
 
 import com.goodsmoa.goodsmoa_BE.user.Entity.User;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "trade_review")
-public class TradeReview {
+@Builder
+@AllArgsConstructor
+public class TradeReviewEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     // ManyToOne 관계 반영: 사용자와 거래는 여러 개가 연결될 수 있음
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trade_id", nullable = false)
-    private TradePost trade;
+    private TradePostEntity trade;
 
     @Column(name = "title", nullable = false, length = 50)
     private String title;
@@ -45,18 +45,6 @@ public class TradeReview {
     @Column(name = "update_at")
     private LocalDateTime updateAt;
 
-    @Builder
-    public TradeReview(Long id, User user, TradePost trade, String title, String file,
-                       Double rating, String content, LocalDateTime createdAt, LocalDateTime updateAt) {
-        this.id = id;
-        this.user = user;
-        this.trade = trade;
-        this.title = title;
-        this.file = file;
-        this.rating = rating;
-        this.content = content;
-        this.createdAt = createdAt;
-        this.updateAt = updateAt;
-    }
+
 }
 

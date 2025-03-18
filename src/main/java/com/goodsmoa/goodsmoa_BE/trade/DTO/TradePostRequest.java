@@ -1,16 +1,26 @@
 package com.goodsmoa.goodsmoa_BE.trade.DTO;
 
-import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePost;
+import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
+import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+
 
 
 @Getter
-@NoArgsConstructor
-
+@Builder
 public class TradePostRequest {
+
+    @NotNull
+    private Long id;
+
+    //TODO 바꾸기
+    @NotNull(message = "카테고리 ID는 필수입니다.")
+    private int categoryId;
+
+    @NotBlank(message = "이미지 첨부는 필수입니다.")
+    private String image;
 
     @NotBlank(message = "제목은 필수입니다.")
     @Size(max = 50 , message = "제목은 최대 50자까지 가능합니다.")
@@ -25,11 +35,11 @@ public class TradePostRequest {
 
     @NotBlank(message = "상품 상태는 필수입니다.")
     @Pattern(regexp = "중고|새상품|교환", message = "상품 상태는 '중고', '새상품', '교환' 중 하나여야 합니다.")
-    private String conditionStatus;
+    private TradePostEntity.ConditionStatus conditionStatus;
 
     @NotBlank(message = "거래 상태는 필수입니다.")
     @Pattern(regexp = "판매중|거래중|완료", message = "거래 상태는 '판매중', '거래중', '완료' 중 하나여야 합니다.")
-    private String tradeStatus;
+    private TradePostEntity.TradeStatus  tradeStatus;
 
     @NotNull(message = "배송비 설정은 필수입니다.")
     private Boolean deliveryPrice;
@@ -43,33 +53,4 @@ public class TradePostRequest {
     @Size(max = 150, message = "해시태그는 최대 150자까지 가능합니다.")
     private String hashtag;
 
-    @Builder
-    public TradePostRequest(String title, String content,
-                            Integer productPrice, String conditionStatus, String tradeStatus,
-                            Boolean deliveryPrice, Boolean direct, String place, String hashtag) {
-        this.title = title;
-        this.content = content;
-        this.productPrice = productPrice;
-        this.conditionStatus = conditionStatus;
-        this.tradeStatus = tradeStatus;
-        this.deliveryPrice = deliveryPrice;
-        this.direct = direct;
-        this.place = place;
-        this.hashtag = hashtag;
-    }
-
-    /** ✅ DTO → 엔티티 변환 메서드 */
-    public TradePost toEntity() {
-        return TradePost.builder()
-                .title(title)
-                .content(content)
-                .productPrice(productPrice)
-                .conditionStatus(TradePost.ConditionStatus.valueOf(conditionStatus))
-                .tradeStatus(TradePost.TradeStatus.valueOf(tradeStatus))
-                .deliveryPrice(deliveryPrice)
-                .direct(direct)
-                .place(place)
-                .hashtag(hashtag)
-                .build();
-    }
 }

@@ -1,22 +1,24 @@
 package com.goodsmoa.goodsmoa_BE.trade.DTO;
 
+import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeLikeEntity;
+import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
+import com.goodsmoa.goodsmoa_BE.user.Entity.User;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+
 
 @Getter
-@NoArgsConstructor
 public class TradeLikeRequest {
 
     @NotNull
-    private Long tradeId;
+    private Long trade;
 
-    @NotNull
-    private Long userId;
 
-    public TradeLikeRequest(Long tradeId, Long userId) {
-        this.tradeId = tradeId;
-        this.userId = userId;
+    public TradeLikeEntity toEntity(TradePostEntity trade, User user) {
+        return TradeLikeEntity.builder()
+                .trade(trade)
+                .user(user)
+                .build();
     }
+}
 
-    }
