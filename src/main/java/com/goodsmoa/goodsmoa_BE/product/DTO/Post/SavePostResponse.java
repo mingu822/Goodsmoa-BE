@@ -19,4 +19,7 @@ public class SavePostResponse {
 
     private String thumbnailImage;
 
+    private Integer categoryId;
+
+
 }

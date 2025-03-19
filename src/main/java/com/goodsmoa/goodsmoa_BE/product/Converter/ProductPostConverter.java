@@ -2,9 +2,11 @@ package com.goodsmoa.goodsmoa_BE.product.Converter;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.product.DTO.Post.*;
+import com.goodsmoa.goodsmoa_BE.product.Entity.ProductDeliveryEntity;
 import com.goodsmoa.goodsmoa_BE.product.Entity.ProductEntity;
 import com.goodsmoa.goodsmoa_BE.product.Entity.ProductPostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -12,19 +14,19 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@RequiredArgsConstructor
 @Component
-@Slf4j
 public class ProductPostConverter {
 
-    @Autowired
-    private  ProductConverter productConverter;
+    private final ProductConverter productConverter;
+
+    private final ProductDeliveryConverter productDeliveryConverter;
 
     /**
      * save DTO -> Entity 변경
      * 상품을 담기 위해 DB에 임시저장하기 위한 메서드
      */
-    public ProductPostEntity saveToEntity(SavePostRequest request, User user) {
-        log.info("RequestContent : "+ request.getContent());
+    public ProductPostEntity saveToEntity(SavePostRequest request, User user, Category category) {
         return ProductPostEntity.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
@@ -33,6 +35,7 @@ public class ProductPostConverter {
                 .state(false)
                 .views(0L)
                 .user(user)
+                .category(category)
                 .build();
     }
 
@@ -46,26 +49,7 @@ public class ProductPostConverter {
                 .title(entity.getTitle())
                 .content(entity.getContent())
                 .thumbnailImage(entity.getThumbnailImage())
-                .build();
-    }
-
-    /**
-     * create DTO -> Entity 변경
-     * 상품까지 담은 후 DB에 저장을 위한 메서드
-     */
-    public ProductPostEntity createToEntity(PostRequest request, Category category, User user) {
-        return ProductPostEntity.builder()
-                .title(request.getTitle())
-                .content(request.getContent())
-                .thumbnailImage(request.getThumbnailImage())
-                .isPublic(request.getIsPublic())
-                .startTime(request.getStartTime())
-                .endTime(request.getEndTime())
-                .state(request.getState())
-                .password(request.getPassword())
-                .hashtag(request.getHashtag())
-                .category(category)
-                .user(user)
+                .categoryId(entity.getCategory().getId())
                 .build();
     }
 
@@ -87,11 +71,11 @@ public class ProductPostConverter {
                 .views(entity.getViews())
                 .hashtag(entity.getHashtag())
                 .categoryName(entity.getCategory().getName()) // ✅ 카테고리 이름만 반환
-                .userId(entity.getUser().getName())   // ✅ 작성자 이름만 반환
+                .userId(entity.getUser().getId())   // ✅ 작성자 이름만 반환
                 .build();
     }
 
-    public PostDetailResponse detailToResponse(List<ProductEntity> products, ProductPostEntity entity){
+    public PostDetailResponse detailToResponse(List<ProductEntity> products, List<ProductDeliveryEntity>  delivers, ProductPostEntity entity){
         return PostDetailResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
@@ -102,6 +86,7 @@ public class ProductPostConverter {
                 .categoryName(entity.getCategory().getName())
                 .user(entity.getUser())
                 .products(products.stream().map(productConverter::toResponse).toList())
+                .delivers(delivers.stream().map(productDeliveryConverter::toResponse).toList())
                 .build();
     }
 }

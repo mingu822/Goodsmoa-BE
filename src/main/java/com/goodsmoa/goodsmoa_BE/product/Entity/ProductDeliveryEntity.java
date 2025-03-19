@@ -23,9 +23,11 @@ public class ProductDeliveryEntity {
     private String name;
 
     @Column(name = "price", nullable = false)
-    private int price;
+    private Integer price;
 
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
     private ProductPostEntity productPostEntity;
+
+
 }
