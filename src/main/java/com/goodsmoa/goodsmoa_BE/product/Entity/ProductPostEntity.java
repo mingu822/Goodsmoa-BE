@@ -32,7 +32,7 @@ public class ProductPostEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "thumbnail_image", length = 255, nullable = false)
+    @Column(name = "thumbnail_image" , nullable = false)
     private String thumbnailImage;
 
     @Column(name = "public")
@@ -67,19 +67,12 @@ public class ProductPostEntity {
     @OneToMany(mappedBy = "productPostEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductEntity> products;
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
+    @OneToMany(mappedBy = "productPostEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductDeliveryEntity> delivers;
 
-    // 카테고리와 상태 업데이트 메서드
-    public void updateCategoryAndStatus(Category category, boolean status) {
-        this.category = category;
-        this.state = status;
-    }
 
     // 요청 정보를 기반으로 업데이트하는 메서드
-    public void updateFromRequest(PostRequest request) {
+    public void updateFromRequest(PostRequest request,Category category, boolean status) {
         this.title = request.getTitle();
         this.content = request.getContent();
         this.thumbnailImage = request.getThumbnailImage();
@@ -87,6 +80,7 @@ public class ProductPostEntity {
         this.endTime = request.getEndTime();
         this.isPublic = request.getIsPublic();
         this.hashtag = request.getHashtag();
-        this.state = request.getState() != null ? request.getState() : this.state;  // state 업데이트 추가
+        this.category = category;
+        this.state = status;
     }
 }
