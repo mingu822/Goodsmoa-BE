@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -21,7 +21,7 @@ public class ProductPostEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)
-    private Long id;
+    private long id;
 
     @Column(name = "title", length = 100, nullable = false)
     private String title;
@@ -70,17 +70,26 @@ public class ProductPostEntity {
     @OneToMany(mappedBy = "productPostEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductDeliveryEntity> delivers;
 
+    /** ✅ 조회수 증가 */
+    public void increaseViews() {
+        this.views += 1;
+    }
+
 
     // 요청 정보를 기반으로 업데이트하는 메서드
-    public void updateFromRequest(PostRequest request,Category category, boolean status) {
-        this.title = request.getTitle();
-        this.content = request.getContent();
-        this.thumbnailImage = request.getThumbnailImage();
-        this.startTime = request.getStartTime();
-        this.endTime = request.getEndTime();
-        this.isPublic = request.getIsPublic();
-        this.hashtag = request.getHashtag();
-        this.category = category;
+    public void updateFromRequest(PostRequest request, Category category, boolean status) {
+        if (request.getTitle() != null) this.title = request.getTitle();
+        if (request.getContent() != null) this.content = request.getContent();
+        if (request.getThumbnailImage() != null) this.thumbnailImage = request.getThumbnailImage();
+        if (request.getStartTime() != null) this.startTime = request.getStartTime();
+        if (request.getEndTime() != null) this.endTime = request.getEndTime();
+        if (request.getIsPublic() != null) this.isPublic = request.getIsPublic();
+        if (request.getHashtag() != null) this.hashtag = request.getHashtag();
+
+        // 카테고리는 null이 아닐 때만 업데이트 (필수값인 경우를 고려)
+        if (category != null) this.category = category;
+
+        // 상태는 메서드 호출 시 전달된 값 사용
         this.state = status;
     }
 }
