@@ -1,12 +1,13 @@
 package com.goodsmoa.goodsmoa_BE.product.DTO.Post;
 
+import com.goodsmoa.goodsmoa_BE.user.Entity.User;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Builder
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostResponse {
@@ -37,6 +38,6 @@ public class PostResponse {
 
     private String categoryName;
 
-    private String userId;
+    private String userName;
 
 }

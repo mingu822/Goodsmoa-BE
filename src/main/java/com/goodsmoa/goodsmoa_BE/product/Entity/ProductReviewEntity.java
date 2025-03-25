@@ -28,7 +28,7 @@ public class ProductReviewEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false) // 리뷰와의 관계
-    @JsonBackReference
+    @JsonBackReference  
     private User user;
 
     @ManyToOne

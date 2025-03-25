@@ -71,10 +71,13 @@ public class ProductPostConverter {
                 .views(entity.getViews())
                 .hashtag(entity.getHashtag())
                 .categoryName(entity.getCategory().getName()) // ✅ 카테고리 이름만 반환
-                .userId(entity.getUser().getId())   // ✅ 작성자 이름만 반환
+                .userName(entity.getUser().getName())   // ✅ 작성자 아이디 반환
                 .build();
     }
-
+    /**
+     *  조회를 위한 Entity -> DTO
+     *
+     */
     public PostDetailResponse detailToResponse(List<ProductEntity> products, List<ProductDeliveryEntity>  delivers, ProductPostEntity entity){
         return PostDetailResponse.builder()
                 .id(entity.getId())
@@ -85,6 +88,7 @@ public class ProductPostConverter {
                 .hashtag(entity.getHashtag())
                 .categoryName(entity.getCategory().getName())
                 .user(entity.getUser())
+                .views(entity.getViews())
                 .products(products.stream().map(productConverter::toResponse).toList())
                 .delivers(delivers.stream().map(productDeliveryConverter::toResponse).toList())
                 .build();

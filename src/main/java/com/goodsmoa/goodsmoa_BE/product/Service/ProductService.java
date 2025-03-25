@@ -75,7 +75,7 @@ public class ProductService {
     /// 상품글 생성
     // TODO 예외처리 추가하기
     @Transactional
-    public ResponseEntity<PostResponse> createProductPost(@AuthenticationPrincipal User user, PostRequest request){
+    public ResponseEntity<PostResponse> updateProductPost(@AuthenticationPrincipal User user, PostRequest request){
         // 임시 저장된 entity
         Optional<ProductPostEntity> oe = productPostRepository.findById(request.getId());
 
@@ -110,6 +110,10 @@ public class ProductService {
 
         ProductPostEntity entity = ope.get();
 
+        // 조회수 증가
+        entity.increaseViews();
+        productPostRepository.save(entity);
+
         List<ProductEntity> products = productRepository.findByProductPostEntity(entity);
 
         List<ProductDeliveryEntity> delivers = productDeliveryRepository.findByProductPostEntity(entity);
@@ -118,7 +122,6 @@ public class ProductService {
 
         return ResponseEntity.ok(response);
     }
-
     // 배달지 추가
     public ResponseEntity<ProductDeliveryResponse> createProductDelivery(ProductDeliveryRequest request) {
 
@@ -135,6 +138,26 @@ public class ProductService {
         ProductDeliveryResponse response = productDeliveryConverter.toResponse(saveEntity);
 
         return ResponseEntity.ok(response);
+    }
 
+    // 상품글 삭제
+    public ResponseEntity<String> deleteProductPost(@AuthenticationPrincipal User user,Long id){
+
+        Optional<ProductPostEntity> ope = productPostRepository.findById(id);
+
+        // 요청한 id에 해당하는 상품글이 존재하는지 확인
+        if(ope.isEmpty()){
+            return ResponseEntity.badRequest().build();
+        }
+        ProductPostEntity entity = ope.get();
+
+        // 삭제를 요청한 유저와 판매자의 유저의 정보가 일치하는지 확인
+        if (!entity.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).build(); // 권한 체크
+        }
+        // 삭제
+        productPostRepository.delete(entity);
+
+        return ResponseEntity.ok("성공적으로 삭제 되었습니다.");
     }
 }
