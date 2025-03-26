@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import com.goodsmoa.goodsmoa_BE.chat.Entity.ChatJoinEntity;
 import com.goodsmoa.goodsmoa_BE.chat.Entity.ChatRoomEntity;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.validation.constraints.NotNull;
 
 
@@ -24,7 +24,7 @@ public class ChatJoinRequest {
     @NotNull(message = "채팅 참여 상태는 필수입니다.")
     private Boolean status; // 사용자가 채팅방을 나갔는지 여부
 
-    public ChatJoinEntity toEntity(ChatRoomEntity chatRoom, User user) {
+    public ChatJoinEntity toEntity(ChatRoomEntity chatRoom, UserEntity user) {
         return ChatJoinEntity.builder()
                 .chatRoomEntity(chatRoom)
                 .user(user)

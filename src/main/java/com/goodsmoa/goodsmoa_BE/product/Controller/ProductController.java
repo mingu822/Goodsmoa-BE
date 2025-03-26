@@ -6,7 +6,7 @@ import com.goodsmoa.goodsmoa_BE.product.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.product.DTO.ProductRequest;
 import com.goodsmoa.goodsmoa_BE.product.DTO.ProductResponse;
 import com.goodsmoa.goodsmoa_BE.product.Service.ProductService;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,19 +27,19 @@ public class ProductController {
 
     // 임시로 글을 저장해야 상품을 추가시킬 수 있음
     @PostMapping("/post-save")
-    public ResponseEntity<SavePostResponse> SaveProductPost(@AuthenticationPrincipal User user, @RequestBody SavePostRequest request){
+    public ResponseEntity<SavePostResponse> SaveProductPost(@AuthenticationPrincipal UserEntity user, @RequestBody SavePostRequest request){
         return productService.saveProductPost(user,request);
     }
 
     // 임시 저장된 글을 불러와서 상품을 추가하고 db에 저장 시켜야 됨
     @PutMapping("/post-create")
-    public ResponseEntity<PostResponse> createProductPost(@AuthenticationPrincipal User user, @RequestBody PostRequest request){
+    public ResponseEntity<PostResponse> createProductPost(@AuthenticationPrincipal UserEntity user, @RequestBody PostRequest request){
         return productService.updateProductPost(user,request);
     }
 
     // 생성한 상품글을 수정
     @PutMapping("/post-update")
-    public ResponseEntity<PostResponse> updateProductPost(@AuthenticationPrincipal User user, @RequestBody PostRequest request){
+    public ResponseEntity<PostResponse> updateProductPost(@AuthenticationPrincipal UserEntity user, @RequestBody PostRequest request){
         return productService.updateProductPost(user,request);
     }
 
@@ -51,7 +51,7 @@ public class ProductController {
 
     // 상품글 삭제
     @DeleteMapping("/post-delete/{id}")
-    public ResponseEntity<String> deleteProductPost(@AuthenticationPrincipal User user, @PathVariable Long id){
+    public ResponseEntity<String> deleteProductPost(@AuthenticationPrincipal UserEntity user, @PathVariable Long id){
         return productService.deleteProductPost(user,id);
     }
 

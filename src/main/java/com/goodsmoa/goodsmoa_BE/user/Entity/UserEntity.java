@@ -3,8 +3,6 @@ package com.goodsmoa.goodsmoa_BE.user.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigInteger;
-
 @Entity // JPA의 엔티티임을 선언
 @Getter
 @Setter
@@ -12,23 +10,24 @@ import java.math.BigInteger;
 @AllArgsConstructor // 모든 필드를 포함하는 생성자 자동 생성
 @Builder // 빌더 패턴을 사용하여 객체를 생성할 수 있도록 지원
 @Table(name = "user") // 이 엔티티가 user 테이블과 매핑됨을 명시
-public class User {
+public class UserEntity {
 
     @Id // 기본 키(PK) 지정
-    @Column(name = "id", length = 30, nullable = false) // 컬럼 이름 설정 및 NULL 값 허용 X
+    @Column(name = "id", nullable = false) // 컬럼 이름 설정 및 NULL 값 허용 X
     private String id; // 유저 ID (기본 키)
+
 
     @Column(name = "name", length = 10) // 최대 길이 10 설정
     private String name; // 유저 이름
 
 
-    @Column(name = "email", length = 30) //
+    @Column(name = "email", length = 30)
     private String email; // 이메일 주소
 
     @Column(name = "phone_number", length = 15) // 최대 길이 15 설정
     private String phoneNumber; // 전화번호
 
-    @Column(name = "nickname", length = 30 )
+    @Column(name = "nickname", length = 30, nullable = false) // NULL 허용 X
     private String nickname; // 닉네임
 
     @Column(name = "image", length = 254) // 최대 길이 254 설정
@@ -49,9 +48,9 @@ public class User {
     @Column(name = "report_count", nullable = false, columnDefinition = "INT DEFAULT 0") // 기본값 0
     private Integer reportCount = 0; // 신고당한 횟수
 
-    @Column(name = "role", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0") // 기본값 0
-    private Boolean role = false; // 0: 일반 유저, 1: 관리자
+    @Column(name = "role", nullable = false) // 기본값 0
+    private String role;
 
-    @Column
-    private String refreshtoken;
+    @Column(name = "refresh_token")
+    private String refreshToken;
 }

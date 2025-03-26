@@ -1,7 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.product.Entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,8 +28,8 @@ public class ProductReviewEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false) // 리뷰와의 관계
-    @JsonBackReference  
-    private User user;
+    @JsonBackReference
+    private UserEntity user;
 
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false) // 리뷰와의 관계

@@ -1,6 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.demand.Entity;
 
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -16,7 +16,7 @@ public class DemandLikeEntity {
     // 좋아요 한 유저
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User user;
+    private UserEntity user;
 
     // 좋아요 한 글
     @ManyToOne(fetch = FetchType.LAZY)

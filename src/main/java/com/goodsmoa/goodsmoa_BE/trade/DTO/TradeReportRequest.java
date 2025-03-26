@@ -2,7 +2,7 @@ package com.goodsmoa.goodsmoa_BE.trade.DTO;
 
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeReportEntity;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -21,7 +21,7 @@ public class TradeReportRequest {
 
 
     // 엔티티 변환 메서드
-    public TradeReportEntity toEntity(TradePostEntity tradeEntity, User userEntity) {
+    public TradeReportEntity toEntity(TradePostEntity tradeEntity, UserEntity userEntity) {
         return TradeReportEntity.builder()
                 .trade(tradeEntity)
                 .user(userEntity)

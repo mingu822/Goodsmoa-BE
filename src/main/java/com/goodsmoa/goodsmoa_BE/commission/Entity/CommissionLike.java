@@ -1,7 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.commission.Entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,6 +29,6 @@ public class CommissionLike {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @JsonBackReference
-    private User userId;
+    private UserEntity userId;
 
 }

@@ -1,6 +1,5 @@
 package com.goodsmoa.goodsmoa_BE.product.DTO.Post;
 
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
 import lombok.*;
 
 import java.time.LocalDate;

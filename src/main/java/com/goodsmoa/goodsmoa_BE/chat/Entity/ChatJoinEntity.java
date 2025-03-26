@@ -1,6 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.chat.Entity;
 
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,5 +27,5 @@ public class ChatJoinEntity {
     // 채팅방 참여하는 유저
     @ManyToOne
     @JoinColumn(name = "user_id" , nullable = false)
-    private User user;
+    private UserEntity user;
 }

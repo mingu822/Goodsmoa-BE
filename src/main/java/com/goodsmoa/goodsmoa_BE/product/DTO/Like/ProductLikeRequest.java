@@ -2,7 +2,7 @@ package com.goodsmoa.goodsmoa_BE.product.DTO.Like;
 
 import com.goodsmoa.goodsmoa_BE.product.Entity.ProductLikeEntity;
 import com.goodsmoa.goodsmoa_BE.product.Entity.ProductPostEntity;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -19,7 +19,7 @@ public class ProductLikeRequest {
     private Long userId; // ✅ User의 FK
 
     /** ✅ DTO → 엔티티 변환 */
-    public ProductLikeEntity toEntity(ProductPostEntity productPostEntity, User user) {
+    public ProductLikeEntity toEntity(ProductPostEntity productPostEntity, UserEntity user) {
         return ProductLikeEntity.builder()
                 .id(id)
                 .productPostEntity(productPostEntity) // ✅ FK 매핑

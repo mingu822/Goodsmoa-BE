@@ -1,7 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.trade.Entity;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -22,7 +22,7 @@ public class TradePostEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User user;
+    private UserEntity user;
 
 
     @ManyToOne(fetch = FetchType.LAZY)

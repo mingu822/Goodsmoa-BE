@@ -1,6 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.chat.Entity;
 
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,7 +33,7 @@ public class ChatMessageEntity {
     // 메세지 보낸 사람 아이디
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User user;
+    private UserEntity user;
 
     // 채팅방 아이디
     @ManyToOne(fetch = FetchType.LAZY)

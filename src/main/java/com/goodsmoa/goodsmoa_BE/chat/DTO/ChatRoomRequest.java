@@ -1,7 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.chat.DTO;
 
 import com.goodsmoa.goodsmoa_BE.chat.Entity.ChatRoomEntity;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -25,7 +25,7 @@ public class ChatRoomRequest {
     @NotNull(message = "채팅방 상태는 필수입니다.")
     private  Boolean status;
 
-    public ChatRoomEntity toEntity(ChatRoomRequest chatRoomRequest, User user) {
+    public ChatRoomEntity toEntity(ChatRoomRequest chatRoomRequest, UserEntity user) {
         return ChatRoomEntity.builder()
                 .title(title)
                 .status(status)

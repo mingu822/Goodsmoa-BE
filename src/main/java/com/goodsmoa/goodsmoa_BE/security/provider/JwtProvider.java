@@ -2,7 +2,7 @@ package com.goodsmoa.goodsmoa_BE.security.provider;
 
 import com.goodsmoa.goodsmoa_BE.security.constrants.SecurityConstants;
 import com.goodsmoa.goodsmoa_BE.security.props.JwtProps;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import com.goodsmoa.goodsmoa_BE.user.Service.UserService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -10,10 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.List;
 
 @Slf4j
 @Component  // Spring의 빈(Bean)으로 등록하여, IoC(제어의 역전) 컨테이너에서 관리될 수 있도록 한다.
@@ -45,8 +48,9 @@ public class JwtProvider {
     /**
      * ✅ JWT **엑세스 토큰 (30분)** 생성
      */
-    public String createAccessToken(User user) {
+    public String createAccessToken(UserEntity user) {
         int exp = 1000 * 60 * 30;  // 30분 (밀리초 단위)
+
         SecretKey shaKey = getShaKey();
 
 
@@ -78,7 +82,7 @@ public class JwtProvider {
     /**
      * ✅ JWT **리프레시 토큰 (30일)** 생성
      */
-    public String createRefreshToken(User user) {
+    public String createRefreshToken(UserEntity user) {
         long exp = 1000L * 60 * 60 * 24 * 30;  // ✅ `long`으로 변경
 
         SecretKey shaKey = getShaKey();
@@ -97,7 +101,6 @@ public class JwtProvider {
                 // 모든 설정이 끝나면 최종적으로 JWT 토큰을 생성하고 반환
                 .compact();
 
-        log.info("refreshtoken생성:" + refreshjwt);
 
         return refreshjwt;
 
@@ -119,12 +122,12 @@ public class JwtProvider {
             String id = claims.getBody().get("id").toString(); // 유저 ID 가져오기
 
             // 🔹 DB에서 유저 정보 가져오기
-            User user = userService.getUserById(id);
-            if (user == null || !user.getRefreshtoken().equals(refreshToken)) {
+            UserEntity user = userService.getUserById(id);
+            if (user == null || !user.getRefreshToken().equals(refreshToken)) {
                 throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
             }
 
-            // 🔹 새로운 엑세스 토큰 발급 (5일짜리)
+            // 🔹 새로운 엑세스 토큰 발급
             return createAccessToken(user);
 
         } catch (ExpiredJwtException e) {
@@ -174,15 +177,19 @@ public class JwtProvider {
             // 사용자 id
             String id =  parsedToken.getBody().get("id").toString();
             // 회원 권한
-            Boolean role = (Boolean) parsedToken.getBody().get("role");
+            String role = (String) parsedToken.getBody().get("role");
 
             String nickname= (String) parsedToken.getBody().get("nickname");
 
             // 해당 유저의 정보 담기 위해 Users 객체 생성
-            User user = new User();
+            UserEntity user = new UserEntity();
             user.setId(id);
             user.setRole(role);
             user.setNickname(nickname);
+
+
+            // 🔥 권한을 SimpleGrantedAuthority로 변환 (DB에서 ROLE_ 형식으로 저장 중이므로 그대로 사용!)
+            List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
 
 
             // UsernamePasswordAuthenticationToken을 생성하여 인증 정보를 반환
@@ -191,7 +198,7 @@ public class JwtProvider {
             //세 번째 매개변수 (userDetails.getAuthorities()): 사용자의 권한 목록.
             // getAuthorities()는 UserDetails 객체에(여기선 customuser)서 사용자 권한들을 반환하는 메서드
             // Spring Security 인증 객체 생성 (권한이 필요 없으면 null 전달)
-            return new UsernamePasswordAuthenticationToken(user, null, null);
+            return new UsernamePasswordAuthenticationToken(user, null, authorities);
 
         } catch (ExpiredJwtException exception) {
             log.warn("만료된 JWT 토큰을 파싱하려는 시도: {}", exception.getMessage());

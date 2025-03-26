@@ -16,7 +16,7 @@ import com.goodsmoa.goodsmoa_BE.product.Entity.ProductPostEntity;
 import com.goodsmoa.goodsmoa_BE.product.Repository.ProductDeliveryRepository;
 import com.goodsmoa.goodsmoa_BE.product.Repository.ProductPostRepository;
 import com.goodsmoa.goodsmoa_BE.product.Repository.ProductRepository;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +62,7 @@ public class ProductService {
 
     /// 임시 상품글 생성
     // TODO 예외처리 추가하기
-    public ResponseEntity<SavePostResponse> saveProductPost(@AuthenticationPrincipal User user, SavePostRequest request){
+    public ResponseEntity<SavePostResponse> saveProductPost(@AuthenticationPrincipal UserEntity user, SavePostRequest request){
         Category category = categoryRepository.getReferenceById(request.getCategoryId());
 
         ProductPostEntity entity = productPostConverter.saveToEntity(request, user, category);
@@ -75,7 +75,7 @@ public class ProductService {
     /// 상품글 생성
     // TODO 예외처리 추가하기
     @Transactional
-    public ResponseEntity<PostResponse> updateProductPost(@AuthenticationPrincipal User user, PostRequest request){
+    public ResponseEntity<PostResponse> updateProductPost(@AuthenticationPrincipal UserEntity user, PostRequest request){
         // 임시 저장된 entity
         Optional<ProductPostEntity> oe = productPostRepository.findById(request.getId());
 
@@ -141,7 +141,7 @@ public class ProductService {
     }
 
     // 상품글 삭제
-    public ResponseEntity<String> deleteProductPost(@AuthenticationPrincipal User user,Long id){
+    public ResponseEntity<String> deleteProductPost(@AuthenticationPrincipal UserEntity user, Long id){
 
         Optional<ProductPostEntity> ope = productPostRepository.findById(id);
 
