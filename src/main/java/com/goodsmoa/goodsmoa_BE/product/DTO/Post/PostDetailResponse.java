@@ -2,7 +2,7 @@ package com.goodsmoa.goodsmoa_BE.product.DTO.Post;
 
 import com.goodsmoa.goodsmoa_BE.product.DTO.Delivery.ProductDeliveryResponse;
 import com.goodsmoa.goodsmoa_BE.product.DTO.ProductResponse;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -28,7 +28,7 @@ public class PostDetailResponse {
 
     private String categoryName;
 
-    private User user;
+    private UserEntity user;
 
     private Long views;
 

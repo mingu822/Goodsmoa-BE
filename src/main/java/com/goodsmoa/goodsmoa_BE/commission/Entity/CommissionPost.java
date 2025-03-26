@@ -3,7 +3,7 @@ package com.goodsmoa.goodsmoa_BE.commission.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 
 @Entity
 @Table(name = "commission_post")
@@ -52,5 +52,5 @@ public class CommissionPost {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User userId;
+    private UserEntity userId;
 }

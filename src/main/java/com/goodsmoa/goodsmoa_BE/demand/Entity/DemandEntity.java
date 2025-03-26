@@ -1,6 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.demand.Entity;
 
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -66,8 +66,8 @@ public class DemandEntity {
 
     // user N:1로 연결
     @ManyToOne(fetch = FetchType.LAZY)
-    private User user;
-    
+    private UserEntity user;
+
     // demand_product 1:N으로 연결
     // 교체시 통째로 교체함. 한명이라도 수요조사 참여시 수정 불가
     @OneToMany(mappedBy = "demandEntity", orphanRemoval = true, cascade = CascadeType.ALL)
@@ -84,7 +84,7 @@ public class DemandEntity {
         this.image = image;
         this.hashtag = hashtag;
     }
-    
+
     // 끌어올림
     public void pull() {
         this.pulledAt = LocalDateTime.now();

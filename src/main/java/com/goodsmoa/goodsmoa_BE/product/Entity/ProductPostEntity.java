@@ -2,7 +2,7 @@ package com.goodsmoa.goodsmoa_BE.product.Entity;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.product.DTO.Post.PostRequest;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -62,7 +62,7 @@ public class ProductPostEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private UserEntity user;
 
     @OneToMany(mappedBy = "productPostEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductEntity> products;

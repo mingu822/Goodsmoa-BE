@@ -5,10 +5,8 @@ import com.goodsmoa.goodsmoa_BE.product.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.product.Entity.ProductDeliveryEntity;
 import com.goodsmoa.goodsmoa_BE.product.Entity.ProductEntity;
 import com.goodsmoa.goodsmoa_BE.product.Entity.ProductPostEntity;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -26,7 +24,7 @@ public class ProductPostConverter {
      * save DTO -> Entity 변경
      * 상품을 담기 위해 DB에 임시저장하기 위한 메서드
      */
-    public ProductPostEntity saveToEntity(SavePostRequest request, User user, Category category) {
+    public ProductPostEntity saveToEntity(SavePostRequest request, UserEntity user, Category category) {
         return ProductPostEntity.builder()
                 .title(request.getTitle())
                 .content(request.getContent())

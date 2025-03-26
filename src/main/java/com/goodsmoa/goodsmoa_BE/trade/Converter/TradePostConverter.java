@@ -4,7 +4,7 @@ import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.TradePostRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.TradePostResponse;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -28,7 +28,7 @@ public class TradePostConverter {
     }
 
     // Request → Entity 변환
-    public TradePostEntity toEntity(TradePostRequest request, User user, Category category) {
+    public TradePostEntity toEntity(TradePostRequest request, UserEntity user, Category category) {
         return TradePostEntity.builder()
                 .user(user)  // 수정: User 객체를 직접 전달
                 .category(category)  // 수정: Category 객체를 직접 전달

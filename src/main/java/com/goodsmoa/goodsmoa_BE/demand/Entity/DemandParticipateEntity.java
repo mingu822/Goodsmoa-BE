@@ -1,14 +1,14 @@
 package com.goodsmoa.goodsmoa_BE.demand.Entity;
 
 
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 
 @Entity @Getter
 @Table(name = "demand_participate")
 public class DemandParticipateEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,7 +20,7 @@ public class DemandParticipateEntity {
     // 수요조사 참여 회원
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User user;
+    private UserEntity user;
 
     // 참여한 수요조사 글 id
     @ManyToOne(fetch = FetchType.LAZY)

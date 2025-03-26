@@ -1,6 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.trade.Entity;
 
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,7 +21,7 @@ public class TradeReviewEntity {
     // ManyToOne 관계 반영: 사용자와 거래는 여러 개가 연결될 수 있음
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trade_id", nullable = false)

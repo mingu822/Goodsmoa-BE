@@ -3,7 +3,7 @@ package com.goodsmoa.goodsmoa_BE.chat.DTO;
 
 import com.goodsmoa.goodsmoa_BE.chat.Entity.ChatMessageEntity;
 import com.goodsmoa.goodsmoa_BE.chat.Entity.ChatRoomEntity;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -20,7 +20,7 @@ public class ChatMessageRequest {
     @NotBlank(message = "메세지를 입력해주세요")
     private String content;
 
-    public ChatMessageEntity toEntity(ChatRoomEntity chatRoomEntity, User user) {
+    public ChatMessageEntity toEntity(ChatRoomEntity chatRoomEntity, UserEntity user) {
         return ChatMessageEntity.builder()
                 .content(content)
                 .chatRoomId(chatRoomEntity)

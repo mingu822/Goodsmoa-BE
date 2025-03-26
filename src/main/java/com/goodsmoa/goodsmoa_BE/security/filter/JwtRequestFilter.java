@@ -13,7 +13,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.goodsmoa.goodsmoa_BE.security.constrants.SecurityConstants;
 
 import java.io.IOException;
-
 @Slf4j
 public class JwtRequestFilter extends OncePerRequestFilter {
 
@@ -26,28 +25,21 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     }
 
 
-    // ✅ 특정 URL은 필터 적용 안 함
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String requestURI = request.getRequestURI();
 
-        boolean isExcluded = requestURI.startsWith("/login")
-                || requestURI.startsWith("/public")
-                || requestURI.startsWith("/error")
-                || requestURI.startsWith("/static")
-                || requestURI.startsWith("/css")
-                || requestURI.startsWith("/js")
-                || requestURI.startsWith("/images")
-                || requestURI.startsWith("/webjars")  // ✅ webjars (정적 파일) 추가
-                || requestURI.matches(".*\\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|otf|eot)$");  // ✅ 모든 정적 파일 패턴 추가
 
-        log.info("🔍 필터 검사 중: {}", requestURI);
-        if (isExcluded) {
-            log.info("✅ 필터 제외 대상: {}", requestURI);
+
+    // ✨ 쿠키에서 accessToken 꺼내는 함수
+    private String getTokenFromCookie(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("accessToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
         }
-
-        return isExcluded;
+        return null;
     }
+
 
 
 
@@ -59,31 +51,35 @@ public class JwtRequestFilter extends OncePerRequestFilter {
      * 2. 인증 시도
      * 3. JWT 검증
      *      ⭕ 토큰이 유효하면->ok securtycontext에 저장
-     *      ❌ 토큰이 만료되거나 변조-> ㄲㅈ securitycontext에서 제거한다
+     *      ❌ 토큰이 만료되거나 변조
 
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+
+
+
+
+
+
+
+
+
         // 1. JWT 추출
-        // 클라이언트가 보낸 요청에서 JWT를 헤더에서 추출
-        String authorization = request.getHeader(SecurityConstants.TOKEN_HEADER); // 헤더에서 "Authorization" 가져오기
-        log.info("request jwt검증필터 실행: authorization : " + authorization); // Authorization 헤더 출력 (디버깅 용)
+        // 1. 쿠키에서 accessToken 꺼내기
+        String jwt = getTokenFromCookie(request);
+        log.info("🍪 쿠키에서 꺼낸 accessToken: {}", jwt);
 
 
-
-        //  "Bearer {jwt}" 형식으로 헤더가 오므로, 확인하고 올바르지 않으면 바로 다음 필터로 넘어가게 함
-        if (authorization == null || authorization.length() == 0 || !authorization.startsWith(SecurityConstants.TOKEN_PREFIX)) {
-            // 헤더가 없거나 "Bearer "로 시작하지 않으면, JWT가 아니므로 필터 체인의 다음 필터로 넘어감
+        // 2. accessToken이 없으면 그냥 다음 필터로
+        if (jwt == null || jwt.isEmpty()) {
+            log.info("❌ 쿠키에 accessToken 없음. 다음 필터로 진행");
             filterChain.doFilter(request, response);
-            log.info("jwt없거나 형식 잘못됨. 다음 필ㅇ터로 진행");
             return;
         }
 
-        //  JWT만 추출
-        // "Bearer {jwt}"에서 "Bearer " 부분을 제거하고, 실제 JWT만 추출함
-        String jwt = authorization.replace(SecurityConstants.TOKEN_PREFIX, "");
 
         // 2. 인증 시도 (jwt 해석해 인증 정보를 담은 객체 반환)
         // JWT를 이용해 인증 정보를 얻음
@@ -106,6 +102,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             // 현재 인증된 사용자의 정보를 SecurityContext에 설정 (인증된 사용자로 인정)
             //authentication 이 객체는 로그인한 사용자의 정보를 담고 있어.
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            log.info("🛠 SecurityContext에 저장된 Authentication: {}", SecurityContextHolder.getContext().getAuthentication());
+            log.info("🛠 SecurityContext에 저장된 Authorities: {}", SecurityContextHolder.getContext().getAuthentication().getAuthorities());
         }
 
         if (!result) {
@@ -119,3 +118,5 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
+
+

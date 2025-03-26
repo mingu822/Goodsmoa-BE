@@ -2,7 +2,7 @@ package com.goodsmoa.goodsmoa_BE.trade.DTO;
 
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeReviewEntity;
-import com.goodsmoa.goodsmoa_BE.user.Entity.User;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -21,7 +21,7 @@ public class TradeReviewRequest {
 
     private String content;
 
-    public TradeReviewEntity toEntity(TradePostEntity tradeEntity, User userEntity) {
+    public TradeReviewEntity toEntity(TradePostEntity tradeEntity, UserEntity userEntity) {
         return TradeReviewEntity.builder()
                 .trade(tradeEntity)  // 거래 정보 설정
                 .user(userEntity)    // 리뷰 작성자 설정
