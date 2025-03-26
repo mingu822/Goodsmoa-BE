@@ -1,13 +1,15 @@
-package com.goodsmoa.goodsmoa_BE.trade.DTO;
+package com.goodsmoa.goodsmoa_BE.trade.DTO.Image;
 
 
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import lombok.Getter;
 
 
 @Getter
+@Builder
 public class TradeImageRequest {
 
 
@@ -23,3 +25,4 @@ public class TradeImageRequest {
                 .build();
     }
 }
+

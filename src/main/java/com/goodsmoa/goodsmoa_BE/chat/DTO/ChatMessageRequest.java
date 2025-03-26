@@ -14,7 +14,7 @@ import lombok.Getter;
 public class ChatMessageRequest {
 
     //채팅방 만들 유저 아이디
-    @NotNull
+    @NotBlank
     private String userId;
     // 메세지 내용
     @NotBlank(message = "메세지를 입력해주세요")
@@ -28,3 +28,4 @@ public class ChatMessageRequest {
                 .build();
     }
 }
+

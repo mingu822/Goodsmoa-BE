@@ -21,11 +21,12 @@ public class ChatJoinEntity {
 
     // 채팅방 정보 불러오는 엔티티
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_room_id" , nullable = false)
+    @JoinColumn(name = "chat_room_id" )
     private ChatRoomEntity chatRoomEntity;
 
     // 채팅방 참여하는 유저
     @ManyToOne
-    @JoinColumn(name = "user_id" , nullable = false)
+    @JoinColumn(name = "user_id" )
     private UserEntity user;
 }
+

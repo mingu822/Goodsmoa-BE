@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.trade.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,14 +18,14 @@ public class TradeImageEntity {
 
     private String imagePath;
 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trade_id")
+    @JsonIgnore
     private TradePostEntity tradePostEntity;
 
-    // 이미지를 변경하는 메서드
-    public void updateImagePath(String newImagePath) {
-        this.imagePath = newImagePath;
-    }
+
 
 
 }
+
