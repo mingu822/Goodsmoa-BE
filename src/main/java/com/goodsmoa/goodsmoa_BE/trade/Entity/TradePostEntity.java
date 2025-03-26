@@ -1,13 +1,19 @@
 package com.goodsmoa.goodsmoa_BE.trade.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
+import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.TradePostRequest;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 
-
+@Slf4j
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
@@ -22,11 +28,11 @@ public class TradePostEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private UserEntity user;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
+    @JoinColumn(name = "category_id" , nullable = false)
     private Category category;
 
     private String title;
@@ -42,51 +48,78 @@ public class TradePostEntity {
     @Enumerated(EnumType.STRING)
     private TradeStatus tradeStatus;
 
-    private Boolean deliveryPrice;
+    private Boolean delivery;
+
+    private Long deliveryPrice;
+
     private Boolean direct;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
 
+    @Column(name = "thumbnail_image" , nullable = false)
+    private String thumbnailImage;
+
     private String place;
-    private Long views = 0L;
+
+    @Column(nullable = false)
+    private Long views =0L;
 
     private String hashtag;
 
+    private LocalDateTime pulledAt;
 
+    @OneToMany(mappedBy = "tradePostEntity", fetch = FetchType.LAZY , cascade = CascadeType.ALL , orphanRemoval = true)
+    private List<TradeImageEntity> image;
+
+
+    // 이미지를 변경하는 메서드
+    public void updateImagePath(List<TradeImageEntity> updateImages) {
+        if (this.image == null) {
+            this.image = new ArrayList<>(); // 리스트가 null이면 새로 생성
+        }
+        this.image.clear(); // 기존 이미지 제거
+        this.image.addAll(updateImages); // 새로운 이미지 추가
+    }
+
+//    끌어올림 하는 메서드
+    public void pullAt(LocalDateTime pulledAt) {
+        this.pulledAt = pulledAt;
+
+    }
 
     /** ✅ 조회수 증가 */
     public void increaseViews() {
         this.views += 1;
-    }
-
-    /** ✅ 거래 상태 변경 */
-    public void changeTradeStatus(TradeStatus newStatus) {
-        this.tradeStatus = newStatus;
-        this.updatedAt = LocalDateTime.now();
+        log.info("조회수가 증가했습니다");
     }
 
     /** ✅ 게시글 내용 수정 */
-    public void updatePost(String newTitle, String newContent, Integer newProductPrice, String newHashtag) {
-        this.title = newTitle;
-        this.content = newContent;
-        this.productPrice = newProductPrice;
-        this.hashtag = newHashtag;
-        this.updatedAt = LocalDateTime.now();
+    public void updatePost(TradePostRequest request) {
+        if(request.getTitle() != null) this.title = request.getTitle();
+        if(request.getContent() != null) this.content = request.getContent();
+        if(this.productPrice < 0 ) {
+            throw new IllegalArgumentException("가격은 음수가 될 수 없습니다.");
+        }
+        this.productPrice = request.getProductPrice();
+        if(request.getHashtag() != null) this.hashtag = request.getHashtag();
+        if(request.getThumbnailImage() != null) this.thumbnailImage = request.getThumbnailImage();
+        this.tradeStatus = request.getTradeStatus();
+        this.conditionStatus = request.getConditionStatus();
+
     }
 
     /** ✅ 거래 방식 수정 (택배비 & 직거래 가능 여부 변경) */
-    public void updateTradeOptions(Boolean newDeliveryPrice, Boolean newDirect) {
-        this.deliveryPrice = newDeliveryPrice;
-        this.direct = newDirect;
-        this.updatedAt = LocalDateTime.now();
+    public void updateTradeOptions(TradePostRequest request) {
+        if(request.getDelivery() != null) this.delivery = request.getDelivery();
+        if(request.getDirect() != null) this.direct = request.getDirect();
+
     }
 
     /** ✅ 거래 위치 수정 */
-    public void updateTradeLocation(String newPlace) {
-        this.place = newPlace;
-        this.updatedAt = LocalDateTime.now();
+    public void updateTradeLocation(TradePostRequest request) {
+        if(request.getPlace() != null) this.place = request.getPlace();
     }
     public enum ConditionStatus {
         중고, 새상품, 교환
@@ -95,3 +128,4 @@ public class TradePostEntity {
         판매중, 거래중, 완료
     }
 }
+

@@ -22,7 +22,7 @@ public class DemandEntityService {
     // 비공개,종료되지 않은 모든 글 가져오기
     @Transactional
     public List<DemandEntity> getDemandEntityList() {
-        return demandEntityRepository.findAllByEndTimeAfterAndState(LocalDateTime.now(), 1);
+        return demandEntityRepository.findAllByEndTimeAfterAndState(LocalDateTime.now(), true);
     }
 
     // 생성 혹은 변경

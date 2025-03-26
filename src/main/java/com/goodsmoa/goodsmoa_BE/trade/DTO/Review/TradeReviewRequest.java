@@ -1,4 +1,4 @@
-package com.goodsmoa.goodsmoa_BE.trade.DTO;
+package com.goodsmoa.goodsmoa_BE.trade.DTO.Review;
 
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeReviewEntity;

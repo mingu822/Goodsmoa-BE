@@ -25,6 +25,7 @@ public class ChatRoomEntity {
 
     // 채팅방 만드는 사람의 유저아이디
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id" , nullable = false)
+    @JoinColumn(name = "user_id" )
     private UserEntity user;
 }
+
