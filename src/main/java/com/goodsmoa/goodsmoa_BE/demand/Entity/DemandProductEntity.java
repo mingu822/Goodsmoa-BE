@@ -1,7 +1,10 @@
-package com.goodsmoa.goodsmoa_BE.demand.Entity;
+package com.goodsmoa.goodsmoa_BE.demand.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity @Getter @Builder
 @AllArgsConstructor
@@ -23,6 +26,7 @@ public class DemandProductEntity {
     private int price;
 
     // 이미지
+    @Column(nullable = false)
     private String image;
 
     // 목표 수량
@@ -30,7 +34,7 @@ public class DemandProductEntity {
     private int targetCount;
     
     // 상품이 속한 수요조사 폼 id
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "demand_id", nullable = false)
-    private DemandEntity demandEntity;
+    private DemandPostEntity demandPostEntity;
 }
