@@ -1,14 +1,19 @@
-package com.goodsmoa.goodsmoa_BE.demand.Entity;
+package com.goodsmoa.goodsmoa_BE.demand.entity;
 
 
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@Entity @Getter
+@Entity @Getter @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "demand_participate")
 public class DemandParticipateEntity {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,8 +29,8 @@ public class DemandParticipateEntity {
 
     // 참여한 수요조사 글 id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "demand_id")
-    private DemandEntity demand;
+    @JoinColumn(name = "demand_post_id")
+    private DemandPostEntity demand;
 
     // 구매를 원하는 상품 id
     @ManyToOne(fetch = FetchType.LAZY)

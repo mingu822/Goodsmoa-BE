@@ -1,6 +1,6 @@
-package com.goodsmoa.goodsmoa_BE.demand.Db;
+package com.goodsmoa.goodsmoa_BE.demand.repository;
 
-import com.goodsmoa.goodsmoa_BE.demand.Entity.DemandReportEntity;
+import com.goodsmoa.goodsmoa_BE.demand.entity.DemandReportEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DemandReportRepository extends JpaRepository<DemandReportEntity, Long> {
