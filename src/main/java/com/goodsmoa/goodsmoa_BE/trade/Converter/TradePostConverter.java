@@ -2,17 +2,25 @@ package com.goodsmoa.goodsmoa_BE.trade.Converter;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
+import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 public class TradePostConverter {
 
+    private final TradeImageConverter tradeImageConverter;
+
+    public TradePostConverter(TradeImageConverter tradeImageConverter) {
+        this.tradeImageConverter = tradeImageConverter;
+    }
+
     // Entity → Response 변환
-    public TradePostResponse toResponse(TradePostEntity entity) {
+    public TradePostResponse toResponse(TradePostEntity entity, List<TradeImageEntity> imageEntity) {
         return TradePostResponse.builder()
                 .user(entity.getUser())
                 .title(entity.getTitle())
@@ -29,7 +37,7 @@ public class TradePostConverter {
                 .deliveryPrice(entity.getDeliveryPrice())
                 .views(entity.getViews())
                 .categoryName(entity.getCategory().getName()) // 수정: getCategory().getId()
-                .tradeImage(entity.getImage())
+                .tradeImage(imageEntity.stream().map(tradeImageConverter::toResponse).toList())
                 .build();
     }
 

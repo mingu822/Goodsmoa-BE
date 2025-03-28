@@ -7,22 +7,15 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 
 @Getter
 @Builder
 public class TradeImageRequest {
 
-
+    private long postId;
     @NotBlank(message = "이미지 경로를 설정해주세요")
     private String imagePath;
-
-
-
-    public TradeImageEntity toEntity(TradePostEntity tradePostEntity) {
-        return TradeImageEntity.builder()
-                .imagePath(imagePath)
-                .tradePostEntity(tradePostEntity)
-                .build();
-    }
 }
 
