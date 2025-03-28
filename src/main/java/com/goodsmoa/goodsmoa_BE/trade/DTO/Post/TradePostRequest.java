@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 
 @Getter
 @Builder
@@ -53,6 +55,8 @@ public class TradePostRequest {
 
     @Size(max = 150, message = "해시태그는 최대 150자까지 가능합니다.")
     private String hashtag;
+
+    private List<String> imagePath;
 
 }
 

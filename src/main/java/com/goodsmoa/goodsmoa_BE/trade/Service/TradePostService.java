@@ -5,6 +5,8 @@ import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeImageConverter;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostConverter;
+import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageRequest;
+import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageResponse;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -35,6 +38,17 @@ public class TradePostService {
     private final TradeImageConverter tradeImageConverter;
     private final UserRepository userRepository;
 
+
+    // 중고거래 글 안에 쓸 사진 등록
+    @Transactional
+    public ResponseEntity<TradeImageResponse> addImage(TradeImageRequest tradeImageRequest) {
+        TradePostEntity postEntity = tradePostRepository.findById(tradeImageRequest.getPostId()).get();
+        TradeImageEntity tradeImageEntity = tradeImageConverter.toEntity(tradeImageRequest,postEntity);
+
+        TradeImageResponse reponse  = tradeImageConverter.toResponse(tradeImageEntity);
+        return ResponseEntity.ok(reponse);
+    }
+
     //   중고거래 글 쓰기
     @Transactional
     public ResponseEntity<TradePostResponse> createTradePost( UserEntity user, TradePostRequest request) {
@@ -44,8 +58,13 @@ public class TradePostService {
 
         tradePostRepository.save(tradePostEntity);
 
-        TradePostResponse response = tradePostConverter.toResponse(tradePostEntity);
+        List<TradeImageEntity> tradeImageEntities = new ArrayList<>();
 
+        if (request.getImagePath() != null && !request.getImagePath().isEmpty()) {
+            tradeImageEntities = tradeImageConverter.toEntityList(request, tradePostEntity);
+            tradeImageRepository.saveAll(tradeImageEntities); // 이미지 저장
+        }
+        TradePostResponse response = tradePostConverter.toResponse(tradePostEntity,tradeImageEntities);
         return ResponseEntity.ok(response);
     }
 

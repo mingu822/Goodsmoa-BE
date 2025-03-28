@@ -1,6 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.trade.Controller;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
+import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Service.TradePostService;
@@ -27,6 +28,9 @@ public class TradePostController {
             @RequestBody TradePostRequest request) {
         return tradePostService.createTradePost(user, request);
     }
+
+//    임시 저장? 글 쓸 떄 같이 저장?
+
 
     // 중고거래 글 업데이트
     @PutMapping("/update/{id}")
