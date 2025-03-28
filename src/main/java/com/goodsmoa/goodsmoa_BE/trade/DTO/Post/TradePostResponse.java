@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.trade.DTO.Post;
 
+import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageResponse;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
@@ -46,6 +47,6 @@ public class TradePostResponse {
 
     private  UserEntity user;
 
-    private List<TradeImageEntity> tradeImage;
+    private List<TradeImageResponse> tradeImage;
 }
 
