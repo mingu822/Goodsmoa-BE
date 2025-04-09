@@ -15,5 +15,5 @@ public interface DemandEntityRepository extends JpaRepository<DemandEntity, Long
     Optional<DemandEntity> findDemandEntityById(Long id);
 
     // 아직 종료되지 않았으며 state(상태)가 1인 경우(공개)를 가져온다
-    List<DemandEntity> findAllByEndTimeAfterAndState(LocalDateTime endTime, int state);
+  /*  List<DemandEntity> findAllByEndTimeAfterAndState(LocalDateTime endTime, boolean state);*/
 }

@@ -65,8 +65,41 @@ public class UserQuestionEntity {
 
 
 
+    // 문의글 생성
+    public void createQuestion(UserEntity user) {
+        this.user = user;
+        this.reqCreatedAt = LocalDateTime.now();
+    }
+
+    //문의글 수정할떄 실행되는 메서드
+    public void updateQuestion(String title, String content) {
+        if (title != null) {
+            this.title = title;
+        }
+        if (content != null) {
+            this.reqContent = content;
+        }
+        this.reqUpdatedAt = LocalDateTime.now();
+    }
 
 
+    //문의글에 답변달기 메서드
+    public void createAnswer(String resContent) {
+        this.resContent = resContent;
+        this.resCreatedAt = LocalDateTime.now();
+    }
+
+
+    //문의글에 단 답변 수정하기 메서드
+    public void updateAnswer(String resContent) {
+        this.resContent = resContent;
+        this.resupdatedAt = LocalDateTime.now();
+    }
+
+    public void deleteAnswer() {
+        this.resContent = null;
+        this.resupdatedAt = LocalDateTime.now();
+    }
 
 
 

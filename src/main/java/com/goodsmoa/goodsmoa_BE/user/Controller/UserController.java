@@ -1,11 +1,17 @@
 package com.goodsmoa.goodsmoa_BE.user.Controller;
 
 import com.goodsmoa.goodsmoa_BE.security.provider.JwtProvider;
+import com.goodsmoa.goodsmoa_BE.user.DTO.UserInfoResponseDto;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import com.goodsmoa.goodsmoa_BE.user.converter.UserInfoConverter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -21,7 +27,8 @@ public class UserController {
 
     //엑세스 토큰 재발급받는 api
     @PostMapping("/auth/refresh")
-    public ResponseEntity<?> refreshAccessToken(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
+    public ResponseEntity<?> refreshAccessToken(@CookieValue(value = "refreshToken", required = false) String refreshToken,  HttpServletResponse response) {
+
 
         // 1️⃣ 리프레시 토큰이 없을 때
         if (refreshToken == null || refreshToken.isEmpty()) {
@@ -41,14 +48,74 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("리프레시 토큰 검증 실패! 🚫");
         }
 
-        // 4️⃣ 새 엑세스 토큰을 응답 헤더에 추가
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + newAccessToken);
-        log.info("**엑세스 토큰 재발급 완료~!!: " + newAccessToken);
+        // 4️⃣ 새 엑세스 토큰을 쿠키로 보냄
+        // ✅ accessToken도 HttpOnly 쿠키로 내려줌
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", newAccessToken)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(1800) // 30분
+                .sameSite("Lax") // 개발용이니까 Lax (배포시 Secure 추가)
+                .build();
 
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body("엑세스 토큰 재발급 성공! 🎉");
+        log.info("새로 발급받은 엑세스토큰:" ,newAccessToken);
+
+        response.addHeader("Set-Cookie", accessCookie.toString());
+
+        return ResponseEntity.ok("AccessToken을 쿠키에 담아 보냈습니다! 🎉");
     }
+
+
+
+    @GetMapping("/info")
+    public ResponseEntity<UserInfoResponseDto> getUserInfo(@AuthenticationPrincipal UserEntity user) {
+
+        // DTO로 변환
+        UserInfoResponseDto userinfodto = UserInfoConverter.toDto(user);
+
+        return ResponseEntity.ok(userinfodto);
+    }
+
+
+
+
+    /*
+
+
+    ✅ HttpServletResponse란?
+    서버 → 클라이언트로 응답 보낼 때 쓰는 "응답 객체"야!
+    왜 쓰나?	쿠키, 헤더, 상태코드 등 응답 세부 설정하려고(JSON 데이터를 보내거나, 쿠키를 심어주거나)
+    HttpServletResponse를 파라미터로 선언해두면 👉 Spring이 자동으로 주입해줘!
+
+    *
+    * */
+
+    @PostMapping("/auth/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+
+        // ✅ accessToken 쿠키 삭제
+        ResponseCookie deleteAccessToken = ResponseCookie.from("accessToken", "")
+                .path("/")
+                .maxAge(0)
+                .httpOnly(true)
+                .sameSite("Lax")
+                .build();
+
+        // ✅ refreshToken 쿠키 삭제
+        ResponseCookie deleteRefreshToken = ResponseCookie.from("refreshToken", "")
+                .path("/")
+                .maxAge(0)
+                .httpOnly(true)
+                .sameSite("Lax")
+                .build();
+
+        // 응답에 쿠키 두 개 다 추가
+        response.addHeader("Set-Cookie", deleteAccessToken.toString());
+        response.addHeader("Set-Cookie", deleteRefreshToken.toString());
+
+        return ResponseEntity.ok("로그아웃 완료! 👋");
+    }
+
+
+
 
 }

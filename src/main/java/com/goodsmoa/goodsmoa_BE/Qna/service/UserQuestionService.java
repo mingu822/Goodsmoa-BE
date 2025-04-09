@@ -53,10 +53,8 @@ public class UserQuestionService {
      */
     @Transactional
     public UserQuestionEntity createQuestion(UserEntity user, UserQuestionEntity requestEntity) {
-        // ✅ 생성 시간 자동 설정
-        requestEntity.setReqCreatedAt(LocalDateTime.now());
-        //fk인 (user테이블의 pk인 )user_id 저장
-        requestEntity.setUser(user);
+
+        requestEntity.createQuestion(user);
 
         // ✅ DB에 저장 후 반환
         return userQuestionRepository.save(requestEntity);
@@ -74,14 +72,12 @@ public class UserQuestionService {
         UserQuestionEntity question = userQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 문의가 존재하지 않습니다."));
 
-        // ✅ 기존 문의글 엔티티 제목, 내용 수정
-        question.setTitle(requestEntity.getTitle());
-        question.setReqContent(requestEntity.getReqContent());
-        question.setReqUpdatedAt(LocalDateTime.now()); // ✅ 수정 시간 업데이트
 
+        question.updateQuestion(requestEntity.getTitle(), requestEntity.getReqContent() );
         // ✅ DB 저장 후 반환
         return userQuestionRepository.save(question);
     }
+
 
     /**
      * 🔥 문의글 삭제 (본인 글만 가능 or 관리자 권한으로 삭제)
@@ -128,9 +124,8 @@ public class UserQuestionService {
         UserQuestionEntity question = userQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("문의글을 찾을 수 없습니다."));
 
-        // ✅ 2. 기존 문의글의 `res_content` 업데이트
-        question.setResContent(answerRequest.getResContent());
-        question.setResCreatedAt(LocalDateTime.now());
+
+        question.createAnswer(answerRequest.getResContent());
 
         // ✅ 3. 변경된 문의글 저장
         userQuestionRepository.save(question);
@@ -154,8 +149,8 @@ public class UserQuestionService {
                 .orElseThrow(() -> new RuntimeException("문의글을 찾을 수 없습니다."));
 
         // ✅ 2. 기존 문의글의 `res_content` 업데이트, 수정 시간 반영
-        question.setResContent(answerRequest.getResContent());
-        question.setResupdatedAt(LocalDateTime.now());
+
+        question.updateAnswer(answerRequest.getResContent());
 
         // ✅ 3. 변경된 문의글 저장
         userQuestionRepository.save(question);
@@ -180,8 +175,7 @@ public class UserQuestionService {
                 .orElseThrow(() -> new RuntimeException("문의글을 찾을 수 없습니다."));
 
         // ✅ 2. 기존 문의글의 `res_content` null로 변경, 수정 시간 반영
-        question.setResContent(null);
-        question.setResupdatedAt(LocalDateTime.now());
+        question.deleteAnswer();
 
         // ✅ 3. 변경된 문의글 저장
         userQuestionRepository.save(question);

@@ -83,6 +83,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         // 2. 인증 시도 (jwt 해석해 인증 정보를 담은 객체 반환)
         // JWT를 이용해 인증 정보를 얻음
+        //반환값:        return new UsernamePasswordAuthenticationToken(user, null, authorities);
         Authentication authentication = jwtProvider.getAuthenticationToken(jwt);
 
         if (authentication != null && authentication.isAuthenticated()) {

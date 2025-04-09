@@ -194,6 +194,9 @@ public class JwtProvider {
 
             // UsernamePasswordAuthenticationToken을 생성하여 인증 정보를 반환
             //첫 번째 매개변수 (users): 인증된 사용자의 상세 정보.
+                              //user 👉 바로 너가 만든 UserEntity 객체!
+                            //이게 Authentication.getPrincipal()에 담겨서
+                            //나중에 @AuthenticationPrincipal로 바로 쓸 수 있는 거야!!
             //두 번째 매개변수 (null): 사용자의 비밀번호인데, 이미 인증이 끝난 후라 비밀번호는 필요하지 않아서 null을 넣었어.
             //세 번째 매개변수 (userDetails.getAuthorities()): 사용자의 권한 목록.
             // getAuthorities()는 UserDetails 객체에(여기선 customuser)서 사용자 권한들을 반환하는 메서드

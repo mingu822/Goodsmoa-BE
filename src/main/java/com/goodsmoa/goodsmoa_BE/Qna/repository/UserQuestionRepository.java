@@ -17,6 +17,17 @@ public interface UserQuestionRepository extends JpaRepository<UserQuestionEntity
     ✔   즉, 조회하려는 엔티티(UserQuestion)가 기준이므로 UserQuestionRepository에서 관리하는 게 맞아!
     --> 즉, 리포지토리는 "관리하는 엔티티"에 따라 나뉜다!
     * */
+
+    /*
+    UserQuestionEntity는 UserEntity user를 가지고 있어! (외래키 관계)
+
+    findByUserId(String userId)는 user.id 필드를 기준으로 검색하는 거야!
+
+    JPA는 객체 탐색도 가능해서 user.id 도 인식할 수 있어
+    *
+    * */
     List<UserQuestionEntity> findByUserId(String userId);
+
+
 
 }

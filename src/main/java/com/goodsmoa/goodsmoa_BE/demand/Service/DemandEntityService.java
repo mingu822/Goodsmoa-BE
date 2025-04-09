@@ -20,10 +20,10 @@ public class DemandEntityService {
     private final DemandConverter demandConverter;
 
     // 비공개,종료되지 않은 모든 글 가져오기
-    @Transactional
+/*    @Transactional
     public List<DemandEntity> getDemandEntityList() {
         return demandEntityRepository.findAllByEndTimeAfterAndState(LocalDateTime.now(), 1);
-    }
+    }*/
 
     // 생성 혹은 변경
     @Transactional
