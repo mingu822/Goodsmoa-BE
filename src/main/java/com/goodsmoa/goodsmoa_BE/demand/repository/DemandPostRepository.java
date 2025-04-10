@@ -12,7 +12,7 @@ public interface DemandPostRepository extends JpaRepository<DemandPostEntity, Lo
 
     // 수요조사글 ID로 상품글(+연관된 상품리스트) 찾아오기
     @EntityGraph(attributePaths = {"products"})
-    Optional<DemandPostEntity> findDemandPostEntitiesById(Long id);
+    Optional<DemandPostEntity> findDemandPostEntityById(Long id);
 
     // 아직 종료되지 않았으며 state(상태)가 1인 경우(공개)를 가져온다
     List<DemandPostEntity> findAllByEndTimeAfterAndState(LocalDateTime endTime, boolean state);

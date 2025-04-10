@@ -24,8 +24,8 @@ public class DemandApiController {
 
     // 모든 수요조사 조회
     @GetMapping
-    public ResponseEntity<List<DemandPostListResponse>> findAll(){
-        return ResponseEntity.ok(demandPostService.getDemandEntityList());
+    public ResponseEntity<List<DemandPostListResponse>> findAll(boolean state){
+        return ResponseEntity.ok(demandPostService.getDemandEntityList(state));
     }
 
     // 수요조사 상세 조회

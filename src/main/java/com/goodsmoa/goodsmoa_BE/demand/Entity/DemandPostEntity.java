@@ -79,10 +79,9 @@ public class DemandPostEntity {
     private Category category;
     
     // demand_product 1:N으로 연결
-    // 교체시 통째로 교체함. 한명이라도 수요조사 참여시 수정 불가
     @JsonIgnore
-    @OneToMany(mappedBy = "demandEntity", orphanRemoval = true, cascade = CascadeType.ALL)
-    private List<DemandProductEntity> products = new ArrayList<>();
+    @OneToMany(mappedBy = "demandPostEntity", orphanRemoval = true, cascade = CascadeType.ALL)
+    private List<DemandPostProductEntity> products = new ArrayList<>();
 
 
     // 글 수정(상품 목록 제외)
@@ -104,8 +103,9 @@ public class DemandPostEntity {
     }
 
     // 비공개
-    public void notPublic(){
+    public boolean toggleState(){
         this.state = !this.state;
+        return this.state;
     }
 
     // 조회수 증가
