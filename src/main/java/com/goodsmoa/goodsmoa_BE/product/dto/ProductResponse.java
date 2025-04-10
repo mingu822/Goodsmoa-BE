@@ -20,4 +20,6 @@ public class ProductResponse {
 
     private Integer maxQuantity;
 
+    private Long postId;
+
 }

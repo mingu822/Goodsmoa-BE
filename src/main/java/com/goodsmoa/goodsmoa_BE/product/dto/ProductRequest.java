@@ -9,8 +9,7 @@ import lombok.*;
 @Builder
 public class ProductRequest {
 
-    @NotNull(message = "게시글 ID는 필수입니다.")
-    private Long postId;  // ✅ ProductPost의 FK (게시글 ID)
+    private Long id;
 
     @NotBlank(message = "상품명은 필수입니다.")
     @Size(max = 40, message = "상품명은 최대 40자까지 가능합니다.")
@@ -35,5 +34,7 @@ public class ProductRequest {
     @NotNull(message = "최대 구매 가능 수량은 필수입니다.")
     @Min(value = 1, message = "최대 구매 가능 수량은 1개 이상이어야 합니다.")
     private Integer maxQuantity;
+
+    private Long postId;
 
 }

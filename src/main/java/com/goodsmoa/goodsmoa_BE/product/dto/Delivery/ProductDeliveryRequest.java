@@ -16,7 +16,6 @@ public class ProductDeliveryRequest {
     @Min(value = 0, message = "배송 가격은 0 이상이어야 합니다.")
     private Integer price;
 
-    @NotNull(message = "상품 게시글 ID는 필수입니다.")
-    private Long postId;  // ✅ ProductPost의 FK (상품 게시글 ID)
+    private Long postId;
 
 }

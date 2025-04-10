@@ -1,8 +1,11 @@
 package com.goodsmoa.goodsmoa_BE.product.dto.Post;
 
+import com.goodsmoa.goodsmoa_BE.product.dto.Delivery.ProductDeliveryRequest;
+import com.goodsmoa.goodsmoa_BE.product.dto.ProductRequest;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.*;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -43,4 +46,8 @@ public class PostRequest {
 
     @NotNull(message = "카테고리는 필수입니다.")
     private Integer categoryId;  // ✅ Category의 FK (카테고리 ID)
+
+    private List<ProductRequest> products;
+
+    private List<ProductDeliveryRequest> delivers;
 }
