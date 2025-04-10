@@ -1,11 +1,19 @@
 package com.goodsmoa.goodsmoa_BE.user.Controller;
 
 import com.goodsmoa.goodsmoa_BE.security.provider.JwtProvider;
+import com.goodsmoa.goodsmoa_BE.user.Converter.UserInfoConverter;
+import com.goodsmoa.goodsmoa_BE.user.DTO.UserInfoResponseDto;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import com.goodsmoa.goodsmoa_BE.user.Repository.UserRepository;
+import com.goodsmoa.goodsmoa_BE.user.Service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -15,8 +23,8 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final JwtProvider jwtProvider; // ✅ JwtProvider를 주입받음
-
-
+    private final UserRepository userRepository;
+    private final UserService userService;
 
 
     //엑세스 토큰 재발급받는 api
@@ -48,7 +56,61 @@ public class UserController {
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .body("엑세스 토큰 재발급 성공! 🎉");
+                .body("엑세스 토큰 재발급 성공! ");
     }
+
+
+    //로그아웃
+    @PostMapping("/auth/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+
+        // ✅ accessToken 쿠키 삭제
+        ResponseCookie deleteAccessToken = ResponseCookie.from("accessToken", "")
+                .path("/")
+                .maxAge(0)
+                .httpOnly(true)
+                .sameSite("Lax")
+                .build();
+
+        // ✅ refreshToken 쿠키 삭제
+        ResponseCookie deleteRefreshToken = ResponseCookie.from("refreshToken", "")
+                .path("/")
+                .maxAge(0)
+                .httpOnly(true)
+                .sameSite("Lax")
+                .build();
+
+        // 응답에 쿠키 두 개 다 추가
+        response.addHeader("Set-Cookie", deleteAccessToken.toString());
+        response.addHeader("Set-Cookie", deleteRefreshToken.toString());
+
+        return ResponseEntity.ok("로그아웃 완료");
+    }
+
+
+    //유저정보 반환
+    @GetMapping("/info")
+    public ResponseEntity<?> userInfo(
+            @AuthenticationPrincipal UserEntity user
+    ) {
+
+
+
+        UserEntity userentity=userService.getUserById(user.getId());
+
+        //dto변환
+        UserInfoResponseDto responseDto= UserInfoConverter.toDto(userentity);
+
+
+
+
+        return new ResponseEntity<>(responseDto, HttpStatus.OK);
+
+    }
+
+
+
+
+
 
 }
