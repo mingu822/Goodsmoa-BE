@@ -15,7 +15,7 @@ import java.util.ArrayList;
 @AllArgsConstructor
 public class DemandPostConverter {
 
-    private final DemandProductConverter demandProductConverter;
+    private final DemandPostProductConverter demandPostProductConverter;
 
     // 생성에만 쓰임. 수정에는 안쓰임
     // DemandEntityCreateRequest -> DemandPostEntity
@@ -47,7 +47,7 @@ public class DemandPostConverter {
                 .hashtag(entity.getHashtag())
                 .category(entity.getCategory().getName())
                 .creatAt(entity.getCreatedAt())
-                .products(entity.getProducts().stream().map(demandProductConverter::toResponse).toList())
+                .products(entity.getProducts().stream().map(demandPostProductConverter::toResponse).toList())
                 .user(entity.getUser())
                 .build();
     }
