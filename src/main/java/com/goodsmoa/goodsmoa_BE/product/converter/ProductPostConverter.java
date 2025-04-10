@@ -1,7 +1,11 @@
 package com.goodsmoa.goodsmoa_BE.product.converter;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
-import com.goodsmoa.goodsmoa_BE.product.dto.Post.*;
+
+import com.goodsmoa.goodsmoa_BE.product.dto.Post.PostDetailResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.Post.PostRequest;
+import com.goodsmoa.goodsmoa_BE.product.dto.Post.PostResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.Post.PostsResponse;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductDeliveryEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductPostEntity;
@@ -21,41 +25,31 @@ public class ProductPostConverter {
     private final ProductDeliveryConverter productDeliveryConverter;
 
     /**
-     * save DTO -> Entity 변경
+     * create DTO -> Entity 변경
      * 상품을 담기 위해 DB에 임시저장하기 위한 메서드
      */
-    public ProductPostEntity saveToEntity(SavePostRequest request, UserEntity user, Category category) {
+    public ProductPostEntity createToEntity(PostRequest request, UserEntity user, Category category) {
         return ProductPostEntity.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
                 .thumbnailImage(request.getThumbnailImage())
+                .isPublic(request.getIsPublic())
                 .createdAt(LocalDateTime.now())
-                .state(false)
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .state(request.getState())
                 .views(0L)
+                .password(request.getPassword())
+                .hashtag(request.getHashtag())
                 .user(user)
                 .category(category)
                 .build();
     }
-
     /**
-     *  save 엔티티 → DTO 변환
-     *  임시저장 후 이어서 상품을 담기 위해 정보를 반환하는 메서드
-     */
-    public SavePostResponse saveToResponse(ProductPostEntity entity){
-        return SavePostResponse.builder()
-                .id(entity.getId())
-                .title(entity.getTitle())
-                .content(entity.getContent())
-                .thumbnailImage(entity.getThumbnailImage())
-                .categoryId(entity.getCategory().getId())
-                .build();
-    }
-
-    /**
-     *  create 엔티티 → DTO 변환
+     *  update 엔티티 → DTO 변환
      *  저장 후 반환 시키기 위한 메서드
      */
-    public PostResponse createToResponse(ProductPostEntity entity) {
+    public PostResponse createToResponse(ProductPostEntity entity, List<ProductEntity> products, List<ProductDeliveryEntity> delivers) {
         return PostResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
@@ -68,13 +62,14 @@ public class ProductPostConverter {
                 .state(entity.getState())
                 .views(entity.getViews())
                 .hashtag(entity.getHashtag())
-                .categoryName(entity.getCategory().getName()) // ✅ 카테고리 이름만 반환
-                .userName(entity.getUser().getName())   // ✅ 작성자 아이디 반환
+                .categoryName(entity.getCategory().getName())
+                .user(entity.getUser())
+                .products(products.stream().map(productConverter::toResponse).toList())
+                .delivers(delivers.stream().map(productDeliveryConverter::toResponse).toList())
                 .build();
     }
     /**
      *  조회를 위한 Entity -> DTO
-     *
      */
     public PostDetailResponse detailToResponse(List<ProductEntity> products, List<ProductDeliveryEntity>  delivers, ProductPostEntity entity){
         return PostDetailResponse.builder()
@@ -85,10 +80,27 @@ public class ProductPostConverter {
                 .endTime(entity.getEndTime())
                 .hashtag(entity.getHashtag())
                 .categoryName(entity.getCategory().getName())
-                .user(entity.getUser())
+                .userId(entity.getUser().getId())
+                .nickname(entity.getUser().getNickname())
+                .image(entity.getUser().getImage())
                 .views(entity.getViews())
                 .products(products.stream().map(productConverter::toResponse).toList())
                 .delivers(delivers.stream().map(productDeliveryConverter::toResponse).toList())
                 .build();
     }
+
+    public PostsResponse toPostsResponse(ProductPostEntity entity) {
+        return PostsResponse.builder()
+                .id(entity.getId())
+                .title(entity.getTitle())
+                .createdAt(entity.getCreatedAt())
+                .thumbnailImage(entity.getThumbnailImage())
+                .views(entity.getViews())
+                .hashtag(entity.getHashtag())
+                .userId(entity.getUser().getId())
+                .userNickName(entity.getUser().getNickname())
+                .userImage(entity.getUser().getImage())
+                .build();
+    }
+
 }

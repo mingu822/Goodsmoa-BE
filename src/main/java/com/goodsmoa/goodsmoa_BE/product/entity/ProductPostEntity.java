@@ -64,19 +64,12 @@ public class ProductPostEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @OneToMany(mappedBy = "productPostEntity", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductEntity> products;
-
-    @OneToMany(mappedBy = "productPostEntity", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductDeliveryEntity> delivers;
-
     /** ✅ 조회수 증가 */
     public void increaseViews() {
         this.views += 1;
     }
 
 
-    // 요청 정보를 기반으로 업데이트하는 메서드
     public void updateFromRequest(PostRequest request, Category category, boolean status) {
         if (request.getTitle() != null) this.title = request.getTitle();
         if (request.getContent() != null) this.content = request.getContent();
@@ -86,10 +79,14 @@ public class ProductPostEntity {
         if (request.getIsPublic() != null) this.isPublic = request.getIsPublic();
         if (request.getHashtag() != null) this.hashtag = request.getHashtag();
 
-        // 카테고리는 null이 아닐 때만 업데이트 (필수값인 경우를 고려)
+        // 카테고리 업데이트
         if (category != null) this.category = category;
 
-        // 상태는 메서드 호출 시 전달된 값 사용
+        // 상태 업데이트
         this.state = status;
+    }
+
+    public void getViews(Long views) {
+        this.views += views;
     }
 }

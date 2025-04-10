@@ -8,6 +8,10 @@ import com.goodsmoa.goodsmoa_BE.product.dto.ProductResponse;
 import com.goodsmoa.goodsmoa_BE.product.service.ProductService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -19,22 +23,10 @@ public class ProductController {
 
     private final ProductService productService;
 
-    // 상품 추가
-    @PostMapping("/create")
-    public ResponseEntity<ProductResponse> createProduct(@RequestBody ProductRequest request){
-        return productService.createProduct(request);
-    }
-
-    // 임시로 글을 저장해야 상품을 추가시킬 수 있음
-    @PostMapping("/post-save")
-    public ResponseEntity<SavePostResponse> SaveProductPost(@AuthenticationPrincipal UserEntity user, @RequestBody SavePostRequest request){
-        return productService.saveProductPost(user,request);
-    }
-
-    // 임시 저장된 글을 불러와서 상품을 추가하고 db에 저장 시켜야 됨
-    @PutMapping("/post-create")
-    public ResponseEntity<PostResponse> createProductPost(@AuthenticationPrincipal UserEntity user, @RequestBody PostRequest request){
-        return productService.updateProductPost(user,request);
+    // 상품글 추가
+    @PostMapping("/post-create")
+    public ResponseEntity<PostDetailResponse> createProduct(@AuthenticationPrincipal UserEntity user, @RequestBody PostRequest request){
+        return productService.createPost(user, request);
     }
 
     // 생성한 상품글을 수정
@@ -55,9 +47,48 @@ public class ProductController {
         return productService.deleteProductPost(user,id);
     }
 
-    // 배송 방식 추가
-    @PostMapping("/delivery-create")
-    public ResponseEntity<ProductDeliveryResponse> createProductDelivery(@RequestBody ProductDeliveryRequest request){
-        return productService.createProductDelivery(request);
+    // 상품글 리스트 조회
+    @GetMapping("/post")
+    public ResponseEntity<Page<PostsResponse>> getProductPostList(
+            @PageableDefault(size = 10, sort = "createAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return productService.getProductPostList(pageable);
     }
+
+    // TODO 필요시 사용
+//    // 상품 추가
+//    @PostMapping("/create")
+//    public ResponseEntity<ProductResponse> createProduct(@RequestBody ProductRequest request){
+//        return productService.createProduct(request);
+//    }
+//
+//    // 상품 수정
+//    @PutMapping("/update")
+//    public ResponseEntity<ProductResponse> updateProduct(@AuthenticationPrincipal UserEntity user, @RequestBody ProductRequest request){
+//        return productService.updateProduct(user,request);
+//    }
+//
+//    // 상품 삭제
+//    @DeleteMapping("/delete/{id}")
+//    public ResponseEntity<String> deleteProduct(@AuthenticationPrincipal UserEntity user, Long id){
+//        return productService.deleteProduct(user, id);
+//    }
+//
+//    // 배송 방식 추가
+//    @PostMapping("/delivery-create")
+//    public ResponseEntity<ProductDeliveryResponse> createProductDelivery(@RequestBody ProductDeliveryRequest request) {
+//        return productService.createProductDelivery(request);
+//    }
+//
+//    // 배송 방식 수정
+//    @PutMapping("/delivery-update")
+//    public ResponseEntity<ProductDeliveryResponse> updateProductDelivery(@AuthenticationPrincipal UserEntity user, @RequestBody ProductDeliveryRequest request){
+//        return productService.updateProductDelivery(user,request);
+//    }
+//
+//    // 배송 방식 삭제
+//    @DeleteMapping("/delivery-delete/{id}")
+//    public ResponseEntity<String> deleteProductDelivery(@AuthenticationPrincipal UserEntity user, Long id){
+//        return productService.deleteProductDelivery(user, id);
+//    }
+
 }
