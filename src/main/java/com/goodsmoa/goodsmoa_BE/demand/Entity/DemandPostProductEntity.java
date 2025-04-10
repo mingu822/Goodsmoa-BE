@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "demand_product")
-public class DemandProductEntity {
+public class DemandPostProductEntity {
 
     // 수요조사 상품 ID
     @Id
@@ -37,4 +37,11 @@ public class DemandProductEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "demand_id", nullable = false)
     private DemandPostEntity demandPostEntity;
+
+    public void DemandPostProductUpdate(String name, int price, String image, int targetCount) {
+        this.name = name;
+        this.price = price;
+        this.image = image;
+        this.targetCount = targetCount;
+    }
 }

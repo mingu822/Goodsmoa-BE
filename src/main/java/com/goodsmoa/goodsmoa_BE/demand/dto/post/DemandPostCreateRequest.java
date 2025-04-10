@@ -1,6 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.demand.dto.post;
 
-import com.goodsmoa.goodsmoa_BE.demand.entity.DemandProductEntity;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,9 +16,9 @@ import java.util.List;
 @Builder @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DemandPostUpdateRequest {
+public class DemandPostCreateRequest {
 
-    @NotBlank(message = "")
+    @Nullable
     private Long id;
 
     @NotBlank(message = "제목을 작성해주십시오")
@@ -41,9 +41,9 @@ public class DemandPostUpdateRequest {
 
     private String hashtag;
 
-    @NotBlank(message = "올바른 카테고리를 선택해주세요")
+    @NotBlank(message = "카테고리를 선택해주세요")
     private Integer categoryId;
 
     @NotBlank(message = "상품은 최소 1개 이상 있어야 합니다")
-    private List<DemandProductEntity> products;
+    private List<DemandPostProductRequest> products;
 }
