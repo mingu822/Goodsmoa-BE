@@ -28,7 +28,11 @@ public class PostDetailResponse {
 
     private String categoryName;
 
-    private UserEntity user;
+    private String nickname;
+
+    private String image;
+
+    private String userId;
 
     private Long views;
 

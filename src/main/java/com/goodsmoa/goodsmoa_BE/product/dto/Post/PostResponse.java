@@ -1,9 +1,15 @@
 package com.goodsmoa.goodsmoa_BE.product.dto.Post;
 
+import com.goodsmoa.goodsmoa_BE.product.dto.Delivery.ProductDeliveryResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.ProductResponse;
+import com.goodsmoa.goodsmoa_BE.product.entity.ProductDeliveryEntity;
+import com.goodsmoa.goodsmoa_BE.product.entity.ProductEntity;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 @Getter
@@ -37,6 +43,10 @@ public class PostResponse {
 
     private String categoryName;
 
-    private String userName;
+    private UserEntity user;
+
+    private List<ProductResponse> products;
+
+    private List<ProductDeliveryResponse> delivers;
 
 }

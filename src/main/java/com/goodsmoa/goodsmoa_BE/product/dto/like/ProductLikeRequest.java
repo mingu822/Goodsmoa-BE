@@ -17,22 +17,4 @@ public class ProductLikeRequest {
 
     @NotNull(message = "사용자 ID는 필수입니다.")
     private Long userId; // ✅ User의 FK
-
-    /** ✅ DTO → 엔티티 변환 */
-    public ProductLikeEntity toEntity(ProductPostEntity productPostEntity, UserEntity user) {
-        return ProductLikeEntity.builder()
-                .id(id)
-                .productPostEntity(productPostEntity) // ✅ FK 매핑
-                .user(user) // ✅ FK 매핑
-                .build();
-    }
-
-    /** ✅ 엔티티 → DTO 변환 */
-    public static ProductLikeRequest toRequest(ProductLikeEntity productLikeEntity) {
-        return ProductLikeRequest.builder()
-                .id(productLikeEntity.getId()) // ✅ PK 반환
-                .productPostId(productLikeEntity.getProductPostEntity().getId()) // ✅ ProductPost FK
-                .userId(Long.valueOf(productLikeEntity.getUser().getId())) // ✅ User FK
-                .build();
-    }
 }
