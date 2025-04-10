@@ -1,4 +1,4 @@
-package com.goodsmoa.goodsmoa_BE.demand.entity;
+package com.goodsmoa.goodsmoa_BE.demand.Entity;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
@@ -77,7 +77,7 @@ public class DemandPostEntity {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
     private Category category;
-    
+
     // demand_product 1:N으로 연결
     // 교체시 통째로 교체함. 한명이라도 수요조사 참여시 수정 불가
     @JsonIgnore
@@ -97,7 +97,7 @@ public class DemandPostEntity {
         this.hashtag = hashtag;
         this.category = category;
     }
-    
+
     // 끌어올림
     public void pull() {
         this.pulledAt = LocalDateTime.now();
