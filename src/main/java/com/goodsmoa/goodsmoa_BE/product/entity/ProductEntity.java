@@ -1,10 +1,8 @@
 package com.goodsmoa.goodsmoa_BE.product.entity;
 
+import com.goodsmoa.goodsmoa_BE.product.dto.ProductRequest;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
@@ -45,5 +43,14 @@ public class ProductEntity {
     // enum
     public enum AvailabilityStatus{
         판매중, 품절, 숨기기
+    }
+
+    public void updateFromRequest(ProductRequest request) {
+        this.name = request.getName();
+        this.price = request.getPrice();
+        this.quantity = request.getQuantity();
+        this.image = request.getImage();
+        this.available = AvailabilityStatus.valueOf(request.getAvailable());
+        this.maxQuantity = request.getMaxQuantity();
     }
 }
