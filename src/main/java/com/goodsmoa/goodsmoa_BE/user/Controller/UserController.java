@@ -71,7 +71,8 @@ public class UserController {
 
 
 
-    //로그아웃
+    //로그아웃 (서비스 추가)
+
     @PostMapping("/auth/logout")
     public ResponseEntity<?> logout(   @AuthenticationPrincipal UserEntity user,HttpServletResponse response ) {
 
