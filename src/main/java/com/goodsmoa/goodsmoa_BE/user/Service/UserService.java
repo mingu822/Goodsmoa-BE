@@ -56,6 +56,14 @@ public class UserService {
     }
 
 
+    // ✅ 유저의 refreshToken 삭제 (로그아웃 시 사용)
+    public void removeRefreshToken(UserEntity user) {
+        if (user != null) {
+            user.setRefreshToken(null);  // DB 값 null로 설정
+            userRepository.save(user);   // 반영 저장
+        }
+    }
+
 
 
 }
