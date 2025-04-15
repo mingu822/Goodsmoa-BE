@@ -3,12 +3,7 @@ package com.goodsmoa.goodsmoa_BE.user.Controller;
 import com.goodsmoa.goodsmoa_BE.security.provider.JwtProvider;
 import com.goodsmoa.goodsmoa_BE.user.Converter.UserInfoConverter;
 import com.goodsmoa.goodsmoa_BE.user.DTO.UserInfoResponseDto;
-import com.goodsmoa.goodsmoa_BE.user.DTO.UserInfoUpdateRequestDto;
-import com.goodsmoa.goodsmoa_BE.user.Entity.UserAccountEntity;
-import com.goodsmoa.goodsmoa_BE.user.Entity.UserAddressEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
-import com.goodsmoa.goodsmoa_BE.user.Repository.UserAccountRepository;
-import com.goodsmoa.goodsmoa_BE.user.Repository.UserAddressRepository;
 import com.goodsmoa.goodsmoa_BE.user.Repository.UserRepository;
 import com.goodsmoa.goodsmoa_BE.user.Service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,8 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Slf4j
 @RequestMapping("/users")
 @RestController // ✅ @Controller 대신 @RestController 사용 (JSON 응답)
@@ -32,8 +25,6 @@ public class UserController {
     private final JwtProvider jwtProvider; // ✅ JwtProvider를 주입받음
     private final UserRepository userRepository;
     private final UserService userService;
-    private final UserAddressRepository userAddressRepository;
-    private final UserAccountRepository userAccountRepository;
 
 
     //엑세스 토큰 재발급받는 api
@@ -58,7 +49,6 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("리프레시 토큰 검증 실패! 🚫");
         }
 
-
         // 4️⃣ 새 엑세스 토큰을 응답 헤더에 추가
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + newAccessToken);
@@ -70,15 +60,9 @@ public class UserController {
     }
 
 
-
     //로그아웃
     @PostMapping("/auth/logout")
-    public ResponseEntity<?> logout(   @AuthenticationPrincipal UserEntity user,HttpServletResponse response ) {
-
-
-        // ✅ DB에 저장된 refreshToken 비우기
-        userService.removeRefreshToken(user);
-
+    public ResponseEntity<?> logout(HttpServletResponse response) {
 
         // ✅ accessToken 쿠키 삭제
         ResponseCookie deleteAccessToken = ResponseCookie.from("accessToken", "")
@@ -101,39 +85,28 @@ public class UserController {
         response.addHeader("Set-Cookie", deleteRefreshToken.toString());
 
         return ResponseEntity.ok("로그아웃 완료");
-
-
     }
 
 
+    //유저정보 반환
     @GetMapping("/info")
-    public ResponseEntity<UserInfoResponseDto> userInfo(@AuthenticationPrincipal UserEntity user) {
-
-        UserEntity userEntity = userService.getUserById(user.getId());
-
-        List<UserAddressEntity> addresses = userAddressRepository.findAllByUser(userEntity);
-        UserAccountEntity account =
-                userAccountRepository.findByUser(userEntity); // 1:1 관계니까 하나만
-
-        UserInfoResponseDto dto = UserInfoConverter.toDto(userEntity, addresses, account);
-        return ResponseEntity.ok(dto);
-    }
-
-
-    //유저정보 수정
-    //PUT은 기존 자원을 "전체 수정"할 때 쓰는 HTTP 메서드야
-    @PutMapping("/info")
-    public ResponseEntity<String> updateUserInfo(
-            @AuthenticationPrincipal UserEntity user,
-            @RequestBody UserInfoUpdateRequestDto dto
+    public ResponseEntity<?> userInfo(
+            @AuthenticationPrincipal UserEntity user
     ) {
 
+
+
         UserEntity userentity=userService.getUserById(user.getId());
-        userService.updateUser(userentity, dto);
-        return ResponseEntity.ok("유저 정보와 배송지 수정 완료 ✅");
+
+        //dto변환
+        UserInfoResponseDto responseDto= UserInfoConverter.toDto(userentity);
+
+
+
+
+        return new ResponseEntity<>(responseDto, HttpStatus.OK);
+
     }
-
-
 
 
 
