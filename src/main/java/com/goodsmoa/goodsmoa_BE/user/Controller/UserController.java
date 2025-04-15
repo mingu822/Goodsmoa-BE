@@ -73,7 +73,12 @@ public class UserController {
 
     //로그아웃
     @PostMapping("/auth/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
+    public ResponseEntity<?> logout(   @AuthenticationPrincipal UserEntity user,HttpServletResponse response ) {
+
+
+        // ✅ DB에 저장된 refreshToken 비우기
+        userService.removeRefreshToken(user);
+
 
         // ✅ accessToken 쿠키 삭제
         ResponseCookie deleteAccessToken = ResponseCookie.from("accessToken", "")
