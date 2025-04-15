@@ -134,22 +134,21 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         // ✅ 쿠키로 전달
 
-        //응답헤더에 setcookie로 프론트에 쿠키 심어줌
-        response.setHeader("Set-Cookie",
-                "refreshToken=" + refreshToken + "; " +
-                        "HttpOnly; " +
-                        "Path=/; " +
-                        "Max-Age=1800; " + // 30분
-                        "SameSite=Lax"); // ✅ Secure 제거(배포할떄만쓰자), SameSite도 Lax로 변경!
-
-
-        //응답헤더에 setcookie로 프론트에 쿠키 심어줌
-        response.setHeader("Set-Cookie",
+        // ✅ AccessToken → 30분짜리
+        response.addHeader("Set-Cookie",
                 "accessToken=" + accessToken + "; " +
                         "HttpOnly; " +
                         "Path=/; " +
-                        "Max-Age=2592000; " + // 30일
-                        "SameSite=Lax"); // ✅ Secure 제거(배포할떄만쓰자), SameSite도 Lax로 변경!
+                        "Max-Age=1800; " + // ⏰ 30분!
+                        "SameSite=Lax");
+
+        // ✅ RefreshToken → 30일짜리
+        response.addHeader("Set-Cookie",
+                "refreshToken=" + refreshToken + "; " +
+                        "HttpOnly; " +
+                        "Path=/; " +
+                        "Max-Age=2592000; " + // ⏰ 30일!
+                        "SameSite=Lax");
 
 
         log.info("✅ {} 로그인 완료! AccessToken: {}, RefreshToken: {}", registrationId, accessToken, refreshToken);

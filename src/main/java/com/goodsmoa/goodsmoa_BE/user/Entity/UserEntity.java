@@ -53,4 +53,17 @@ public class UserEntity {
 
     @Column(name = "refresh_token")
     private String refreshToken;
+
+
+
+    //유저 정보 수정 메서드(setter 역할)
+    public void updateUserInfo(String name, String nickname, String email, String phoneNumber, String content, String image) {
+        this.name = name;
+        this.nickname = nickname;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.content = content;
+        this.image = image;
+    }
+
 }
