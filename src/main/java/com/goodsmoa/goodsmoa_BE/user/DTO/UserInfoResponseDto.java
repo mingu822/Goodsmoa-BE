@@ -3,10 +3,11 @@ package com.goodsmoa.goodsmoa_BE.user.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 
-@Data
-@AllArgsConstructor
+import java.util.List;
+
+@Getter
 @Builder
 public class UserInfoResponseDto {
     private String id;          // 유저 ID
@@ -21,4 +22,7 @@ public class UserInfoResponseDto {
     private Boolean status;     // 계정 활성 상태
     private Integer reportCount;// 신고 횟수
     private String role;        // 역할
+
+    private List<AddressResponseDto> addresses;
+    private AccountResponseDto account;
 }
