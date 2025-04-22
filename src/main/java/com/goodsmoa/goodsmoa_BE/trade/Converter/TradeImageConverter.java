@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 @Component
 public class TradeImageConverter {
 
+
     public TradeImageResponse toResponse(TradeImageEntity entities) {
          return TradeImageResponse.builder()
                  .id(entities.getId())
@@ -20,9 +21,9 @@ public class TradeImageConverter {
                  .build();
     }
 
-    public TradeImageEntity toEntity(TradeImageRequest request, TradePostEntity tradePostEntity) {
+    public TradeImageEntity toEntity(String imagePath, TradePostEntity tradePostEntity) {
         return TradeImageEntity.builder()
-                .imagePath(request.getImagePath())
+                .imagePath(imagePath)
                 .tradePostEntity(tradePostEntity)
                 .build();
 

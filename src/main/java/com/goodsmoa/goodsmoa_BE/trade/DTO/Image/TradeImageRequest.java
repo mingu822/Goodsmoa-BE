@@ -15,7 +15,8 @@ import java.util.List;
 public class TradeImageRequest {
 
     private long postId;
+
     @NotBlank(message = "이미지 경로를 설정해주세요")
-    private String imagePath;
+    private List<String> imagePath;
 }
 

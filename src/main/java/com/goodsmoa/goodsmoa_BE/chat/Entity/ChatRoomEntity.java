@@ -4,6 +4,8 @@ import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -25,7 +27,15 @@ public class ChatRoomEntity {
 
     // 채팅방 만드는 사람의 유저아이디
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id" )
-    private UserEntity user;
+    @JoinColumn(name= "sender_id", nullable = false)
+    private UserEntity sender;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name= "receiver_id", nullable = false)
+    private UserEntity receiver;
+
+
+
+
 }
 
