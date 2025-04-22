@@ -29,8 +29,14 @@ public class TradePostController {
         return tradePostService.createTradePost(user, request);
     }
 
-//    임시 저장? 글 쓸 떄 같이 저장?
-
+    // 중고거래 글에 이미지 추가
+    @PostMapping("/{id}/image/add")
+    public ResponseEntity<String> addImage(
+            @PathVariable Long id,
+            @RequestBody TradeImageRequest imageRequests) {
+        tradePostService.addImage(id, imageRequests);
+        return ResponseEntity.ok("이미지 추가 완료");
+    }
 
     // 중고거래 글 업데이트
     @PutMapping("/update/{id}")

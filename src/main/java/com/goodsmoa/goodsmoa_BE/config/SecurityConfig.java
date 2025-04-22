@@ -110,6 +110,7 @@ public class SecurityConfig {
 
         //이거 왜인지 작동안함-> 걍 필터에서 처리함
         http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/login/**", "/oauth2/**", "/public/**", "/error").permitAll() // ✅ 로그인 관련 요청 모두 허용
                 .requestMatchers("/mypage/**", "/orders/**", "/cart/**").authenticated() // 로그인 필요
                 .anyRequest().permitAll()

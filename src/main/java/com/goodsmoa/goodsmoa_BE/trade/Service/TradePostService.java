@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -38,16 +39,27 @@ public class TradePostService {
     private final TradeImageConverter tradeImageConverter;
     private final UserRepository userRepository;
 
-
+//.
     // 중고거래 글 안에 쓸 사진 등록
     @Transactional
-    public ResponseEntity<TradeImageResponse> addImage(TradeImageRequest tradeImageRequest) {
-        TradePostEntity postEntity = tradePostRepository.findById(tradeImageRequest.getPostId()).get();
-        TradeImageEntity tradeImageEntity = tradeImageConverter.toEntity(tradeImageRequest,postEntity);
+    public void addImage(Long postId, TradeImageRequest imageRequests) {
+        TradePostEntity postEntity = tradePostRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
-        TradeImageResponse reponse  = tradeImageConverter.toResponse(tradeImageEntity);
-        return ResponseEntity.ok(reponse);
+        List<TradeImageEntity> newImages = imageRequests.getImagePath()
+                .stream()
+                .map(imagePath -> TradeImageEntity.builder()
+                        .imagePath(imagePath)
+                        .tradePostEntity(postEntity)
+                        .build())
+                .collect(Collectors.toList());
+
+        postEntity.addImagePath(newImages); // 기존 이미지 유지하고 새로운 이미지 추가
+
+        tradePostRepository.save(postEntity);
     }
+
+
 
     //   중고거래 글 쓰기
     @Transactional

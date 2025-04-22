@@ -21,7 +21,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 public class TradePostEntity {
-
+//
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -75,11 +75,10 @@ public class TradePostEntity {
 
 
     // 이미지를 변경하는 메서드
-    public void updateImagePath(List<TradeImageEntity> updateImages) {
+    public void addImagePath(List<TradeImageEntity> updateImages) {
         if (this.image == null) {
             this.image = new ArrayList<>(); // 리스트가 null이면 새로 생성
         }
-        this.image.clear(); // 기존 이미지 제거
         this.image.addAll(updateImages); // 새로운 이미지 추가
     }
 
