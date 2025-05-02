@@ -13,13 +13,13 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Slf4j
 public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer {
 
-
+    private JwtProvider jwtProvider;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
+                .addInterceptors(new JwtAuthInterceptor(jwtProvider))
                 .setAllowedOrigins("*");
-//                .addInterceptors(new JwtAuthInterceptor(jwtProvider));
 
         registry.addEndpoint("/ws-sockjs") // SockJS용
                 .setAllowedOriginPatterns("*")
