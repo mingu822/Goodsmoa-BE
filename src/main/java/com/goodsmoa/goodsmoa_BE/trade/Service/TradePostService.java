@@ -3,6 +3,7 @@ package com.goodsmoa.goodsmoa_BE.trade.Service;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
+import com.goodsmoa.goodsmoa_BE.elasticsearch.Service.TradePostSearchService;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeImageConverter;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostConverter;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageRequest;
@@ -38,7 +39,7 @@ public class TradePostService {
     private final CategoryRepository categoryRepository;
     private final TradeImageConverter tradeImageConverter;
     private final UserRepository userRepository;
-
+    private final TradePostSearchService tradePostSearchService;
 //.
     // 중고거래 글 안에 쓸 사진 등록
     @Transactional
@@ -77,6 +78,9 @@ public class TradePostService {
             tradeImageRepository.saveAll(tradeImageEntities); // 이미지 저장
         }
         TradePostResponse response = tradePostConverter.toResponse(tradePostEntity,tradeImageEntities);
+
+        tradePostSearchService.savePost(tradePostEntity); // 엘라스틱 서치 저장
+
         return ResponseEntity.ok(response);
     }
 

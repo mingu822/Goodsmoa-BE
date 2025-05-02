@@ -26,7 +26,13 @@ public class TradePostDetailResponse {
 
     private String categoryName;
 
-    private String userName;
+    private String nickName;
+
+    private String image;
+
+    private String userId;
+
+    private String thumbnailImage;
 
     private List<TradeImageEntity> imageUrl;
 

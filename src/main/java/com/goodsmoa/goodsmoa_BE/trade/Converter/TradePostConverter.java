@@ -81,7 +81,7 @@ public class TradePostConverter {
                 .hashtag(request.getHashtag())
                 .build();
     }
-
+    // Entity → DetailResponse 변환
     public TradePostDetailResponse detailResponse(TradePostEntity entity) {
         return TradePostDetailResponse.builder()
                 .id(entity.getId())
@@ -89,7 +89,9 @@ public class TradePostConverter {
                 .content(entity.getContent())
                 .hashtag(entity.getHashtag())
                 .categoryName(entity.getCategory().getName())
-                .userName(entity.getUser().getName())
+                .nickName(entity.getUser().getNickname())
+                .userId(entity.getUser().getId())
+                .image(entity.getUser().getImage())
                 .imageUrl(entity.getImage())
                 .delivery(entity.getDelivery())
                 .deliveryPrice(entity.getDeliveryPrice())

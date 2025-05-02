@@ -28,6 +28,14 @@ public class ChatController {
         try {
             log.info("📥 메시지 수신: {}", chatMessage);
 
+            // 유저 정보 확인 및 설정
+            if (user != null) {
+                chatMessage.setSenderId(user.getId()); // 또는 setSenderId(user.getId())
+                log.info("💡 보낸 사람: {}", user.getId());
+            } else {
+                log.warn("⚠️ 인증된 유저 정보가 없습니다.");
+            }
+
             // 메시지 DB 저장
             chatService.saveChatMessage(chatMessage);
 

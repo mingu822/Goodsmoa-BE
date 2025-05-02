@@ -92,6 +92,11 @@ dependencies {
 	// 웹소켓
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
+	// Elasticsearch 클라이언트
+//	implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:8.18.0'
+
+	//Elasticsearch
+	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 }
 
 tasks.named('test') {
