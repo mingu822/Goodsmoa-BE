@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Toss 테스트 결제</title>
+    <script src="https://js.tosspayments.com/v1/payment"></script>
+</head>
+<body>
+<h2>테스트 결제</h2>
+<button id="pay-button">결제하기</button>
+
+<script>
+    const tossPayments = TossPayments("test_ck_AQ92ymxN342Zya29jK2KrajRKXvd");
+
+    async function startPayment() {
+        const response = await fetch('http://localhost:8080/payment/toss', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify({
+                orderId: 11,
+                postName: "도라에몽 제품",
+                postThumbnail: "https://example.com/thumbnail.jpg",
+                productsPrice: 40000,
+                deliveryPrice: 3000,
+                totalPrice: 43000
+            })
+        });
+
+        const data = await response.json();
+
+        tossPayments.requestPayment('카드', {
+            amount: data.amount,
+            orderId: data.orderCode,
+            orderName: data.orderName,
+            customerName: data.customerName,
+            successUrl: data.successUrl,
+            failUrl: data.failUrl
+        });
+    }
+
+    document.getElementById('pay-button').onclick = startPayment;
+
+    // 실패 후 리다이렉트되었을 경우, failUrl에 code, message, orderId가 쿼리로 포함되어 있을 것
+    async function handleFailure() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const message = urlParams.get('message');
+        const orderId = urlParams.get('orderId');
+
+        if (code && message && orderId) {
+            alert("결제가 실패했습니다. 다시 시도합니다.");
+
+            const response = await fetch(`http://localhost:8080/fail?code=${code}&message=${message}&orderId=${orderId}`);
+            const data = await response.json();
+
+            // 다시 결제 요청
+            tossPayments.requestPayment('카드', {
+                amount: data.amount,
+                orderId: data.orderId,
+                orderName: data.orderName,
+                customerName: data.customerName,
+                successUrl: data.successUrl,
+                failUrl: data.failUrl
+            });
+        }
+    }
+
+    handleFailure(); // 페이지 로드시 실패 처리 여부 확인
+</script>
+
+</body>
+</html>

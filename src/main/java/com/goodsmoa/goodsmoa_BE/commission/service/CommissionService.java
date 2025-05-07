@@ -30,7 +30,7 @@ public class CommissionService {
     private final CommissionPostConverter commissionPostConverter;
 
 
-    /// 임시 커미션 글 생성
+    // 임시 커미션 글 생성
     public ResponseEntity<SavePostResponse> saveCommissionPost(@AuthenticationPrincipal UserEntity user, SavePostRequest request) {
 
         CommissionPostEntity entity = commissionPostConverter.saveToEntity(request,user);
@@ -42,7 +42,7 @@ public class CommissionService {
         return ResponseEntity.ok(response);
     }
 
-    /// 상세 신청 양식 만들기
+    // 상세 신청 양식 만들기
     public ResponseEntity<CommissionDetailResponse> createCommissionDetail(CommissionDetailRequest request) {
 
         log.info("request.getCommissionId() : "+ String.valueOf(request.getCommissionId()));
@@ -60,7 +60,7 @@ public class CommissionService {
         return ResponseEntity.ok(response);
     }
 
-    /// 완전한 커미션글 생성 및 수정 시 사용
+    // 완전한 커미션글 생성 및 수정 시 사용
     public ResponseEntity<PostResponse> updateCommissionPost(UserEntity user, PostRequest request) {
 
         Optional<CommissionPostEntity> oe = commissionRepository.findById(request.getId());

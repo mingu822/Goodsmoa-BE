@@ -50,7 +50,7 @@ public class ProductController {
     // 상품글 리스트 조회
     @GetMapping("/post")
     public ResponseEntity<Page<PostsResponse>> getProductPostList(
-            @PageableDefault(size = 10, sort = "createAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return productService.getProductPostList(pageable);
     }
 
