@@ -21,7 +21,7 @@ public class ProductPostEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)
-    private long id;
+    private Long id;
 
     @Column(name = "title", length = 100, nullable = false)
     private String title;
