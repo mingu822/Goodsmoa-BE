@@ -10,5 +10,6 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "toss")
 public class TossProperties {
+    
     private String secretKey;
 }

@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 public class OrderPHResponse {
 
     // 결제 완료 후 보내주는 정보
-    // TODO 구매내역에서 어떤 제품을 보여줄 것인가?????
 
     private Long id;
 

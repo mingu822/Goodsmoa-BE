@@ -47,4 +47,5 @@ public class PaymentEntity {
     public enum PaymentStatus {
         READY, SUCCESS, FAILED
     }
+
 }

@@ -30,4 +30,5 @@ public class OrderItemEntity {
     // 몇 개 샀는지
     @Column(nullable = false)
     private Integer quantity;
+
 }

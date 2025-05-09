@@ -45,6 +45,7 @@ public class TossPaymentService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper;
 
+
     // 결제할 때 필요한 정보를 반환
     public ResponseEntity<TossPaymentRequest> requestPayment(OrderResponse response) {
         OrderEntity orderEntity = orderRepository.findById(response.getOrderId())
@@ -53,7 +54,6 @@ public class TossPaymentService {
         return ResponseEntity.ok(request);
     }
 
-    // todo 주문내역을 볼 때 어떤 상품으로 볼 건지 선택하기(회의 필요)
     @Transactional
     public ResponseEntity<OrderPHResponse> confirmPayment(String paymentKey, String orderId, int amount) {
 
