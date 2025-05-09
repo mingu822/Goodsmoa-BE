@@ -20,4 +20,5 @@ public class TossSuccessResponse {
     private String customerName;    // 구매자 이름
 
     private String method;          // 결제 방식 (e.g. 카드, 가상계좌 등)
+
 }

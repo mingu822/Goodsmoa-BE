@@ -91,4 +91,5 @@ public class OrderEntity {
     public enum OrderStatus {
         배송준비, 배송중, 배송완료
     }
+
 }

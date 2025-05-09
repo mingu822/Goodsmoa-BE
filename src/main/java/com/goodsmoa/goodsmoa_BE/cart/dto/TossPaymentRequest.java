@@ -21,4 +21,5 @@ public class TossPaymentRequest {
 
     private String failUrl;       // 결제 실패 시 이동할 URL
 
+
 }

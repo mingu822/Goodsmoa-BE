@@ -25,4 +25,5 @@ public class OrderResponse {        // 결제하기 창
 
     private Integer totalPrice;
 
+
 }
