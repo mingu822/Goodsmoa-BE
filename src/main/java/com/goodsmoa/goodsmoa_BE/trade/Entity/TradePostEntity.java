@@ -54,11 +54,11 @@ public class TradePostEntity {
 
     private Boolean direct;
 
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    private LocalDateTime updatedAt;
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @Column(name = "thumbnail_image" , nullable = false)
+    @Column(name = "thumbnail_image" )
     private String thumbnailImage;
 
     private String place;
@@ -75,11 +75,17 @@ public class TradePostEntity {
 
 
     // 이미지를 변경하는 메서드
-    public void addImagePath(List<TradeImageEntity> updateImages) {
+    public void addImageList(List<TradeImageEntity> updateImages) {
         if (this.image == null) {
             this.image = new ArrayList<>(); // 리스트가 null이면 새로 생성
         }
         this.image.addAll(updateImages); // 새로운 이미지 추가
+    }
+    public void addImage(TradeImageEntity updateImage) {
+        if (this.image == null) {
+            this.image = new ArrayList<>();
+        }
+        this.image.add(updateImage);
     }
 
 //    끌어올림 하는 메서드
@@ -95,15 +101,18 @@ public class TradePostEntity {
     }
 
     /** ✅ 게시글 내용 수정 */
-    public void updatePost(TradePostRequest request) {
+    public void updatePost(TradePostRequest request,String contentWithImages) {
         if(request.getTitle() != null) this.title = request.getTitle();
-        if(request.getContent() != null) this.content = request.getContent();
+        this.content = contentWithImages;
+
         if(this.productPrice < 0 ) {
             throw new IllegalArgumentException("가격은 음수가 될 수 없습니다.");
         }
         this.productPrice = request.getProductPrice();
+
         if(request.getHashtag() != null) this.hashtag = request.getHashtag();
-        if(request.getThumbnailImage() != null) this.thumbnailImage = request.getThumbnailImage();
+
+//        if(request.getThumbnailImage() != null) this.thumbnailImage = request.getThumbnailImage();
         this.tradeStatus = request.getTradeStatus();
         this.conditionStatus = request.getConditionStatus();
 
@@ -120,11 +129,19 @@ public class TradePostEntity {
     public void updateTradeLocation(TradePostRequest request) {
         if(request.getPlace() != null) this.place = request.getPlace();
     }
+
+    public void updateThumbnailImage(String newThumbnailUrl) {
+        this.thumbnailImage = newThumbnailUrl;
+    }
+
     public enum ConditionStatus {
         중고, 새상품, 교환
     }
     public enum TradeStatus {
         판매중, 거래중, 완료
     }
+
+
+
 }
 

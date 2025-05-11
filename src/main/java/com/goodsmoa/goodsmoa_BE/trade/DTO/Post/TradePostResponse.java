@@ -17,6 +17,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TradePostResponse {
+
+    private Long id;
+
     private String title;
 
     private String content;

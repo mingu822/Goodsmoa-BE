@@ -13,15 +13,10 @@ import lombok.Getter;
 public class TradeLikeRequest {
 
     @NotNull
-    private Long trade;
+    private Long tradeId;
 
 
-    public TradeLikeEntity toEntity(TradePostEntity trade, UserEntity user) {
-        return TradeLikeEntity.builder()
-                .trade(trade)
-                .user(user)
-                .build();
-    }
+
 }
 
 
