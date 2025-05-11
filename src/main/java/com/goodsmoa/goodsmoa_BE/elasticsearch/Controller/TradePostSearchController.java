@@ -18,7 +18,8 @@ public class TradePostSearchController {
     private final TradePostSearchService searchService;
 
     @GetMapping
-    public List<TradePostDetailResponse> search(@RequestParam String keyword) {
+    public List<TradePostDetailResponse> search(@RequestParam String keyword)
+    {
         return searchService.search(keyword);
     }
 }

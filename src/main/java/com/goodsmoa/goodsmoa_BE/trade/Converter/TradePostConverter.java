@@ -22,6 +22,7 @@ public class TradePostConverter {
     // Entity → Response 변환
     public TradePostResponse toResponse(TradePostEntity entity, List<TradeImageEntity> imageEntity) {
         return TradePostResponse.builder()
+                .id(entity.getId())
                 .user(entity.getUser())
                 .title(entity.getTitle())
                 .content(entity.getContent())
@@ -62,17 +63,17 @@ public class TradePostConverter {
     }
 
     // Request → Entity 변환
-    public TradePostEntity toEntity(TradePostRequest request, Category category, UserEntity user) {
+    public TradePostEntity toEntity(TradePostRequest request, Category category, UserEntity user, String thumbnailUrl,String contentWithImages) {
         return TradePostEntity.builder()
                 .user(user)  // 수정: User 객체를 직접 전달
                 .category(category)  // 수정: Category 객체를 직접 전달
                 .title(request.getTitle())
-                .content(request.getContent())
+                .content(contentWithImages)
                 .productPrice(request.getProductPrice())
                 .conditionStatus(request.getConditionStatus())
                 .tradeStatus(request.getTradeStatus())
                 .delivery(request.getDelivery())
-                .thumbnailImage(request.getThumbnailImage())
+                .thumbnailImage(thumbnailUrl)
                 .deliveryPrice(request.getDeliveryPrice())
                 .views(0L)
                 .createdAt(LocalDateTime.now())

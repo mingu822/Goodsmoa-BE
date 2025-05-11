@@ -8,9 +8,11 @@ import com.goodsmoa.goodsmoa_BE.trade.Service.TradePostService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,31 +24,40 @@ public class TradePostController {
     private final TradePostService tradePostService;
 
     // 중고거래 글 작성
-    @PostMapping("/create")
+    @PostMapping(value="/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TradePostResponse> createTradePost(
             @AuthenticationPrincipal UserEntity user,
-            @RequestBody TradePostRequest request) {
-        return tradePostService.createTradePost(user, request);
+            @RequestPart("request") TradePostRequest request,
+            @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage,
+            @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages,
+            @RequestPart(value = "productImages", required = false) List<MultipartFile> productImages)
+    {
+        TradeImageRequest imageRequest = new TradeImageRequest();
+        imageRequest.setThumbnailImage(thumbnailImage);
+        imageRequest.setContentImages(contentImages);
+        imageRequest.setProductImages(productImages);
+        return tradePostService.createTradePost(user, request,imageRequest);
     }
 
     // 중고거래 글에 이미지 추가
-    @PostMapping("/{id}/image/add")
-    public ResponseEntity<String> addImage(
-            @PathVariable Long id,
-            @RequestBody TradeImageRequest imageRequests) {
-        tradePostService.addImage(id, imageRequests);
-        return ResponseEntity.ok("이미지 추가 완료");
-    }
+//    @PostMapping("/{id}/image/add")
+//    public ResponseEntity<String> addImage(
+//            @PathVariable Long id,
+//            @RequestBody TradeImageRequest imageRequests) {
+//        tradePostService.addImage(id, imageRequests);
+//        return ResponseEntity.ok("이미지 추가 완료");
+//    }
 
-    // 중고거래 글 업데이트
-    @PutMapping("/update/{id}")
+    @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TradePostUpdateResponse> updateTradePost(
             @AuthenticationPrincipal UserEntity user,
             @PathVariable Long id,
-            @RequestBody TradePostRequest request
-            ) {
-        return tradePostService.updateTradePost(user, id, request);
+            @RequestPart("request") TradePostRequest request,
+            @RequestPart(value = "imageRequest", required = false) TradeImageUpdateRequest imageRequest
+    ) {
+        return tradePostService.updateTradePost(user, id, request, imageRequest);
     }
+
 
     // 중고거래 글 삭제
     @DeleteMapping("/delete/{id}")

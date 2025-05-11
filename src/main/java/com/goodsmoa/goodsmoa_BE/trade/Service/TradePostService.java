@@ -4,6 +4,7 @@ package com.goodsmoa.goodsmoa_BE.trade.Service;
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 import com.goodsmoa.goodsmoa_BE.elasticsearch.Service.TradePostSearchService;
+import com.goodsmoa.goodsmoa_BE.fileUpload.FileUploadService;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeImageConverter;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostConverter;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageRequest;
@@ -23,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -40,43 +42,94 @@ public class TradePostService {
     private final TradeImageConverter tradeImageConverter;
     private final UserRepository userRepository;
     private final TradePostSearchService tradePostSearchService;
-//.
+    private final FileUploadService fileUploadService;
+
+    //.
     // 중고거래 글 안에 쓸 사진 등록
-    @Transactional
-    public void addImage(Long postId, TradeImageRequest imageRequests) {
-        TradePostEntity postEntity = tradePostRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
-
-        List<TradeImageEntity> newImages = imageRequests.getImagePath()
-                .stream()
-                .map(imagePath -> TradeImageEntity.builder()
-                        .imagePath(imagePath)
-                        .tradePostEntity(postEntity)
-                        .build())
-                .collect(Collectors.toList());
-
-        postEntity.addImagePath(newImages); // 기존 이미지 유지하고 새로운 이미지 추가
-
-        tradePostRepository.save(postEntity);
-    }
+//    @Transactional
+//    public void addImage(Long postId, TradeImageRequest imageRequests) {
+//        TradePostEntity postEntity = tradePostRepository.findById(postId)
+//                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+//
+//        List<TradeImageEntity> newImages = imageRequests.getImagePath()
+//                .stream()
+//                .map(imagePath -> TradeImageEntity.builder()
+//                        .imagePath(imagePath)
+//                        .tradePostEntity(postEntity)
+//                        .build())
+//                .collect(Collectors.toList());
+//
+//        postEntity.addImagePath(newImages); // 기존 이미지 유지하고 새로운 이미지 추가
+//
+//        tradePostRepository.save(postEntity);
+//    }
 
 
 
     //   중고거래 글 쓰기
     @Transactional
-    public ResponseEntity<TradePostResponse> createTradePost( UserEntity user, TradePostRequest request) {
+    public ResponseEntity<TradePostResponse> createTradePost( UserEntity user, TradePostRequest request, TradeImageRequest imageRequest) {
         Category category = categoryRepository.getReferenceById(request.getCategoryId());
 
-        TradePostEntity tradePostEntity = tradePostConverter.toEntity(request, category, user);
+//        String thumbnailUrl = null;
+//        if(imageRequest.getThumbnailImage() != null) {
+//            thumbnailUrl = fileUploadService.uploadSingleImage(imageRequest.getThumbnailImage());
+//
+//        }
+        //썸네일
+        //http://localhost:8080/trade/thumbnail/be2fb8e0-5765-4dd6-8e32-715387162fc4_%E1%84%86%E1%85%A6%E1%84%82%E1%85%B2%20%E1%84%80%E1%85%AE%E1%84%89%E1%85%A5%E1%86%BC%E1%84%83%E1%85%A9.png
+        String thumbnailUrl = null;
+        if (imageRequest.getThumbnailImage() != null) {
+            thumbnailUrl = fileUploadService.uploadSingleImage(imageRequest.getThumbnailImage(), "thumbnail");
+        }
+        //내용 안에 이미지
+        List<String> contentUrls = fileUploadService.uploadMultiImages(imageRequest.getContentImages(), "content");
+        //http://localhost:8080/trade/content/ + url
+        StringBuilder contentWithImages = new StringBuilder(request.getContent());
+        for (String url : contentUrls) {
+            contentWithImages.append("<br><img src='").append(url).append("'/>");
+//            contentWithImages.append(url).append(" ");
+        }
+        String finalContent = contentWithImages.toString();
+
+        TradePostEntity tradePostEntity = tradePostConverter.toEntity(request, category, user,thumbnailUrl,finalContent);
 
         tradePostRepository.save(tradePostEntity);
 
         List<TradeImageEntity> tradeImageEntities = new ArrayList<>();
 
-        if (request.getImagePath() != null && !request.getImagePath().isEmpty()) {
-            tradeImageEntities = tradeImageConverter.toEntityList(request, tradePostEntity);
-            tradeImageRepository.saveAll(tradeImageEntities); // 이미지 저장
+        //http://localhost:8080/trade/product/ + url
+        //상품 이미지
+        List<String> productUrls = fileUploadService.uploadMultiImages(imageRequest.getProductImages(), "product");
+        for (String url : productUrls) {
+            tradeImageEntities.add(TradeImageEntity.builder()
+                    .imagePath(url)
+                    .tradePostEntity(tradePostEntity)
+                    .build());
         }
+//        if (request.getImagePath() != null && !request.getImagePath().isEmpty()) {
+//            tradeImageEntities = tradeImageConverter.toEntityList(request, tradePostEntity);
+//            tradeImageRepository.saveAll(tradeImageEntities); // 이미지 저장
+//        }
+//
+//        List<String> contentUrl = fileUploadService.uploadMultiImages(imageRequest.getContentImages());
+//        for(String url : contentUrl){
+//            tradeImageEntities.add(TradeImageEntity.builder()
+//                    .imagePath(url)
+//                    .tradePostEntity(tradePostEntity)
+//                    .build());
+//        }
+//
+//        List<String> productUrls = fileUploadService.uploadMultiImages(imageRequest.getProductImages());
+//        for(String url : productUrls){
+//            tradeImageEntities.add(TradeImageEntity.builder()
+//                    .imagePath(url)
+//                    .tradePostEntity(tradePostEntity)
+//                    .build());
+//        }
+
+        tradeImageRepository.saveAll(tradeImageEntities);
+
         TradePostResponse response = tradePostConverter.toResponse(tradePostEntity,tradeImageEntities);
 
         tradePostSearchService.savePost(tradePostEntity); // 엘라스틱 서치 저장
@@ -85,19 +138,82 @@ public class TradePostService {
     }
 
     //    중고거래 글 업뎃
+//    @Transactional
+//    public ResponseEntity<TradePostUpdateResponse> updateTradePost(UserEntity user, Long tradePostEntityId , TradePostRequest request) {
+//        TradePostEntity tradePostEntity = tradePostRepository.findById(tradePostEntityId).orElseThrow(()-> new EntityNotFoundException("해당 거래글이 존재하지 않습니다."));
+//        if(!userRepository.existsById(user.getId())) {
+//            return ResponseEntity.notFound().build();
+//        }
+//        tradePostEntity.updatePost(request);
+//        tradePostEntity.updateTradeLocation(request);
+//        tradePostEntity.updateTradeOptions(request);
+//
+//        return ResponseEntity.ok(tradePostConverter.upResponse(tradePostEntity));
+//    }
     @Transactional
-    public ResponseEntity<TradePostUpdateResponse> updateTradePost(UserEntity user, Long tradePostEntityId , TradePostRequest request) {
-        TradePostEntity tradePostEntity = tradePostRepository.findById(tradePostEntityId).orElseThrow(()-> new EntityNotFoundException("해당 거래글이 존재하지 않습니다."));
-        if(!userRepository.existsById(user.getId())) {
-            return ResponseEntity.notFound().build();
-        }
-        tradePostEntity.updatePost(request);
-        tradePostEntity.updateTradeLocation(request);
-        tradePostEntity.updateTradeOptions(request);
+    public ResponseEntity<TradePostUpdateResponse> updateTradePost(UserEntity user, Long tradePostId,
+                                                                   TradePostRequest request, TradeImageUpdateRequest imageRequest) {
 
-        return ResponseEntity.ok(tradePostConverter.upResponse(tradePostEntity));
+        TradePostEntity tradePost = tradePostRepository.findById(tradePostId)
+                .orElseThrow(() -> new EntityNotFoundException("거래 글이 존재하지 않습니다."));
+
+        if (!user.getId().equals(tradePost.getUser().getId())) {
+            throw new UnsupportedOperationException("글 작성자만 수정할 수 있습니다.");
+        }
+
+        // 1. 썸네일 이미지 교체
+        if (imageRequest != null && imageRequest.getNewThumbnailImage() != null) {
+            String newThumbnailUrl = fileUploadService.uploadSingleImage(imageRequest.getNewThumbnailImage(), "thumbnail");
+            tradePost.updateThumbnailImage(newThumbnailUrl);
+        }
+
+        // 2. 본문 이미지 삭제
+        if (imageRequest != null && imageRequest.getDeleteContentImageIds() != null) {
+            tradeImageRepository.deleteAllByIdInBatch(imageRequest.getDeleteContentImageIds());
+        }
+
+        // 3. 본문 이미지 추가 및 HTML 변환
+        StringBuilder contentWithImages = new StringBuilder(request.getContent());
+        if (imageRequest != null && imageRequest.getNewContentImages() != null) {
+            List<String> contentUrls = fileUploadService.uploadMultiImages(imageRequest.getNewContentImages(), "content");
+            for (String url : contentUrls) {
+                contentWithImages.append("<br><img src='").append(url).append("'/>");
+                tradePost.addImage(TradeImageEntity.builder()
+                        .imagePath(url)
+                        .tradePostEntity(tradePost)
+                        .build());
+            }
+        }
+
+        // 4. 상품 이미지 삭제
+        if (imageRequest != null && imageRequest.getDeleteProductImageIds() != null) {
+            tradeImageRepository.deleteAllByIdInBatch(imageRequest.getDeleteProductImageIds());
+        }
+
+        // 5. 상품 이미지 추가
+        if (imageRequest != null && imageRequest.getNewProductImages() != null) {
+            List<String> productUrls = fileUploadService.uploadMultiImages(imageRequest.getNewProductImages(), "product");
+            List<TradeImageEntity> newImages = productUrls.stream()
+                    .map(url -> TradeImageEntity.builder()
+                            .imagePath(url)
+                            .tradePostEntity(tradePost)
+                            .build())
+                    .collect(Collectors.toList());
+            tradePost.addImageList(newImages);
+        }
+
+        // 6. 게시글 정보 업데이트
+        tradePost.updatePost(request, contentWithImages.toString());
+        tradePost.updateTradeLocation(request);
+        tradePost.updateTradeOptions(request);
+
+        return ResponseEntity.ok(tradePostConverter.upResponse(tradePost));
     }
 
+
+
+
+    // 끌어올림 시간
     @Transactional
     public ResponseEntity<TradePostPulledResponse> pullPost(Long id){
         TradePostEntity tradePostEntity = tradePostRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("해당글이 존재하지 않습니다."));

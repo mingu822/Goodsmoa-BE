@@ -5,6 +5,8 @@ import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
@@ -22,9 +24,10 @@ public class TradeLikeEntity {
     @JoinColumn(name = "trade_id", nullable = false)
     private TradePostEntity trade;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
+    private LocalDateTime createAt = LocalDateTime.now();
 
 }
