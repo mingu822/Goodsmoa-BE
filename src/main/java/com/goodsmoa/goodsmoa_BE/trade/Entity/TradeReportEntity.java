@@ -1,8 +1,11 @@
 package com.goodsmoa.goodsmoa_BE.trade.Entity;
 
+import com.goodsmoa.goodsmoa_BE.trade.DTO.Report.TradeReportRequest;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -29,6 +32,15 @@ public class TradeReportEntity {
 
     @Column(nullable = false)
     private String title;
+
+
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    public void updateReport(TradeReportRequest request){
+        if(request.getTitle() != null) this.title = request.getTitle();
+        if(request.getContent() != null) this.content = request.getContent();
+
+    }
 
 }
 

@@ -36,14 +36,14 @@ public class TradeImageConverter {
                 .collect(Collectors.toList());
     }
     // 여러 이미지를 엔티티 형식으로 변환
-    public List<TradeImageEntity> toEntityList(TradePostRequest request, TradePostEntity tradePostEntity) {
-        return request.getImagePath().stream()
-                .map(imagePath -> TradeImageEntity.builder()
-                        .imagePath(imagePath)
-                        .tradePostEntity(tradePostEntity)
-                        .build())
-                .collect(Collectors.toList());
-    }
+//    public List<TradeImageEntity> toEntityList(TradePostRequest request, TradePostEntity tradePostEntity) {
+//        return request.getImagePath().stream()
+//                .map(imagePath -> TradeImageEntity.builder()
+//                        .imagePath(imagePath)
+//                        .tradePostEntity(tradePostEntity)
+//                        .build())
+//                .collect(Collectors.toList());
+//    }
 
 }
 

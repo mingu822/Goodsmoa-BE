@@ -16,6 +16,7 @@ public class TradeImageEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(columnDefinition = "TEXT")
     private String imagePath;
 
 
