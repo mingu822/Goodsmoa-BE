@@ -21,7 +21,16 @@ public class TradeReportConverter {
     }
 
     // Entity → Response 변환
-    public TradeReportResponse toResponse(TradeReportEntity entity) {
+    public TradeReportResponse toResponse( TradeReportEntity entity) {
+        return TradeReportResponse.builder()
+                .nickName(entity.getUser().getNickname())
+                .userId(entity.getUser().getId())
+                .title(entity.getTitle())
+                .content(entity.getContent())
+                .build();
+    }
+
+    public TradeReportResponse updateResponse(TradeReportEntity entity) {
         return TradeReportResponse.builder()
                 .title(entity.getTitle())
                 .content(entity.getContent())

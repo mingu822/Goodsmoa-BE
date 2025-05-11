@@ -17,8 +17,8 @@ import java.util.List;
 @NoArgsConstructor
 public class TradePostRequest {
 
-    @NotBlank(message = "이미지 첨부는 필수입니다.")
-    private String thumbnailImage;
+//    @NotBlank(message = "이미지 첨부는 필수입니다.")
+//    private String thumbnailImage;
 
     @NotBlank(message = "제목은 필수입니다.")
     @Size(max = 50 , message = "제목은 최대 50자까지 가능합니다.")
@@ -56,7 +56,12 @@ public class TradePostRequest {
     @Size(max = 150, message = "해시태그는 최대 150자까지 가능합니다.")
     private String hashtag;
 
-    private List<String> imagePath;
+//    content 용
+//    private List<String> imagePath;
+//    image 테이블
+//    private List<String> detailImagePath;
+
+
 
 }
 
