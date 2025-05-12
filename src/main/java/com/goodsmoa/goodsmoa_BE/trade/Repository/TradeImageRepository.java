@@ -15,5 +15,7 @@ public interface TradeImageRepository extends JpaRepository<TradeImageEntity, Lo
      */
 
     List<TradeImageEntity> findAllById(Long tradeImageEntityId);
+
+    void deleteByImagePath(String path);
 }
 

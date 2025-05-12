@@ -1,6 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.trade.Converter;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
+import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImgUpdateRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class TradePostConverter {
@@ -53,7 +55,12 @@ public class TradePostConverter {
                 .deliveryPrice(entity.getDeliveryPrice())
                 .direct(entity.getDirect())
                 .hashtag(entity.getHashtag())
-                .tradeImage(entity.getImage())
+                .tradeImage(entity.getImage().stream()
+                        .map(img -> TradeImgUpdateRequest.builder()
+                                .id(img.getId())
+                                .imagePath(img.getImagePath())
+                                .build())
+                        .collect(Collectors.toList()))
                 .productPrice(entity.getProductPrice())
                 .thumbnailImage(entity.getThumbnailImage())
                 .id(entity.getId())

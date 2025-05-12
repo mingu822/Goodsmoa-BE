@@ -73,11 +73,18 @@ public class TradePostEntity {
     @OneToMany(mappedBy = "tradePostEntity", fetch = FetchType.LAZY , cascade = CascadeType.ALL , orphanRemoval = true)
     private List<TradeImageEntity> image;
 
+    public void setUser(UserEntity user) {
+        this.user = user;
+    }
+
 
     // 이미지를 변경하는 메서드
     public void addImageList(List<TradeImageEntity> updateImages) {
         if (this.image == null) {
             this.image = new ArrayList<>(); // 리스트가 null이면 새로 생성
+        }
+        for(TradeImageEntity img : updateImages) {
+            img.setTradePostEntity(this);
         }
         this.image.addAll(updateImages); // 새로운 이미지 추가
     }
@@ -85,6 +92,7 @@ public class TradePostEntity {
         if (this.image == null) {
             this.image = new ArrayList<>();
         }
+        updateImage.setTradePostEntity(this);
         this.image.add(updateImage);
     }
 
