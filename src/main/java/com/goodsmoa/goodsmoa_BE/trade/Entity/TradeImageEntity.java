@@ -25,7 +25,9 @@ public class TradeImageEntity {
     @JsonIgnore
     private TradePostEntity tradePostEntity;
 
-
+    public void setTradePostEntity(TradePostEntity tradePostEntity) {
+        this.tradePostEntity = tradePostEntity;
+    }
 
 
 }

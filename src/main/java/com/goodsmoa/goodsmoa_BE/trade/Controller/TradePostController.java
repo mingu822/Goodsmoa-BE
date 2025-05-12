@@ -1,6 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.trade.Controller;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
+import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeImageUpdateConverter;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
@@ -48,13 +49,24 @@ public class TradePostController {
 //        return ResponseEntity.ok("이미지 추가 완료");
 //    }
 
-    @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TradePostUpdateResponse> updateTradePost(
             @AuthenticationPrincipal UserEntity user,
             @PathVariable Long id,
             @RequestPart("request") TradePostRequest request,
-            @RequestPart(value = "imageRequest", required = false) TradeImageUpdateRequest imageRequest
+            @RequestPart(value = "newThumbnailImage", required = false) MultipartFile newThumbnailImage,
+            @RequestPart(value = "newContentImages", required = false) List<MultipartFile> newContentImages,
+            @RequestPart(value = "newProductImages" , required = false) List<MultipartFile> newProductImages,
+            @RequestPart(value = "deleteContentImageIds" , required = false) List<String> deleteContentImageIds,
+            @RequestPart(value = "deleteProductImageIds", required = false) List<Long> deleteProductImageIds
     ) {
+        TradeImageUpdateRequest imageRequest = TradeImageUpdateConverter.toUpdate(
+                newThumbnailImage,
+                newContentImages,
+                newProductImages,
+                deleteContentImageIds,
+                deleteProductImageIds
+        );
         return tradePostService.updateTradePost(user, id, request, imageRequest);
     }
 

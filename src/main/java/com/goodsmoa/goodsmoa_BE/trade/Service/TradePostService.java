@@ -9,6 +9,7 @@ import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeImageConverter;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostConverter;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageResponse;
+import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImgUpdateRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
@@ -64,8 +65,6 @@ public class TradePostService {
 //        tradePostRepository.save(postEntity);
 //    }
 
-
-
     //   중고거래 글 쓰기
     @Transactional
     public ResponseEntity<TradePostResponse> createTradePost( UserEntity user, TradePostRequest request, TradeImageRequest imageRequest) {
@@ -93,6 +92,9 @@ public class TradePostService {
         String finalContent = contentWithImages.toString();
 
         TradePostEntity tradePostEntity = tradePostConverter.toEntity(request, category, user,thumbnailUrl,finalContent);
+
+        tradePostEntity.setUser(user);
+
 
         tradePostRepository.save(tradePostEntity);
 
@@ -157,8 +159,11 @@ public class TradePostService {
         TradePostEntity tradePost = tradePostRepository.findById(tradePostId)
                 .orElseThrow(() -> new EntityNotFoundException("거래 글이 존재하지 않습니다."));
 
-        if (!user.getId().equals(tradePost.getUser().getId())) {
-            throw new UnsupportedOperationException("글 작성자만 수정할 수 있습니다.");
+//        if (!user.getId().equals(tradePost.getUser().getId())) {
+//            throw new UnsupportedOperationException("글 작성자만 수정할 수 있습니다.");
+//        }
+        if(!userRepository.existsById(user.getId())) {
+            return ResponseEntity.notFound().build();
         }
 
         // 1. 썸네일 이미지 교체
@@ -169,7 +174,11 @@ public class TradePostService {
 
         // 2. 본문 이미지 삭제
         if (imageRequest != null && imageRequest.getDeleteContentImageIds() != null) {
-            tradeImageRepository.deleteAllByIdInBatch(imageRequest.getDeleteContentImageIds());
+            List<String> contentImagePaths = imageRequest.getDeleteContentImageIds();
+            for (String path : contentImagePaths) {
+                // imagePath가 해당하는 이미지 삭제
+                tradeImageRepository.deleteByImagePath(path);
+            }
         }
 
         // 3. 본문 이미지 추가 및 HTML 변환
@@ -178,11 +187,8 @@ public class TradePostService {
             List<String> contentUrls = fileUploadService.uploadMultiImages(imageRequest.getNewContentImages(), "content");
             for (String url : contentUrls) {
                 contentWithImages.append("<br><img src='").append(url).append("'/>");
-                tradePost.addImage(TradeImageEntity.builder()
-                        .imagePath(url)
-                        .tradePostEntity(tradePost)
-                        .build());
             }
+
         }
 
         // 4. 상품 이미지 삭제
@@ -199,7 +205,17 @@ public class TradePostService {
                             .tradePostEntity(tradePost)
                             .build())
                     .collect(Collectors.toList());
+
+            List<TradeImageEntity> savedNewImages = tradeImageRepository.saveAll(newImages);
+
             tradePost.addImageList(newImages);
+
+            List<TradeImgUpdateRequest> responseImages = savedNewImages.stream()
+                    .map(img -> TradeImgUpdateRequest.builder()
+                            .id(img.getId())
+                            .imagePath(img.getImagePath())
+                            .build())
+                    .toList();
         }
 
         // 6. 게시글 정보 업데이트
@@ -207,11 +223,9 @@ public class TradePostService {
         tradePost.updateTradeLocation(request);
         tradePost.updateTradeOptions(request);
 
+        // 응답에 DTO를 사용하여 변환
         return ResponseEntity.ok(tradePostConverter.upResponse(tradePost));
     }
-
-
-
 
     // 끌어올림 시간
     @Transactional
