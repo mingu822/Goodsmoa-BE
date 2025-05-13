@@ -118,5 +118,19 @@ public class TradePostConverter {
                 .pulledAt(entity.getPulledAt())
                 .build();
     }
+
+    public TradePostLookResponse lookResponse(TradePostEntity entity) {
+        return TradePostLookResponse.builder()
+                .id(entity.getId())
+                .title(entity.getTitle())
+                .createdAt(entity.getCreatedAt())
+                .thumbnailImage(entity.getThumbnailImage())
+                .views(entity.getViews())
+                .hashtag(entity.getHashtag())
+                .userId(entity.getUser().getId())
+                .userNickName(entity.getUser().getNickname())
+                .userImage(entity.getUser().getImage())
+                .build();
+    }
 }
 

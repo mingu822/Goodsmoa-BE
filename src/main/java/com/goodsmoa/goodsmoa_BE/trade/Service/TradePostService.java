@@ -8,7 +8,6 @@ import com.goodsmoa.goodsmoa_BE.fileUpload.FileUploadService;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeImageConverter;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostConverter;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageRequest;
-import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageResponse;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImgUpdateRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
@@ -20,12 +19,13 @@ import com.goodsmoa.goodsmoa_BE.user.Repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.Response;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -262,6 +262,11 @@ public class TradePostService {
 
 
         return ResponseEntity.ok(tradePostConverter.detailResponse(tradePostEntity));
+    }
+    public ResponseEntity<Page<TradePostLookResponse>> getTradePostList(Pageable pageable) {
+        Page<TradePostEntity> tradePostEntityPage = tradePostRepository.findAll(pageable);
+        Page<TradePostLookResponse> responsePage = tradePostEntityPage.map( tradePostConverter::lookResponse);
+        return ResponseEntity.ok(responsePage);
     }
 
 

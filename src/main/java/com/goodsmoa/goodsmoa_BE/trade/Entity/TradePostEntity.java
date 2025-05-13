@@ -37,7 +37,7 @@ public class TradePostEntity {
 
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String content;
 
     private Integer productPrice;
