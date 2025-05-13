@@ -13,7 +13,7 @@ import java.util.UUID;
 @Service
 public class FileUploadService {
 
-    private final String baseUploadDir = "src/main/resources/static/trade/";
+    private final String baseUploadDir = "src/main/resources/static/";
 
     public String uploadSingleImage(MultipartFile image, String subFolder) {
         if (image == null || image.isEmpty()) return null;

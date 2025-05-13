@@ -79,10 +79,10 @@ public class TradePostService {
         //http://localhost:8080/trade/thumbnail/be2fb8e0-5765-4dd6-8e32-715387162fc4_%E1%84%86%E1%85%A6%E1%84%82%E1%85%B2%20%E1%84%80%E1%85%AE%E1%84%89%E1%85%A5%E1%86%BC%E1%84%83%E1%85%A9.png
         String thumbnailUrl = null;
         if (imageRequest.getThumbnailImage() != null) {
-            thumbnailUrl = fileUploadService.uploadSingleImage(imageRequest.getThumbnailImage(), "thumbnail");
+            thumbnailUrl = fileUploadService.uploadSingleImage(imageRequest.getThumbnailImage(), "trade/thumbnail");
         }
         //내용 안에 이미지
-        List<String> contentUrls = fileUploadService.uploadMultiImages(imageRequest.getContentImages(), "content");
+        List<String> contentUrls = fileUploadService.uploadMultiImages(imageRequest.getContentImages(), "trade/content");
         //http://localhost:8080/trade/content/ + url
         StringBuilder contentWithImages = new StringBuilder(request.getContent());
         for (String url : contentUrls) {
@@ -102,7 +102,7 @@ public class TradePostService {
 
         //http://localhost:8080/trade/product/ + url
         //상품 이미지
-        List<String> productUrls = fileUploadService.uploadMultiImages(imageRequest.getProductImages(), "product");
+        List<String> productUrls = fileUploadService.uploadMultiImages(imageRequest.getProductImages(), "trade/product");
         for (String url : productUrls) {
             tradeImageEntities.add(TradeImageEntity.builder()
                     .imagePath(url)
@@ -168,7 +168,7 @@ public class TradePostService {
 
         // 1. 썸네일 이미지 교체
         if (imageRequest != null && imageRequest.getNewThumbnailImage() != null) {
-            String newThumbnailUrl = fileUploadService.uploadSingleImage(imageRequest.getNewThumbnailImage(), "thumbnail");
+            String newThumbnailUrl = fileUploadService.uploadSingleImage(imageRequest.getNewThumbnailImage(), "trade/thumbnail");
             tradePost.updateThumbnailImage(newThumbnailUrl);
         }
 
@@ -184,7 +184,7 @@ public class TradePostService {
         // 3. 본문 이미지 추가 및 HTML 변환
         StringBuilder contentWithImages = new StringBuilder(request.getContent());
         if (imageRequest != null && imageRequest.getNewContentImages() != null) {
-            List<String> contentUrls = fileUploadService.uploadMultiImages(imageRequest.getNewContentImages(), "content");
+            List<String> contentUrls = fileUploadService.uploadMultiImages(imageRequest.getNewContentImages(), "trade/content");
             for (String url : contentUrls) {
                 contentWithImages.append("<br><img src='").append(url).append("'/>");
             }
@@ -198,7 +198,7 @@ public class TradePostService {
 
         // 5. 상품 이미지 추가
         if (imageRequest != null && imageRequest.getNewProductImages() != null) {
-            List<String> productUrls = fileUploadService.uploadMultiImages(imageRequest.getNewProductImages(), "product");
+            List<String> productUrls = fileUploadService.uploadMultiImages(imageRequest.getNewProductImages(), "trade/product");
             List<TradeImageEntity> newImages = productUrls.stream()
                     .map(url -> TradeImageEntity.builder()
                             .imagePath(url)
