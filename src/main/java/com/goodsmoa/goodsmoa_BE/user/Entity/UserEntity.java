@@ -3,12 +3,12 @@ package com.goodsmoa.goodsmoa_BE.user.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity // JPA의 엔티티임을 선언
+@Entity
 @Getter
 @Setter
-@NoArgsConstructor // 기본 생성자 자동 생성 (JPA에서 필수)
-@AllArgsConstructor // 모든 필드를 포함하는 생성자 자동 생성
-@Builder // 빌더 패턴을 사용하여 객체를 생성할 수 있도록 지원
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "user") // 이 엔티티가 user 테이블과 매핑됨을 명시
 public class UserEntity {
 
