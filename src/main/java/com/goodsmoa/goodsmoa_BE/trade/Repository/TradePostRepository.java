@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface TradePostRepository extends JpaRepository<TradePostEntity, Long> {
     List<TradePostEntity> findAllByOrderByCreatedAtDescPulledAtDesc();
+
+    List<TradePostEntity> findAllByIdNotIn(List<Long> hiddenPostIds);
 }

@@ -75,6 +75,13 @@ public class TradePostEntity {
     @OneToMany(mappedBy = "tradePostEntity", fetch = FetchType.LAZY , cascade = CascadeType.ALL , orphanRemoval = true)
     private List<TradeImageEntity> image;
 
+    @OneToMany(mappedBy = "tradePost", fetch = FetchType.LAZY)
+    private List<UserHiddenPost> hiddenByUsers;
+
+    public boolean isHiddenByUser(UserEntity user){
+        return hiddenByUsers.stream().anyMatch(hiddenPost ->hiddenPost.getUser().equals(user));
+    }
+
     public void setUser(UserEntity user) {
         this.user = user;
     }
