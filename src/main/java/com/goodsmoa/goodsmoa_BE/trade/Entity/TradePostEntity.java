@@ -37,6 +37,7 @@ public class TradePostEntity {
 
     private String title;
 
+    @Setter
     @Column(columnDefinition = "MEDIUMTEXT")
     private String content;
 
@@ -58,6 +59,7 @@ public class TradePostEntity {
 
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @Setter
     @Column(name = "thumbnail_image" )
     private String thumbnailImage;
 
@@ -141,6 +143,11 @@ public class TradePostEntity {
     public void updateThumbnailImage(String newThumbnailUrl) {
         this.thumbnailImage = newThumbnailUrl;
     }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailImage = thumbnailUrl;
+    }
+
 
     public enum ConditionStatus {
         중고, 새상품, 교환
