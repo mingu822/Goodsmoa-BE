@@ -32,7 +32,7 @@ import com.goodsmoa.goodsmoa_BE.security.service.CustomOAuth2UserService;
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
 
-    //✅ 카카오 서비스 객체 주입
+    // 카카오 서비스 객체 주입
     @Autowired
     private CustomOAuth2UserService customOAuth2UserService; // ✅ 객체(Bean)로 주입
 
@@ -60,19 +60,19 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // ✅ 모든 도메인(Origin) 허용 → React Native에서 API 요청 가능
+        // 모든 도메인(Origin) 허용 → React Native에서 API 요청 가능
         configuration.addAllowedOriginPattern("*");
 
-        // ✅ 허용할 HTTP 메서드
+        // 허용할 HTTP 메서드
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        // ✅ 허용할 요청 헤더
+        // 허용할 요청 헤더
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
 
-        // ✅ 프론트엔드에서 응답 헤더에서 Authorization 확인 가능하도록 설정
+        // 프론트엔드에서 응답 헤더에서 Authorization 확인 가능하도록 설정
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
 
-        // ✅ 쿠키 및 인증 정보 포함 허용
+        // 쿠키 및 인증 정보 포함 허용
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -108,10 +108,9 @@ public class SecurityConfig {
 
 
 
-        //이거 왜인지 작동안함-> 걍 필터에서 처리함
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/ws/**").permitAll()
-                .requestMatchers("/login/**", "/oauth2/**", "/public/**", "/error").permitAll() // ✅ 로그인 관련 요청 모두 허용
+                .requestMatchers("/login/**", "/oauth2/**", "/public/**", "/error").permitAll() //  로그인 관련 요청 모두 허용
                 .requestMatchers("/mypage/**", "/orders/**", "/cart/**").authenticated() // 로그인 필요
                 .anyRequest().permitAll()
         );
@@ -121,8 +120,7 @@ public class SecurityConfig {
 
 
 
-        // ✅ OAuth2 로그인 설정 (카카오 로그인)
-        // ✅ OAuth2 로그인 설정 (카카오 로그인)
+        // OAuth2 로그인 설정 (카카오 로그인)
         http.oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo
                         // CustomOAuth2UserService: 🔹 로그인시 카카오 로그인 사용자 정보 처리하고 jwt 발급해줌
