@@ -97,8 +97,9 @@ public class TradePostController {
     //중고거래 리스트 조회
     @GetMapping("/post")
     public ResponseEntity<Page<TradePostLookResponse>> getTradePostList(
+            @AuthenticationPrincipal UserEntity user,
             @PageableDefault(size = 10 , sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
-        return tradePostService.getTradePostList(pageable);
+        return tradePostService.getTradePostList(user,pageable);
     }
 
 }
