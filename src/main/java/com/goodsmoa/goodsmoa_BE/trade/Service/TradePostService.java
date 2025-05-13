@@ -13,6 +13,7 @@ import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Repository.TradeImageRepository;
+import com.goodsmoa.goodsmoa_BE.trade.Repository.TradePostHiddenRepository;
 import com.goodsmoa.goodsmoa_BE.trade.Repository.TradePostRepository;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import com.goodsmoa.goodsmoa_BE.user.Repository.UserRepository;
@@ -44,6 +45,7 @@ public class TradePostService {
     private final UserRepository userRepository;
     private final TradePostSearchService tradePostSearchService;
     private final FileUploadService fileUploadService;
+    private final TradePostHiddenRepository tradePostHiddenRepository;
 
 
     //.
@@ -126,18 +128,6 @@ public class TradePostService {
 
 
     //    중고거래 글 업뎃
-//    @Transactional
-//    public ResponseEntity<TradePostUpdateResponse> updateTradePost(UserEntity user, Long tradePostEntityId , TradePostRequest request) {
-//        TradePostEntity tradePostEntity = tradePostRepository.findById(tradePostEntityId).orElseThrow(()-> new EntityNotFoundException("해당 거래글이 존재하지 않습니다."));
-//        if(!userRepository.existsById(user.getId())) {
-//            return ResponseEntity.notFound().build();
-//        }
-//        tradePostEntity.updatePost(request);
-//        tradePostEntity.updateTradeLocation(request);
-//        tradePostEntity.updateTradeOptions(request);
-//
-//        return ResponseEntity.ok(tradePostConverter.upResponse(tradePostEntity));
-//    }
     @Transactional
     public ResponseEntity<TradePostUpdateResponse> updateTradePost(UserEntity user, Long tradePostId,
                                                                    TradePostRequest request, TradeImageUpdateRequest imageRequest) {
@@ -249,11 +239,21 @@ public class TradePostService {
 
         return ResponseEntity.ok(tradePostConverter.detailResponse(tradePostEntity));
     }
+    // 중고거래 글 전체 조회
     public ResponseEntity<Page<TradePostLookResponse>> getTradePostList(Pageable pageable) {
         Page<TradePostEntity> tradePostEntityPage = tradePostRepository.findAll(pageable);
         Page<TradePostLookResponse> responsePage = tradePostEntityPage.map( tradePostConverter::lookResponse);
         return ResponseEntity.ok(responsePage);
     }
+
+    public List<TradePostEntity> getVisiblePosts(UserEntity user) {
+        List<Long> hiddenPostIds = tradePostHiddenRepository.findAllByUser(user).stream()
+                .map(h -> h.getTradePost().getId())
+                .toList();
+
+        return tradePostRepository.findAllByIdNotIn(hiddenPostIds);
+    }
+
 
 
 
