@@ -48,26 +48,6 @@ public class TradePostService {
     private final TradePostHiddenRepository tradePostHiddenRepository;
 
 
-    //.
-    // 중고거래 글 안에 쓸 사진 등록
-//    @Transactional
-//    public void addImage(Long postId, TradeImageRequest imageRequests) {
-//        TradePostEntity postEntity = tradePostRepository.findById(postId)
-//                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
-//
-//        List<TradeImageEntity> newImages = imageRequests.getImagePath()
-//                .stream()
-//                .map(imagePath -> TradeImageEntity.builder()
-//                        .imagePath(imagePath)
-//                        .tradePostEntity(postEntity)
-//                        .build())
-//                .collect(Collectors.toList());
-//
-//        postEntity.addImagePath(newImages); // 기존 이미지 유지하고 새로운 이미지 추가
-//
-//        tradePostRepository.save(postEntity);
-//    }
-
     //   중고거래 글 쓰기
     @Transactional
     public ResponseEntity<TradePostResponse> createTradePost(UserEntity user, TradePostRequest request, TradeImageRequest imageRequest) {
@@ -239,20 +219,33 @@ public class TradePostService {
 
         return ResponseEntity.ok(tradePostConverter.detailResponse(tradePostEntity));
     }
-    // 중고거래 글 전체 조회
-    public ResponseEntity<Page<TradePostLookResponse>> getTradePostList(Pageable pageable) {
-        Page<TradePostEntity> tradePostEntityPage = tradePostRepository.findAll(pageable);
-        Page<TradePostLookResponse> responsePage = tradePostEntityPage.map( tradePostConverter::lookResponse);
-        return ResponseEntity.ok(responsePage);
-    }
-
-    public List<TradePostEntity> getVisiblePosts(UserEntity user) {
+    // 로그인한 유저 기준으로 숨김 처리된 게시물 제외하고 조회
+    public ResponseEntity<Page<TradePostLookResponse>> getTradePostList(UserEntity user, Pageable pageable) {
         List<Long> hiddenPostIds = tradePostHiddenRepository.findAllByUser(user).stream()
                 .map(h -> h.getTradePost().getId())
                 .toList();
 
-        return tradePostRepository.findAllByIdNotIn(hiddenPostIds);
+        Page<TradePostEntity> tradePostEntityPage;
+
+        if (hiddenPostIds.isEmpty()) {
+            // 숨긴 게시물이 없으면 전체 조회
+            tradePostEntityPage = tradePostRepository.findAll(pageable);
+        } else {
+            // 숨긴 게시물 제외하고 조회
+            tradePostEntityPage = tradePostRepository.findByIdNotIn(hiddenPostIds, pageable);
+        }
+
+        Page<TradePostLookResponse> responsePage = tradePostEntityPage.map(tradePostConverter::lookResponse);
+        return ResponseEntity.ok(responsePage);
     }
+
+//    public List<TradePostEntity> getVisiblePosts(UserEntity user) {
+//        List<Long> hiddenPostIds = tradePostHiddenRepository.findAllByUser(user).stream()
+//                .map(h -> h.getTradePost().getId())
+//                .toList();
+//
+//        return tradePostRepository.findAllByIdNotIn(hiddenPostIds);
+//    }
 
 
 

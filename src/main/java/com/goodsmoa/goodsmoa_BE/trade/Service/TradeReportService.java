@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -71,6 +72,12 @@ public class TradeReportService {
             return ResponseEntity.notFound().build();
         }
         tradeReportRepository.delete(report);
+        // 2. 숨김 처리도 같이 해제
+        TradePostEntity reportedPost = report.getTrade();
+        Optional<UserHiddenPost> hidden = tradePostHiddenRepository.findByUserAndTradePost(user, reportedPost);
+
+        hidden.ifPresent(tradePostHiddenRepository::delete);
+
         return ResponseEntity.ok("삭제 완료되었습니다.");
     }
     @Transactional
