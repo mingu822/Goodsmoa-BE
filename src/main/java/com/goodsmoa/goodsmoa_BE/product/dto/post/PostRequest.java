@@ -35,9 +35,6 @@ public class PostRequest {
     @NotNull(message = "종료 날짜는 필수입니다.")
     private LocalDate endTime;
 
-    @NotNull(message = "게시글 상태는 필수입니다.")
-    private Boolean state;
-
     @Size(max = 16, message = "비밀번호는 최대 16자까지 가능합니다.")
     private String password;
 

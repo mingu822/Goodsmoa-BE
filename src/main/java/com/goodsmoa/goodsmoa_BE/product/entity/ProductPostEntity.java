@@ -26,13 +26,14 @@ public class ProductPostEntity {
     @Column(name = "title", length = 100, nullable = false)
     private String title;
 
+    @Setter
     @Column(name = "content", columnDefinition = "LONGTEXT", nullable = false)
     private String content;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "thumbnail_image" , nullable = false)
+    @Column(name = "thumbnail_image", nullable = false)
     private String thumbnailImage;
 
     @Column(name = "public")
@@ -44,6 +45,7 @@ public class ProductPostEntity {
     @Column(name = "end_time")
     private LocalDate endTime;
 
+    @Setter
     @Column(name = "state", nullable = false)
     private Boolean state = false;  // 기본값 false (임시저장)
 
@@ -64,13 +66,9 @@ public class ProductPostEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    /** ✅ 조회수 증가 */
-    public void increaseViews() {
-        this.views += 1;
-    }
-
-
-    public void updateFromRequest(PostRequest request, Category category, boolean status) {
+    public void updateFromRequest(PostRequest request, Category category
+                                  //, boolean status
+    ) {
         if (request.getTitle() != null) this.title = request.getTitle();
         if (request.getContent() != null) this.content = request.getContent();
         if (request.getThumbnailImage() != null) this.thumbnailImage = request.getThumbnailImage();
@@ -83,7 +81,11 @@ public class ProductPostEntity {
         if (category != null) this.category = category;
 
         // 상태 업데이트
-        this.state = status;
+        // this.state = status;
+    }
+
+    public void setThumbnailImage(String thumbnailPath) {
+        this.thumbnailImage = thumbnailPath;
     }
 
     public void getViews(Long views) {
