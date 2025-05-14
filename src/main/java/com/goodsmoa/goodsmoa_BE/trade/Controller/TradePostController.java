@@ -37,10 +37,15 @@ public class TradePostController {
             @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages,
             @RequestPart(value = "productImages", required = false) List<MultipartFile> productImages)
     {
-        TradeImageRequest imageRequest = new TradeImageRequest();
-        imageRequest.setThumbnailImage(thumbnailImage);
-        imageRequest.setContentImages(contentImages);
-        imageRequest.setProductImages(productImages);
+        TradeImageRequest imageRequest = TradeImageRequest.builder()
+                .thumbnailImage(thumbnailImage)
+                .contentImages(contentImages)
+                .productImages(productImages)
+                .build();
+//        TradeImageRequest imageRequest = new TradeImageRequest();
+//        imageRequest.setThumbnailImage(thumbnailImage);
+//        imageRequest.setContentImages(contentImages);
+//        imageRequest.setProductImages(productImages);
         return tradePostService.createTradePost(user, request,imageRequest);
     }
 
@@ -88,7 +93,7 @@ public class TradePostController {
     public ResponseEntity<TradePostDetailResponse> getTradePost(@PathVariable Long id) {
         return tradePostService.getTradePost( id);
     }
-
+    // 중고거래 끌어올림
     @PutMapping("/pull/{id}")
     public ResponseEntity<TradePostPulledResponse> pullTradePost(@PathVariable Long id) {
         return tradePostService.pullPost(id);

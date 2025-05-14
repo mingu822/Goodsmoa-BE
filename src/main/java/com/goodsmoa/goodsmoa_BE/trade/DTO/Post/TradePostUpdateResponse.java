@@ -2,11 +2,9 @@ package com.goodsmoa.goodsmoa_BE.trade.DTO.Post;
 
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImgUpdateRequest;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -40,6 +38,13 @@ public class TradePostUpdateResponse {
     private String categoryName;
 
     private String userId;
+
+    private String userNickName;
+
+    private LocalDateTime updatedAt;
+
+    @Setter
+    private List<String> contentImageUrls;
 
     private List<TradeImgUpdateRequest> tradeImage;
 }

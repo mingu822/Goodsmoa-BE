@@ -7,6 +7,7 @@ import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.List;
 @Table(name = "trade_post")
 @Builder
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class TradePostEntity {
 //
     @Id
@@ -112,20 +114,24 @@ public class TradePostEntity {
     }
 
     /** ✅ 조회수 증가 */
-    public void increaseViews() {
-        this.views += 1;
-        log.info("조회수가 증가했습니다");
-    }
+//    public void increaseViews() {
+//        this.views += 1;
+//        log.info("조회수가 증가했습니다");
+//    }
 
+
+    public void getViews(Long views){
+        this.views += views;
+    }
     /** ✅ 게시글 내용 수정 */
     public void updatePost(TradePostRequest request,String contentWithImages) {
         if(request.getTitle() != null) this.title = request.getTitle();
         this.content = contentWithImages;
 
-        if(this.productPrice < 0 ) {
+        if(request.getProductPrice() < 0 ) {
             throw new IllegalArgumentException("가격은 음수가 될 수 없습니다.");
         }
-        this.productPrice = request.getProductPrice();
+
 
         if(request.getHashtag() != null) this.hashtag = request.getHashtag();
 
