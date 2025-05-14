@@ -47,11 +47,13 @@ public class TradePostConverter {
     public TradePostUpdateResponse upResponse(TradePostEntity entity){
         return TradePostUpdateResponse.builder()
                 .userId(entity.getUser().getId())
+                .userNickName(entity.getUser().getNickname())
                 .categoryName(entity.getCategory().getName())
                 .conditionStatus(entity.getConditionStatus())
                 .tradeStatus(entity.getTradeStatus())
                 .delivery(entity.getDelivery())
                 .content(entity.getContent())
+                .updatedAt(LocalDateTime.now())
                 .deliveryPrice(entity.getDeliveryPrice())
                 .direct(entity.getDirect())
                 .hashtag(entity.getHashtag())
@@ -66,7 +68,6 @@ public class TradePostConverter {
                 .id(entity.getId())
                 .place(entity.getPlace())
                 .build();
-
     }
 
     // Request → Entity 변환
