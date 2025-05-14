@@ -2,6 +2,7 @@ package com.goodsmoa.goodsmoa_BE.product.controller;
 
 import com.goodsmoa.goodsmoa_BE.product.dto.Delivery.ProductDeliveryRequest;
 import com.goodsmoa.goodsmoa_BE.product.dto.Delivery.ProductDeliveryResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.Image.ProductImageUpdateRequest;
 import com.goodsmoa.goodsmoa_BE.product.dto.Post.*;
 import com.goodsmoa.goodsmoa_BE.product.dto.ProductRequest;
 import com.goodsmoa.goodsmoa_BE.product.dto.ProductResponse;
@@ -12,9 +13,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,16 +29,36 @@ public class ProductController {
     private final ProductService productService;
 
     // 상품글 추가
-    @PostMapping("/post-create")
-    public ResponseEntity<PostDetailResponse> createProduct(@AuthenticationPrincipal UserEntity user, @RequestBody PostRequest request){
-        return productService.createPost(user, request);
+    @PostMapping(value = "/post-create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PostDetailResponse> createPost(
+            @AuthenticationPrincipal UserEntity user,
+            @RequestPart("postRequest") PostRequest request,
+            @RequestPart("thumbnailImage") MultipartFile thumbnailImage,
+            @RequestPart(value = "productImages", required = false) List<MultipartFile> productImages,
+            @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages
+    ) {
+        return productService.createPost(user, request, thumbnailImage, productImages, contentImages);
     }
 
     // 생성한 상품글을 수정
-    @PutMapping("/post-update")
-    public ResponseEntity<PostResponse> updateProductPost(@AuthenticationPrincipal UserEntity user, @RequestBody PostRequest request){
-        return productService.updateProductPost(user,request);
+    @PostMapping(value = "/post-update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PostDetailResponse> updateProductPost(
+            @AuthenticationPrincipal UserEntity user,
+            @PathVariable Long id,
+            @RequestPart("postRequest") PostRequest request,
+            @RequestPart(value = "newThumbnailImage", required = false) MultipartFile newThumbnailImage,
+            @RequestPart(value = "newContentImages", required = false) List<MultipartFile> newContentImages,
+            @RequestPart(value = "newProductImages", required = false) List<MultipartFile> newProductImages,
+            @RequestPart(value = "deleteContentImageIds", required = false) List<String> deleteContentImageIds,
+            @RequestPart(value = "deleteProductImageIds", required = false) List<Long> deleteProductImageIds
+    ) {
+        return productService.updateProductPost(user, id, request,newThumbnailImage,
+                newContentImages,
+                newProductImages,
+                deleteContentImageIds,
+                deleteProductImageIds);
     }
+
 
     // 상품글 상세 조회
     @GetMapping("/post-detail/{id}")

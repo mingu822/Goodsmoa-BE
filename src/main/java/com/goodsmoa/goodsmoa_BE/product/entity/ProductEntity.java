@@ -6,6 +6,7 @@ import lombok.*;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,7 +21,7 @@ public class ProductEntity {
     @Column(name = "name", length = 40, nullable = false)
     private String name;
 
-    @Column(name = "price", nullable = false)
+    @Column(name = "price")
     private Integer price;
 
     @Column(name = "quantity", nullable = false)
@@ -33,7 +34,7 @@ public class ProductEntity {
     @Column(name = "available", nullable = false)
     private AvailabilityStatus available;
 
-    @Column(name = "max_quantity", nullable = false)
+    @Column(name = "max_quantity")
     private Integer maxQuantity;
 
     @ManyToOne
@@ -50,7 +51,7 @@ public class ProductEntity {
         this.price = request.getPrice();
         this.quantity = request.getQuantity();
         this.image = request.getImage();
-        this.available = AvailabilityStatus.valueOf(request.getAvailable());
+        this.available = AvailabilityStatus.판매중;
         this.maxQuantity = request.getMaxQuantity();
     }
 }
