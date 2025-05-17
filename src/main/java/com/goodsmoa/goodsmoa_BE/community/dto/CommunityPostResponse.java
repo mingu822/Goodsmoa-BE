@@ -1,6 +1,9 @@
 package com.goodsmoa.goodsmoa_BE.community.dto;
 
 import lombok.*;
+
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,8 +18,15 @@ public class CommunityPostResponse {
     // ex) 애니, 아이돌..
     private String categoryName;
 
-    //작성자 닉네임
     private String nickname;
     private Long views;
     private String createdAt;
+    private String updatedAt;
+
+    //해당글 총댓글수
+    private Long replyCount;
+
+    //댓글 트리
+    private List<CommunityReplyResponse> replies;
+
 }

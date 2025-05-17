@@ -45,11 +45,10 @@ public class JwtProvider {
         return Keys.hmacShaKeyFor(signingKey); // SecretKey 객체 반환
     }
 
-    /**
-     * ✅ JWT **엑세스 토큰 (30분)** 생성
-     */
+
+    //엑세스토큰 300분 설정 (개발용)
     public String createAccessToken(UserEntity user) {
-        int exp = 1000 * 60 * 30;  // 30분 (밀리초 단위)
+        int exp = 1000 * 60 * 300;
 
         SecretKey shaKey = getShaKey();
 

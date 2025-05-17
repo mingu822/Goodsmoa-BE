@@ -13,6 +13,6 @@ public class CommunityPostRequest {
 
     //ex)잡답,정보..
     private String detailCategory;
-    //ex)0:애니, 1:아이돌..
-    private Integer categoryId;
+    //ex)애니,아이돌..
+    private String categoryName;
 }
