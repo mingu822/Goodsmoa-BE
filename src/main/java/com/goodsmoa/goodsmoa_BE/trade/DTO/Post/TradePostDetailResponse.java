@@ -42,6 +42,8 @@ public class TradePostDetailResponse {
 
     private long deliveryPrice;
 
+    private long productPrice;
+
     private boolean direct;
 
     private long views;

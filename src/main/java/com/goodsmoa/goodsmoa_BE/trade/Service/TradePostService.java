@@ -44,7 +44,6 @@ public class TradePostService {
     private final TradePostConverter tradePostConverter;
     private final TradeImageRepository tradeImageRepository;
     private final CategoryRepository categoryRepository;
-    private final TradeImageConverter tradeImageConverter;
     private final UserRepository userRepository;
     private final TradePostSearchService tradePostSearchService;
     private final FileUploadService fileUploadService;

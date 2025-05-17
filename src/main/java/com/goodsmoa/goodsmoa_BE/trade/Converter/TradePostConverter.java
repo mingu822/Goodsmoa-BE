@@ -92,6 +92,7 @@ public class TradePostConverter {
     }
     // Entity → DetailResponse 변환
     public TradePostDetailResponse detailResponse(TradePostEntity entity) {
+        List<TradeImageEntity> images = entity.getImage();
         return TradePostDetailResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
@@ -101,10 +102,11 @@ public class TradePostConverter {
                 .nickName(entity.getUser().getNickname())
                 .userId(entity.getUser().getId())
                 .image(entity.getUser().getImage())
-                .imageUrl(entity.getImage())
+                .imageUrl(images)
+                .thumbnailImage(entity.getThumbnailImage())
                 .delivery(entity.getDelivery())
                 .deliveryPrice(entity.getDeliveryPrice())
-                .deliveryPrice(entity.getProductPrice())
+                .productPrice(entity.getProductPrice())
                 .direct(entity.getDirect())
                 .views(entity.getViews())
                 .place(entity.getPlace())
