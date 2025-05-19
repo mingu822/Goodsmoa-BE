@@ -2,6 +2,7 @@ package com.goodsmoa.goodsmoa_BE.trade.DTO.Post;
 
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageResponse;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
+import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostDescription;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.*;
@@ -47,8 +48,8 @@ public class TradePostResponse {
 
     private  UserEntity user;
 
-    @Setter
-    private List<String> contentImageUrls;
+
+    private List<DescriptionDTO> descriptions;
 
     private List<TradeImageResponse> tradeImage;
 }

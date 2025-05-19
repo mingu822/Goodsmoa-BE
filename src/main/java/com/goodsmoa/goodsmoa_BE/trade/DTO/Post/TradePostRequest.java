@@ -24,8 +24,8 @@ public class TradePostRequest {
     @Size(max = 50 , message = "제목은 최대 50자까지 가능합니다.")
     private String title;
 
-    @NotBlank(message = "내용은 필수입니다.")
-    private String content;
+//    @NotBlank(message = "내용은 필수입니다.")
+//    private String content;
 
     @Min(value = 0, message = "가격은 0원 이상이어야 합니다.")
     private int productPrice;
@@ -56,11 +56,8 @@ public class TradePostRequest {
     @Size(max = 150, message = "해시태그는 최대 150자까지 가능합니다.")
     private String hashtag;
 
-//    content 용
-//    private List<String> imagePath;
-//    image 테이블
-//    private List<String> detailImagePath;
-
+    @NotBlank(message = "내용은 작성해야합니다.")
+    private List<DescriptionDTO> descriptions;
 
 
 }

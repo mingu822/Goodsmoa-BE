@@ -1,6 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.trade.DTO.Post;
 
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
+import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostDescription;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,6 +36,8 @@ public class TradePostDetailResponse {
     private String thumbnailImage;
 
     private List<TradeImageEntity> imageUrl;
+
+    private List<TradePostDescription> description;
 
     private String place;
 

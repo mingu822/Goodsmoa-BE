@@ -39,9 +39,12 @@ public class TradePostEntity {
 
     private String title;
 
-    @Setter
-    @Column(columnDefinition = "MEDIUMTEXT")
-    private String content;
+//    @Setter
+//    @Column(columnDefinition = "MEDIUMTEXT")
+//    private String content;
+
+    @OneToMany(mappedBy = "tradePost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TradePostDescription> contentDescriptions = new ArrayList<>();
 
     private Integer productPrice;
 
@@ -114,19 +117,14 @@ public class TradePostEntity {
     }
 
     /** ✅ 조회수 증가 */
-//    public void increaseViews() {
-//        this.views += 1;
-//        log.info("조회수가 증가했습니다");
-//    }
-
-
     public void getViews(Long views){
         this.views += views;
     }
+
     /** ✅ 게시글 내용 수정 */
-    public void updatePost(TradePostRequest request,String contentWithImages) {
+    public void updatePost(TradePostRequest request) {
         if(request.getTitle() != null) this.title = request.getTitle();
-        this.content = contentWithImages;
+//        this.content = contentWithImages;
 
         if(request.getProductPrice() < 0 ) {
             throw new IllegalArgumentException("가격은 음수가 될 수 없습니다.");
