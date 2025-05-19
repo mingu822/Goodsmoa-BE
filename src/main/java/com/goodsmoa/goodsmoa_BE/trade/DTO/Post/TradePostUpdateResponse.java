@@ -44,7 +44,7 @@ public class TradePostUpdateResponse {
     private LocalDateTime updatedAt;
 
     @Setter
-    private List<String> contentImageUrls;
+    private List<DescriptionDTO> descriptions;
 
     private List<TradeImgUpdateRequest> tradeImage;
 }
