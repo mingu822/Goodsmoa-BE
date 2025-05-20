@@ -47,7 +47,7 @@ public class CommunityPostConverter {
 
 
     //댓글 포함해 응답하는 ver 오버로딩
-    public CommunityPostResponse toResponseDto(CommunityPostEntity entity, Long replyCount, List<CommunityReplyResponse> replies) {
+    public CommunityPostResponse toResponseDto(CommunityPostEntity entity, Long replyCount, List<CommunityReplyResponse> replies, Long likeCount) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         return CommunityPostResponse.builder()
@@ -62,6 +62,7 @@ public class CommunityPostConverter {
                 .updatedAt(entity.getUpdatedAt() == null ? null : entity.getUpdatedAt().format(formatter))
                 .replyCount(replyCount)
                 .replies(replies)
+                .likeCount(likeCount) // 💡 좋아요 카운트 넣기
                 .build();
     }
 
