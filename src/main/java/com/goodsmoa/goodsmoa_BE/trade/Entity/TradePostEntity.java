@@ -7,6 +7,7 @@ import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.List;
 @Table(name = "trade_post")
 @Builder
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class TradePostEntity {
 //
     @Id
@@ -37,9 +39,12 @@ public class TradePostEntity {
 
     private String title;
 
-    @Setter
-    @Column(columnDefinition = "MEDIUMTEXT")
-    private String content;
+//    @Setter
+//    @Column(columnDefinition = "MEDIUMTEXT")
+//    private String content;
+
+    @OneToMany(mappedBy = "tradePost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TradePostDescription> contentDescriptions = new ArrayList<>();
 
     private Integer productPrice;
 
@@ -75,6 +80,13 @@ public class TradePostEntity {
     @OneToMany(mappedBy = "tradePostEntity", fetch = FetchType.LAZY , cascade = CascadeType.ALL , orphanRemoval = true)
     private List<TradeImageEntity> image;
 
+    @OneToMany(mappedBy = "tradePost", fetch = FetchType.LAZY)
+    private List<UserHiddenPost> hiddenByUsers;
+
+    public boolean isHiddenByUser(UserEntity user){
+        return hiddenByUsers.stream().anyMatch(hiddenPost ->hiddenPost.getUser().equals(user));
+    }
+
     public void setUser(UserEntity user) {
         this.user = user;
     }
@@ -105,20 +117,19 @@ public class TradePostEntity {
     }
 
     /** ✅ 조회수 증가 */
-    public void increaseViews() {
-        this.views += 1;
-        log.info("조회수가 증가했습니다");
+    public void getViews(Long views){
+        this.views += views;
     }
 
     /** ✅ 게시글 내용 수정 */
-    public void updatePost(TradePostRequest request,String contentWithImages) {
+    public void updatePost(TradePostRequest request) {
         if(request.getTitle() != null) this.title = request.getTitle();
-        this.content = contentWithImages;
+//        this.content = contentWithImages;
 
-        if(this.productPrice < 0 ) {
+        if(request.getProductPrice() < 0 ) {
             throw new IllegalArgumentException("가격은 음수가 될 수 없습니다.");
         }
-        this.productPrice = request.getProductPrice();
+
 
         if(request.getHashtag() != null) this.hashtag = request.getHashtag();
 

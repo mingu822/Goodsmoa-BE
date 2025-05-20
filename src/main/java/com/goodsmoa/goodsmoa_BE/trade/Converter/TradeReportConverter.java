@@ -32,6 +32,8 @@ public class TradeReportConverter {
 
     public TradeReportResponse updateResponse(TradeReportEntity entity) {
         return TradeReportResponse.builder()
+                .userId(entity.getUser().getId())
+                .nickName(entity.getUser().getNickname())
                 .title(entity.getTitle())
                 .content(entity.getContent())
                 .build();

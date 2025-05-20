@@ -23,6 +23,10 @@ public class TradePostLookResponse {
 
     private Long views;
 
+    private Integer productPrice;
+
+    private String categoryName;
+
     private String hashtag;
 
     private String userId;

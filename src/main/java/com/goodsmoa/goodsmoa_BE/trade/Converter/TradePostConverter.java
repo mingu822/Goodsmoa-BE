@@ -4,11 +4,13 @@ import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImgUpdateRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
+import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostDescription;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,17 +19,20 @@ public class TradePostConverter {
 
     private final TradeImageConverter tradeImageConverter;
 
-    public TradePostConverter(TradeImageConverter tradeImageConverter) {
+    private final TradePostDescriptionConverter tradePostDescriptionConverter;
+
+    public TradePostConverter(TradeImageConverter tradeImageConverter, TradePostDescriptionConverter tradePostDescriptionConverter) {
         this.tradeImageConverter = tradeImageConverter;
+        this.tradePostDescriptionConverter = tradePostDescriptionConverter;
     }
 
     // Entity → Response 변환
-    public TradePostResponse toResponse(TradePostEntity entity, List<TradeImageEntity> imageEntity) {
+    public TradePostResponse toResponse(TradePostEntity entity, List<TradeImageEntity> imageEntity, List<TradePostDescription> descriptionEntity) {
         return TradePostResponse.builder()
                 .id(entity.getId())
                 .user(entity.getUser())
                 .title(entity.getTitle())
-                .content(entity.getContent())
+//                .content(entity.getContent())
                 .productPrice(entity.getProductPrice())
                 .conditionStatus(entity.getConditionStatus())
                 .tradeStatus(entity.getTradeStatus())
@@ -41,17 +46,26 @@ public class TradePostConverter {
                 .views(entity.getViews())
                 .categoryName(entity.getCategory().getName()) // 수정: getCategory().getId()
                 .tradeImage(imageEntity.stream().map(tradeImageConverter::toResponse).toList())
+                .descriptions(descriptionEntity.stream().map(tradePostDescriptionConverter::toDto).toList())
                 .build();
     }
 
+
+//TODO 업데이트 로직 수정 해야함 Description 이거
     public TradePostUpdateResponse upResponse(TradePostEntity entity){
+        List<DescriptionDTO> descriptionDTOs = entity.getContentDescriptions().stream()
+                .sorted(Comparator.comparingInt(TradePostDescription::getSequence))
+                .map(tradePostDescriptionConverter::toDto)
+                .toList();
+
         return TradePostUpdateResponse.builder()
                 .userId(entity.getUser().getId())
+                .userNickName(entity.getUser().getNickname())
                 .categoryName(entity.getCategory().getName())
                 .conditionStatus(entity.getConditionStatus())
                 .tradeStatus(entity.getTradeStatus())
                 .delivery(entity.getDelivery())
-                .content(entity.getContent())
+                .updatedAt(LocalDateTime.now())
                 .deliveryPrice(entity.getDeliveryPrice())
                 .direct(entity.getDirect())
                 .hashtag(entity.getHashtag())
@@ -61,21 +75,21 @@ public class TradePostConverter {
                                 .imagePath(img.getImagePath())
                                 .build())
                         .collect(Collectors.toList()))
+                .descriptions(descriptionDTOs)
                 .productPrice(entity.getProductPrice())
                 .thumbnailImage(entity.getThumbnailImage())
                 .id(entity.getId())
                 .place(entity.getPlace())
                 .build();
-
     }
 
     // Request → Entity 변환
-    public TradePostEntity toEntity(TradePostRequest request, Category category, UserEntity user, String thumbnailUrl,String contentWithImages) {
+    public TradePostEntity toEntity(TradePostRequest request, Category category, UserEntity user, String thumbnailUrl) {
         return TradePostEntity.builder()
                 .user(user)  // 수정: User 객체를 직접 전달
                 .category(category)  // 수정: Category 객체를 직접 전달
                 .title(request.getTitle())
-                .content(contentWithImages)
+//                .content(contentWithImages)
                 .productPrice(request.getProductPrice())
                 .conditionStatus(request.getConditionStatus())
                 .tradeStatus(request.getTradeStatus())
@@ -91,19 +105,23 @@ public class TradePostConverter {
     }
     // Entity → DetailResponse 변환
     public TradePostDetailResponse detailResponse(TradePostEntity entity) {
+        List<TradeImageEntity> images = entity.getImage();
+        List<TradePostDescription> description = entity.getContentDescriptions();
         return TradePostDetailResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
-                .content(entity.getContent())
+//                .content(entity.getContent())
+                .description(description)
                 .hashtag(entity.getHashtag())
                 .categoryName(entity.getCategory().getName())
                 .nickName(entity.getUser().getNickname())
                 .userId(entity.getUser().getId())
                 .image(entity.getUser().getImage())
-                .imageUrl(entity.getImage())
+                .imageUrl(images)
+                .thumbnailImage(entity.getThumbnailImage())
                 .delivery(entity.getDelivery())
                 .deliveryPrice(entity.getDeliveryPrice())
-                .deliveryPrice(entity.getProductPrice())
+                .productPrice(entity.getProductPrice())
                 .direct(entity.getDirect())
                 .views(entity.getViews())
                 .place(entity.getPlace())
@@ -114,7 +132,8 @@ public class TradePostConverter {
         return TradePostPulledResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
-                .content(entity.getContent())
+                .descriptions(entity.getContentDescriptions())
+//                .content(entity.getContent())
                 .pulledAt(entity.getPulledAt())
                 .build();
     }
@@ -124,6 +143,8 @@ public class TradePostConverter {
                 .id(entity.getId())
                 .title(entity.getTitle())
                 .createdAt(entity.getCreatedAt())
+                .productPrice(entity.getProductPrice())
+                .categoryName(entity.getCategory().getName())
                 .thumbnailImage(entity.getThumbnailImage())
                 .views(entity.getViews())
                 .hashtag(entity.getHashtag())

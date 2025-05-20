@@ -30,7 +30,9 @@ public class PostDetailResponse {
 
     private String nickname;
 
-    private String image;
+    private String userImage;
+
+    private String thumbnailImage;
 
     private String userId;
 
