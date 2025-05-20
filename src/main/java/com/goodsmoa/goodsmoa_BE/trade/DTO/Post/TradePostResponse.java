@@ -2,12 +2,10 @@ package com.goodsmoa.goodsmoa_BE.trade.DTO.Post;
 
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageResponse;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
+import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostDescription;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -49,6 +47,9 @@ public class TradePostResponse {
     private String categoryName;
 
     private  UserEntity user;
+
+
+    private List<DescriptionDTO> descriptions;
 
     private List<TradeImageResponse> tradeImage;
 }

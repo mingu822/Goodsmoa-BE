@@ -10,7 +10,7 @@ public class TradePostDocumentConverter {
         return TradePostDocument.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
-                .content(entity.getContent())
+//                .content(entity.getContent())
                 .hashtag(entity.getHashtag())
                 .build();
     }

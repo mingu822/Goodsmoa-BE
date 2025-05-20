@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -46,7 +47,6 @@ public class FileUploadService {
             int index = 1;
             for (MultipartFile image : images) {
                 if (image.isEmpty()) continue;
-
                 String extension = getExtension(image.getOriginalFilename());
                 String fileName = id + "_" + index++ + extension; // tradeId와 순번을 조합
                 Path filePath = dirPath.resolve(fileName);

@@ -5,6 +5,8 @@ import com.goodsmoa.goodsmoa_BE.trade.DTO.Report.TradeReportRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Report.TradeReportResponse;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeReportEntity;
+import com.goodsmoa.goodsmoa_BE.trade.Entity.UserHiddenPost;
+import com.goodsmoa.goodsmoa_BE.trade.Repository.TradePostHiddenRepository;
 import com.goodsmoa.goodsmoa_BE.trade.Repository.TradePostRepository;
 import com.goodsmoa.goodsmoa_BE.trade.Repository.TradeReportRepository;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
@@ -16,6 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class TradeReportService {
@@ -24,16 +29,24 @@ public class TradeReportService {
     private final TradePostRepository tradePostRepository;
     private final UserRepository userRepository;
     private final TradeReportConverter tradeReportConverter;
+    private final TradePostHiddenRepository tradePostHiddenRepository;
 
     @Transactional
     public ResponseEntity<TradeReportResponse> createReport(Long tradeId, UserEntity user, TradeReportRequest request) {
         TradePostEntity trade = tradePostRepository.findById(tradeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 거래글입니다."));
-//        UserEntity user = userRepository.findById(userId)
-//                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
         TradeReportEntity report = tradeReportConverter.toEntity(request, trade, user);
         tradeReportRepository.save(report);
+
+        // 🚨 이미 숨긴 이력이 없다면 숨김 처리
+        if (!tradePostHiddenRepository.existsByUserAndTradePost(user, trade)) {
+            UserHiddenPost hidden = UserHiddenPost.builder()
+                    .user(user)
+                    .tradePost(trade)
+                    .build();
+            tradePostHiddenRepository.save(hidden);
+        }
 
         return ResponseEntity.ok(tradeReportConverter.toResponse(report));
     }
@@ -59,6 +72,12 @@ public class TradeReportService {
             return ResponseEntity.notFound().build();
         }
         tradeReportRepository.delete(report);
+        // 2. 숨김 처리도 같이 해제
+        TradePostEntity reportedPost = report.getTrade();
+        Optional<UserHiddenPost> hidden = tradePostHiddenRepository.findByUserAndTradePost(user, reportedPost);
+
+        hidden.ifPresent(tradePostHiddenRepository::delete);
+
         return ResponseEntity.ok("삭제 완료되었습니다.");
     }
     @Transactional
@@ -69,4 +88,6 @@ public class TradeReportService {
 
         return ResponseEntity.ok(responsePage);
     }
+
+
 }

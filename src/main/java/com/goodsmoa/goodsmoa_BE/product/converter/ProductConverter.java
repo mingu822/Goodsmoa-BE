@@ -15,7 +15,7 @@ public class ProductConverter {
                 .price(request.getPrice())
                 .quantity(request.getQuantity())
                 .image(request.getImage())
-                .available(ProductEntity.AvailabilityStatus.valueOf(request.getAvailable())) // Enum 변환
+                .available(ProductEntity.AvailabilityStatus.판매중)
                 .maxQuantity(request.getMaxQuantity())
                 .productPostEntity(postEntity) // ✅ FK 매핑
                 .build();
