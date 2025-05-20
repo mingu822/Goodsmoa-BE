@@ -54,7 +54,7 @@ public class CommunityPostEntity {
 
 
     //커뮤니티 글 수정 메서드
-    public void updatePost(String title, String content, String detailCategory) {
+    public void updatePost(String title, String content, String detailCategory, Category category) {
         if (title != null) {
             this.title = title;
         }
@@ -63,6 +63,9 @@ public class CommunityPostEntity {
         }
         if (detailCategory != null) {
             this.detailCategory = detailCategory;
+        }
+        if (category != null) {
+            this.category = category;
         }
 
         this.updatedAt = LocalDateTime.now(); // 업데이트 시간은 무조건 갱신

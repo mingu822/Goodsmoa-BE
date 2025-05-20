@@ -42,4 +42,12 @@ public class CommunityReplyEntity {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+
+
+    // 댓글 수정 메서드
+    public void updateContent(String content) {
+        this.content = content;
+        this.updatedAt = LocalDateTime.now();
+    }
 }
