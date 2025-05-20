@@ -13,7 +13,7 @@ public class UserInfoConverter {
 
     public static UserInfoResponseDto toDto(UserEntity user, List<UserAddressEntity> addressList, UserAccountEntity account) {
 
-        // ✨ 주소 변환을 AddressConverter로 축약!
+        //  주소 변환을 AddressConverter로 축약!
         List<AddressResponseDto> addresses = addressList.stream()
                 //.map(address -> AddressConverter.toDto(address))
                 .map(AddressConverter::toDto)

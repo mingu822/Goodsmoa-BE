@@ -3,9 +3,11 @@ package com.goodsmoa.goodsmoa_BE.community.controller;
 import com.goodsmoa.goodsmoa_BE.community.dto.CommunityPostResponse;
 import com.goodsmoa.goodsmoa_BE.community.dto.CommunityReplyRequest;
 import com.goodsmoa.goodsmoa_BE.community.dto.CommunityReplyResponse;
+import com.goodsmoa.goodsmoa_BE.community.dto.MyReplySimpleResponse;
 import com.goodsmoa.goodsmoa_BE.community.service.CommunityReplyService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -44,9 +46,16 @@ public class CommunityReplyController {
     }
 
 
-    // 댓글 목록 조회(글 기준)
+    // 댓글 목록 조회(글 기준) (아직 필요X)
     @GetMapping("/post/{postId}")
     public ResponseEntity<List<CommunityReplyResponse>> getReplies(@PathVariable Long postId) {
         return ResponseEntity.ok(service.getReplies(postId));
     }
+
+    @GetMapping("/my")
+    public ResponseEntity<Page<MyReplySimpleResponse>> getMyReplies(@AuthenticationPrincipal UserEntity user,
+                                                                    @RequestParam(defaultValue = "0") int page) {
+        return ResponseEntity.ok(service.getMyReplies(user, page));
+    }
+
 }

@@ -2,16 +2,22 @@ package com.goodsmoa.goodsmoa_BE.community.service;
 
 import com.goodsmoa.goodsmoa_BE.community.converter.CommunityPostConverter;
 import com.goodsmoa.goodsmoa_BE.community.converter.CommunityReplyConverter;
+import com.goodsmoa.goodsmoa_BE.community.converter.MyReplySimpleConverter;
 import com.goodsmoa.goodsmoa_BE.community.dto.CommunityPostResponse;
 import com.goodsmoa.goodsmoa_BE.community.dto.CommunityReplyRequest;
 import com.goodsmoa.goodsmoa_BE.community.dto.CommunityReplyResponse;
+import com.goodsmoa.goodsmoa_BE.community.dto.MyReplySimpleResponse;
 import com.goodsmoa.goodsmoa_BE.community.entity.CommunityPostEntity;
 import com.goodsmoa.goodsmoa_BE.community.entity.CommunityReplyEntity;
+import com.goodsmoa.goodsmoa_BE.community.repository.CommunityLikeRepository;
 import com.goodsmoa.goodsmoa_BE.community.repository.CommunityPostRepository;
 import com.goodsmoa.goodsmoa_BE.community.repository.CommunityReplyRepository;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,6 +31,8 @@ public class CommunityReplyService {
     private final CommunityPostRepository postRepository;
     private final CommunityReplyConverter converter;
     private final CommunityPostConverter postConverter;
+    private final CommunityLikeRepository likeRepository;
+    private final MyReplySimpleConverter myReplySimpleConverter;
 
 
     // 댓글 작업 후 글 상세 DTO를 만들어주는 공통 메서드
@@ -34,8 +42,9 @@ public class CommunityReplyService {
 
         Long replyCount = replyRepository.countByPostId(postId);
         List<CommunityReplyResponse> replies = getReplies(postId);
+        Long likeCount = likeRepository.countByPost(post); // ← 요거 추가!!
 
-        return postConverter.toResponseDto(post, replyCount, replies);
+        return postConverter.toResponseDto(post, replyCount, replies, likeCount); // ← 4개 다 전달!
     }
 
 
@@ -143,5 +152,12 @@ public class CommunityReplyService {
     // 댓글 수 조회
     public Long countReplies(Long postId) {
         return replyRepository.countByPostId(postId);
+    }
+
+    //페이지네이션 처리: 내가 쓴 댓글 목록 보기
+    public Page<MyReplySimpleResponse> getMyReplies(UserEntity user, int page) {
+        PageRequest pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return replyRepository.findByUserId(user.getId(), pageable)
+                .map(myReplySimpleConverter::toDto);
     }
 }
