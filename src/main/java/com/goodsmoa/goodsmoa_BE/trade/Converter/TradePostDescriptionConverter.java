@@ -13,19 +13,20 @@ public class TradePostDescriptionConverter {
                 .type(entity.getContentType())
                 .value(entity.getValue())
                 .sequence(entity.getSequence())
-                .textStyle(entity.getTestStyle())
+                .textStyle(entity.getTextStyle())
                 .fontSize(entity.getFontSize())
                 .textAlignment(entity.getTextAlignment())
                 .build();
     }
 
     public TradePostDescription toEntity(DescriptionDTO dto) {
+        boolean isText = dto.isText();
         return TradePostDescription.builder()
                 .contentType(dto.getType())
                 .value(dto.getValue())
                 .sequence(dto.getSequence())
-                .testStyle(dto.getTextStyle() != null ? dto.getTextStyle() : TradePostDescription.TextStyle.NORMAL)
-                .fontSize(dto.getFontSize())
+                .textStyle(dto.getTextStyle())
+                .fontSize(isText ? dto.getFontSize() : null)
                 .textAlignment(dto.getTextAlignment())
                 .build();
     }
