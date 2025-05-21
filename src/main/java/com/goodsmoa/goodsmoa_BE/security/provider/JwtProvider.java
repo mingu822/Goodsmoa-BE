@@ -45,11 +45,10 @@ public class JwtProvider {
         return Keys.hmacShaKeyFor(signingKey); // SecretKey 객체 반환
     }
 
-    /**
-     * ✅ JWT **엑세스 토큰 (30분)** 생성
-     */
+
+    //엑세스토큰 300분 설정 (개발용)
     public String createAccessToken(UserEntity user) {
-        int exp = 1000 * 60 * 30;  // 30분 (밀리초 단위)
+        int exp = 1000 * 60 * 300;
 
         SecretKey shaKey = getShaKey();
 
@@ -188,7 +187,7 @@ public class JwtProvider {
             user.setNickname(nickname);
 
 
-            // 🔥 권한을 SimpleGrantedAuthority로 변환 (DB에서 ROLE_ 형식으로 저장 중이므로 그대로 사용!)
+            //  권한을 SimpleGrantedAuthority로 변환 (DB에서 ROLE_ 형식으로 저장 중이므로 그대로 사용!)
             List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
 
 
@@ -225,8 +224,6 @@ public class JwtProvider {
             Jws<Claims> claims= Jwts.parser().verifyWith(getShaKey()).build().parseSignedClaims(jwt);
             Date expiration = claims.getBody().getExpiration();
             log.info("만료기간:" + expiration.toString());
-            //만료날짜인 expiration과 현재오늘 날짜 비교하기
-            //날짜a.after(날짜b): 날짜a가 날짜b보다 더 뒤에 있으면 true
             boolean result=expiration.after(new Date()); //만료안됐으면 true임
             return result;
 
