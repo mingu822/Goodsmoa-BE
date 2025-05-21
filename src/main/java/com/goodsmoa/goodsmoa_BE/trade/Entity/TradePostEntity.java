@@ -35,13 +35,10 @@ public class TradePostEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id" , nullable = false)
+    @JsonIgnore
     private Category category;
 
     private String title;
-
-//    @Setter
-//    @Column(columnDefinition = "MEDIUMTEXT")
-//    private String content;
 
     @OneToMany(mappedBy = "tradePost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TradePostDescription> contentDescriptions = new ArrayList<>();
@@ -90,6 +87,11 @@ public class TradePostEntity {
     public void setUser(UserEntity user) {
         this.user = user;
     }
+
+    public void setViews(Long views) {
+        this.views = views;
+    }
+
 
 
     // 이미지를 변경하는 메서드

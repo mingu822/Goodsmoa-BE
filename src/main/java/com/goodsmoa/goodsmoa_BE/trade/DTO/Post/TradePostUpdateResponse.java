@@ -15,8 +15,6 @@ public class TradePostUpdateResponse {
 
     private Long id;
 
-    private String content;
-
     private Integer productPrice;
 
     private TradePostEntity.ConditionStatus conditionStatus;

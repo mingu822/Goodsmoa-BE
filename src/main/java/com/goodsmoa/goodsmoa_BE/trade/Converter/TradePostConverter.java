@@ -32,7 +32,6 @@ public class TradePostConverter {
                 .id(entity.getId())
                 .user(entity.getUser())
                 .title(entity.getTitle())
-//                .content(entity.getContent())
                 .productPrice(entity.getProductPrice())
                 .conditionStatus(entity.getConditionStatus())
                 .tradeStatus(entity.getTradeStatus())
@@ -51,7 +50,6 @@ public class TradePostConverter {
     }
 
 
-//TODO 업데이트 로직 수정 해야함 Description 이거
     public TradePostUpdateResponse upResponse(TradePostEntity entity){
         List<DescriptionDTO> descriptionDTOs = entity.getContentDescriptions().stream()
                 .sorted(Comparator.comparingInt(TradePostDescription::getSequence))
@@ -89,7 +87,6 @@ public class TradePostConverter {
                 .user(user)  // 수정: User 객체를 직접 전달
                 .category(category)  // 수정: Category 객체를 직접 전달
                 .title(request.getTitle())
-//                .content(contentWithImages)
                 .productPrice(request.getProductPrice())
                 .conditionStatus(request.getConditionStatus())
                 .tradeStatus(request.getTradeStatus())
@@ -110,7 +107,6 @@ public class TradePostConverter {
         return TradePostDetailResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
-//                .content(entity.getContent())
                 .description(description)
                 .hashtag(entity.getHashtag())
                 .categoryName(entity.getCategory().getName())
@@ -133,7 +129,6 @@ public class TradePostConverter {
                 .id(entity.getId())
                 .title(entity.getTitle())
                 .descriptions(entity.getContentDescriptions())
-//                .content(entity.getContent())
                 .pulledAt(entity.getPulledAt())
                 .build();
     }

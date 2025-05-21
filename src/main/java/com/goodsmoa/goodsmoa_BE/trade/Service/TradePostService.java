@@ -103,6 +103,7 @@ public class TradePostService {
                 }
                 description.setValue(contentUrls.get(imageIndex++));
             }
+            description.sanitize();
 
             TradePostDescription tradePostDescription = tradePostDescriptionConverter.toEntity(description);
             tradePostDescription.setTradePost(tradePostEntity);
@@ -183,6 +184,7 @@ public class TradePostService {
                 .toList();
 
         for (DescriptionDTO dto : sortedDescriptions) {
+            dto.sanitize();
             String value;
             if (dto.getType() == TEXT) {
                 value = dto.getValue();
@@ -202,6 +204,10 @@ public class TradePostService {
                     .value(value)
                     .sequence(dto.getSequence())
                     .build());
+//            TradePostDescription description = tradePostDescriptionConverter.toEntity(dto);
+//            description.setTradePost(tradePost); // 연관관계 설정
+//            newDescriptions.add(description);
+
         }
 
 

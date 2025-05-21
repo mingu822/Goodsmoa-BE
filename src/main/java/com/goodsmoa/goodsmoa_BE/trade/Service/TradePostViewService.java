@@ -28,7 +28,7 @@ public class TradePostViewService {
         redisTemplate.opsForValue().increment(redisKey);
     }
 
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "0 */1 * * * *")
     @Transactional
     public void syncViewCountToDatabase(){
         log.info("조회수 동기화 시작합니다");
@@ -43,7 +43,7 @@ public class TradePostViewService {
             Long views = redisValue != null ? Long.parseLong(redisValue.toString()) : 0L;
 
             tradePostRepository.findById(tradeId).ifPresent(tradePost -> {
-                tradePost.getViews(views);
+                tradePost.setViews(views);
                 tradePostRepository.save(tradePost);
             });
             redisTemplate.delete(key);
