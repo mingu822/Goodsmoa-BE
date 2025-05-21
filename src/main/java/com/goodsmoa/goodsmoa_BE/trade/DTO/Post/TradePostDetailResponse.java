@@ -21,8 +21,6 @@ public class TradePostDetailResponse {
 
     private String title;
 
-    private String content;
-
     private String hashtag;
 
     private String categoryName;

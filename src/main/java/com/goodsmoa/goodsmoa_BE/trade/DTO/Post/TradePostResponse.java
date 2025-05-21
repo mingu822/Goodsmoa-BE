@@ -20,8 +20,6 @@ public class TradePostResponse {
 
     private String title;
 
-    private String content;
-
     private Integer productPrice;
 
     private TradePostEntity.ConditionStatus conditionStatus;

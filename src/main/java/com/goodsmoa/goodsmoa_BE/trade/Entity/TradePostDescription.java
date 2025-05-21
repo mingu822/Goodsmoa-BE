@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.trade.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,11 +26,12 @@ public class TradePostDescription {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trade_post_id")
+    @JsonIgnore
     private TradePostEntity tradePost;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "text_style")
-    private TextStyle testStyle;
+    private TextStyle textStyle;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "alignment")
