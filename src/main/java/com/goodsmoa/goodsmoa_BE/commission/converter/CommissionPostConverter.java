@@ -22,7 +22,7 @@ public class CommissionPostConverter {
     private final CommissionDetailConverter commissionDetailConverter;
 
     /**
-     * save DTO -> Entity 변경
+     * save DTO -> entity 변경
      * 커미션 상세를 만들기 위해 DB에 임시저장하기 위한 메서드
      */
     public CommissionPostEntity saveToEntity(SavePostRequest request, UserEntity user) {
@@ -39,7 +39,7 @@ public class CommissionPostConverter {
     }
 
     /**
-     * save DTO -> Entity 변경
+     * save DTO -> entity 변경
      * 저장한 임시정보를 불러오기 위해 사용
      */
     public SavePostResponse saveToResponse(CommissionPostEntity entity){

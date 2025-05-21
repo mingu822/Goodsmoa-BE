@@ -51,7 +51,7 @@ public class CommunityService {
         Optional<Category> oc = categoryRepository.findByName(req.getCategoryName());
         // 카테고리 못찾으면 404 응답을 줘서 없다고 알림
         if (oc.isEmpty()) return ResponseEntity.badRequest().build();
-        // DTO → Entity 변환
+        // DTO → entity 변환
         CommunityPostEntity entity = converter.toEntity(user, oc.get(), req);
         // DB 저장
         CommunityPostEntity saved = postRepository.save(entity);
@@ -143,6 +143,7 @@ public class CommunityService {
         postRepository.delete(entity);
         return ResponseEntity.ok("삭제가 완료되었습니다.");
     }
+
 
 
     //페이지네이션(20개 단위)한 전체 글 가져오기

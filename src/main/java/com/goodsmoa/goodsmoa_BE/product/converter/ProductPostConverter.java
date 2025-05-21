@@ -25,7 +25,7 @@ public class ProductPostConverter {
     private final ProductDeliveryConverter productDeliveryConverter;
 
     /**
-     * create DTO -> Entity 변경
+     * create DTO -> entity 변경
      * 상품을 담기 위해 DB에 임시저장하기 위한 메서드
      */
     public ProductPostEntity createToEntity(PostRequest request, UserEntity user, Category category) {
@@ -69,7 +69,7 @@ public class ProductPostConverter {
                 .build();
     }
     /**
-     *  조회를 위한 Entity -> DTO
+     *  조회를 위한 entity -> DTO
      */
     public PostDetailResponse detailToResponse(List<ProductEntity> products, List<ProductDeliveryEntity>  delivers, ProductPostEntity entity){
         return PostDetailResponse.builder()

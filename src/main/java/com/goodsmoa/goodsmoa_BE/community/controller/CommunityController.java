@@ -51,6 +51,7 @@ public class CommunityController {
     public ResponseEntity<Page<CommunityPostSimpleResponse>> getAllPosts(@RequestParam(defaultValue = "0") int page) {
         return ResponseEntity.ok(service.getAllPosts(page));
     }
+
     // 내가 쓴 글 페이징 조회
     @GetMapping("/my")
     public ResponseEntity<Page<CommunityPostSimpleResponse>> getMyPosts(@AuthenticationPrincipal UserEntity user,

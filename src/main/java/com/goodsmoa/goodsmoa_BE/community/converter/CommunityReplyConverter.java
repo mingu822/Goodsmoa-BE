@@ -10,7 +10,7 @@ import java.util.ArrayList;
 @Component
 public class CommunityReplyConverter {
 
-    // Entity -> Response DTO
+    // entity -> Response DTO
     public CommunityReplyResponse toDto(CommunityReplyEntity entity) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
