@@ -11,6 +11,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
+
 @Controller
 @RequiredArgsConstructor
 @Slf4j
@@ -23,23 +25,49 @@ public class ChatController {
      * 클라이언트로부터 메시지를 수신하고 DB에 저장한 뒤 구독자에게 브로드캐스트합니다.
      * @param chatMessage 클라이언트에서 받은 채팅 메시지
      */
-    @MessageMapping("/chat/{chatRoomId}") // 클라이언트는 /pub/chat/message로 전송
-    public void sendMessage(@Payload ChatMessage chatMessage, @AuthenticationPrincipal UserEntity user) {
+//    @MessageMapping("/chat/{chatRoomId}") // 클라이언트는 /pub/chat/message로 전송
+//    public void sendMessage(@Payload ChatMessage chatMessage, @AuthenticationPrincipal UserEntity user) {
+//        try {
+//            log.info("📥 메시지 수신: {}", chatMessage);
+//
+//            // 유저 정보 확인 및 설정
+//            if (user != null) {
+//                chatMessage.setSenderId(user.getId()); // 또는 setSenderId(user.getId())
+//                log.info("💡 보낸 사람: {}", user.getId());
+//            } else {
+//                log.warn("⚠️ 인증된 유저 정보가 없습니다.");
+//            }
+//
+//            // 메시지 DB 저장
+//            chatService.saveChatMessage(chatMessage);
+//
+//            // 메시지를 채팅방 구독자에게 전송
+//            String destination = "/sub/chat/" + chatMessage.getChatRoomId();
+//            messagingTemplate.convertAndSend(destination, chatMessage);
+//
+//            log.info("📤 메시지 전송 완료 → {}", destination);
+//
+//        } catch (Exception e) {
+//            log.error("❌ 메시지 처리 중 오류 발생", e);
+//        }
+//    }
+    @MessageMapping("/chat/{chatRoomId}")
+    public void sendMessage(@Payload ChatMessage chatMessage, Principal principal) {
         try {
             log.info("📥 메시지 수신: {}", chatMessage);
 
-            // 유저 정보 확인 및 설정
-            if (user != null) {
-                chatMessage.setSenderId(user.getId()); // 또는 setSenderId(user.getId())
-                log.info("💡 보낸 사람: {}", user.getId());
+            // Principal을 통해 인증된 사용자 정보 확인
+            if (principal != null) {
+                log.info("💡 보낸 사람: {}", principal.getName()); // JWT에서 꺼낸 username
+                chatMessage.setSenderId(principal.getName()); // principal.getName()이 userId일 경우
             } else {
-                log.warn("⚠️ 인증된 유저 정보가 없습니다.");
+                log.warn("⚠️ 인증된 사용자 없음");
             }
 
             // 메시지 DB 저장
             chatService.saveChatMessage(chatMessage);
 
-            // 메시지를 채팅방 구독자에게 전송
+            // 구독자에게 메시지 전송
             String destination = "/sub/chat/" + chatMessage.getChatRoomId();
             messagingTemplate.convertAndSend(destination, chatMessage);
 

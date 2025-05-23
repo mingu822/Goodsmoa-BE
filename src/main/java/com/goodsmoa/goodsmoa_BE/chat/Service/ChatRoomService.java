@@ -30,7 +30,9 @@ public class ChatRoomService {
                 .orElseThrow(() -> new IllegalArgumentException("받는 유저가 존재하지 않습니다."));
 
         // 중복 채팅방 체크
-        Optional<ChatRoomEntity> existingRoom = chatRoomRepository.findBySenderAndReceiver(sender, receiver);
+        Optional<ChatRoomEntity> existingRoom = chatRoomRepository
+                .findBySenderAndReceiver(sender, receiver)
+                .or(() -> chatRoomRepository.findBySenderAndReceiver(receiver, sender));
         if (existingRoom.isPresent()) {
             throw new IllegalStateException("이미 존재하는 채팅방입니다.");
         }
