@@ -28,7 +28,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
 
 
-    // ✨ 쿠키에서 accessToken 꺼내는 함수
+    //  쿠키에서 accessToken 꺼내는 함수
     private String getTokenFromCookie(HttpServletRequest request) {
         if (request.getCookies() != null) {
             for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
@@ -45,15 +45,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
 
 
-    /**
-     * 필터에서 수행하는 작업
-     * 1. JWT 추출
-     * 2. 인증 시도
-     * 3. JWT 검증
-     *      ⭕ 토큰이 유효하면->ok securtycontext에 저장
-     *      ❌ 토큰이 만료되거나 변조
 
-     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -98,9 +90,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             // 유효한 JWT 토큰이면 인증 완료
             log.info("유효한 JWT 토큰 입니다.");
 
-            // SecurityContextHolder: 현재 인증된 사용자들의 정보를 담는 객체
-            // 현재 인증된 사용자의 정보를 SecurityContext에 설정 (인증된 사용자로 인정)
-            //authentication 이 객체는 로그인한 사용자의 정보를 담고 있어.
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             log.info("🛠 SecurityContext에 저장된 Authentication: {}", SecurityContextHolder.getContext().getAuthentication());

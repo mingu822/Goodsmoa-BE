@@ -38,34 +38,29 @@ public class UserController {
 
     //엑세스 토큰 재발급받는 api
     @PostMapping("/auth/refresh")
-    public ResponseEntity<?> refreshAccessToken(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
-
+    public ResponseEntity<?> refreshAccessToken(
+            @CookieValue(value = "refreshToken", required = false) String refreshToken) {
 
         if (refreshToken == null || refreshToken.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("리프레시 토큰이 없습니다. 😢");
         }
 
-        log.info("**리프레시 토큰 확인함: " + refreshToken);
+        try {
+            String newAccessToken = userService.reissueAccessTokenFromRefresh(refreshToken);
 
-        if (!jwtProvider.validateToken(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 리프레시 토큰입니다. ⛔");
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Set-Cookie", "accessToken=" + newAccessToken +
+                    "; HttpOnly; Path=/; Max-Age=1800; SameSite=Lax");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body("엑세스 토큰 재발급 완료 ");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("재발급 실패: " + e.getMessage());
         }
-
-
-        String newAccessToken = jwtProvider.refreshAccessToken(refreshToken);
-        if (newAccessToken == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("리프레시 토큰 검증 실패! 🚫");
-        }
-
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + newAccessToken);
-        log.info("**엑세스 토큰 재발급 완료~!!: " + newAccessToken);
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body("엑세스 토큰 재발급 성공! ");
     }
+
 
 
 
