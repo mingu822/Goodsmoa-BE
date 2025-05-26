@@ -38,6 +38,13 @@ public class ChatRoomEntity {
     // @OneToMany(mappedBy = "chatRoomEntity", cascade = CascadeType.ALL)
     // private List<ChatMessageEntity> messages;
 
+    public void addParticipant(UserEntity user) {
+        if(sender == null) {
+            sender = user;
+        }else if(receiver == null) {
+            receiver = user;
+        }
+    }
 
 
 }

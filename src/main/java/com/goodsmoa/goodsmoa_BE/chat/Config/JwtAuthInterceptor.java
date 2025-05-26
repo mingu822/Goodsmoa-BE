@@ -29,28 +29,22 @@ public class JwtAuthInterceptor implements HandshakeInterceptor {
     public boolean beforeHandshake(ServerHttpRequest request,
                                    ServerHttpResponse response,
                                    WebSocketHandler handler,
-                                   Map<String, Object> attributes) throws Exception{
-//        try {
-//            String token = getTokenFromCookie(request);
-//            log.info("Jwt Token :" +token);
-//            if (token != null && jwtProvider.validateToken(token)) {
-//                Authentication authentication = jwtProvider.getAuthenticationToken(token);
-//                attributes.put("auth", authentication); // ✅ 인증된 사용자 정보 저장
-//                log.info("WebSocket 인증성공");
-//                return true;
-//            }
-//        } catch (Exception e) {
-//            // 🔥 인증 실패 시, WebSocket 핸드셰이크 자체를 막지 않고 속성을 추가
-//            log.info("WebSocket 인승실패");
-//            attributes.put("auth", "unauthenticated");
-//        }
-//        return true; // ✅ 항상 WebSocket 연결을 허용하되, 인증 여부는 속성으로 저장
+                                   Map<String, Object> attributes) throws Exception {
         if (request instanceof ServletServerHttpRequest servletRequest) {
             HttpServletRequest httpServletRequest = servletRequest.getServletRequest();
+
+            // 1. 쿠키에서 accessToken 추출 (기존 방식)
             String token = getTokenFromCookie(httpServletRequest);
 
-            log.info("Access Token from Cookie: {}", token);
+            // 2. 쿼리 파라미터에서 accessToken 추출 (추가)
+            if (token == null) {
+                token = httpServletRequest.getParameter("accessToken");
+                log.info("Access Token from Query Param: {}", token);
+            } else {
+                log.info("Access Token from Cookie: {}", token);
+            }
 
+            // 3. 토큰 검증
             if (token != null && jwtProvider.validateToken(token)) {
                 Authentication authentication = jwtProvider.getAuthenticationToken(token);
                 attributes.put("auth", authentication);
@@ -62,6 +56,7 @@ public class JwtAuthInterceptor implements HandshakeInterceptor {
         }
         return false;
     }
+
 
     @Override
     public void afterHandshake(ServerHttpRequest request,

@@ -18,10 +18,10 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer {
 
-    private JwtProvider jwtProvider;
+    private final JwtProvider jwtProvider;
 
-    @Autowired
-    private JwtAuthInterceptor jwtAuthInterceptor;
+
+    private final JwtAuthInterceptor jwtAuthInterceptor;
 
     private final StompJwtChannelInterceptor stompJwtChannelInterceptor;
 
