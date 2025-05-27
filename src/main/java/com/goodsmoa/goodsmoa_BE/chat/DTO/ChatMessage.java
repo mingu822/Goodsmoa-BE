@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ChatMessage {
     private MessageType type;  // 메시지 타입 (ENTER, TALK, LEAVE)
-
+//
     private Long chatRoomId; // 채팅방 ID
 
     private String senderId; // 보낸 사람

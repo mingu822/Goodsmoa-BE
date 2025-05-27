@@ -24,7 +24,7 @@ public class ChatRoomEntity {
     // 채팅방이 활성화 된건지 아닌지
     @Column(nullable = false)
     private Boolean status; // 진행(true) 종료(false)
-
+//
     // 채팅방 만드는 사람의 유저아이디
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name= "sender_id", nullable = false)
