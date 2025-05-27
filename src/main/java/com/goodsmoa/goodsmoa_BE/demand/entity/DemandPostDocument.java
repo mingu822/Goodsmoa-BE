@@ -60,7 +60,7 @@ public class DemandPostDocument {
     private Boolean isSafePayment;
     @Field(type = FieldType.Boolean, name = "is_state")
     private Boolean isState;
-    
+
     //정렬용
     @Field(type = FieldType.Date, name = "start_time", format = {},  pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS||epoch_millis")
     private LocalDateTime startTime;
@@ -68,4 +68,5 @@ public class DemandPostDocument {
     private LocalDateTime endTime;
     @Field(type = FieldType.Date, name = "pulled_at", format = {}, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS||epoch_millis")
     private LocalDateTime pulledAt;
+
 }

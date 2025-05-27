@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class TradeReportConverter {
 
-    // Request → Entity 변환
+    // Request → entity 변환
     public TradeReportEntity toEntity(TradeReportRequest request, TradePostEntity tradeEntity, UserEntity userEntity) {
         return TradeReportEntity.builder()
                 .trade(tradeEntity)
@@ -20,7 +20,7 @@ public class TradeReportConverter {
                 .build();
     }
 
-    // Entity → Response 변환
+    // entity → Response 변환
     public TradeReportResponse toResponse( TradeReportEntity entity) {
         return TradeReportResponse.builder()
                 .nickName(entity.getUser().getNickname())

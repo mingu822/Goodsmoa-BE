@@ -26,7 +26,7 @@ public class TradePostConverter {
         this.tradePostDescriptionConverter = tradePostDescriptionConverter;
     }
 
-    // Entity → Response 변환
+    // entity → Response 변환
     public TradePostResponse toResponse(TradePostEntity entity, List<TradeImageEntity> imageEntity, List<TradePostDescription> descriptionEntity) {
         return TradePostResponse.builder()
                 .id(entity.getId())
@@ -81,7 +81,7 @@ public class TradePostConverter {
                 .build();
     }
 
-    // Request → Entity 변환
+    // Request → entity 변환
     public TradePostEntity toEntity(TradePostRequest request, Category category, UserEntity user, String thumbnailUrl) {
         return TradePostEntity.builder()
                 .user(user)  // 수정: User 객체를 직접 전달
@@ -100,7 +100,7 @@ public class TradePostConverter {
                 .hashtag(request.getHashtag())
                 .build();
     }
-    // Entity → DetailResponse 변환
+    // entity → DetailResponse 변환
     public TradePostDetailResponse detailResponse(TradePostEntity entity) {
         List<TradeImageEntity> images = entity.getImage();
         List<TradePostDescription> description = entity.getContentDescriptions();

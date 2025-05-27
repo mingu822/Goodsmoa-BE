@@ -56,7 +56,7 @@ public class TradePostRequest {
     @Size(max = 150, message = "해시태그는 최대 150자까지 가능합니다.")
     private String hashtag;
 
-    @NotEmpty(message = "내용은 작성해야합니다.")
+    @NotBlank(message = "내용은 작성해야합니다.")
     private List<DescriptionDTO> descriptions;
 
 
