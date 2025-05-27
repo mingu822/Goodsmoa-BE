@@ -8,7 +8,7 @@ import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 
 public class AddressConverter {
 
-    // Dto -> entity 변환 메서드
+    // Dto -> Entity 변환 메서드
     public static UserAddressEntity toEntity(AddressRequestDto dto, UserEntity user) {
         return UserAddressEntity.builder()
                 .user(user)
@@ -23,7 +23,7 @@ public class AddressConverter {
     }
 
 
-    // entity →
+    // Entity →
     public static AddressResponseDto toDto(UserAddressEntity entity) {
         return AddressResponseDto.builder()
                 .recipientName(entity.getRecipientName())
