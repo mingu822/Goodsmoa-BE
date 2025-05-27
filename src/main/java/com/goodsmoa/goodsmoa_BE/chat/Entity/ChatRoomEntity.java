@@ -18,7 +18,7 @@ public class ChatRoomEntity {
     private Long id;
 
     // 채팅방 제목
-    @Column(nullable = false , length = 15 )
+    @Column(nullable = false , length = 50 )
     private String title;
 
     // 채팅방이 활성화 된건지 아닌지
@@ -33,6 +33,17 @@ public class ChatRoomEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name= "receiver_id", nullable = false)
     private UserEntity receiver;
+// 채팅 메시지 목록 (양방향 매핑 필요 시)
+    // @OneToMany(mappedBy = "chatRoomEntity", cascade = CascadeType.ALL)
+    // private List<ChatMessageEntity> messages;
+
+    public void addParticipant(UserEntity user) {
+        if(sender == null) {
+            sender = user;
+        }else if(receiver == null) {
+            receiver = user;
+        }
+    }
 
 
 
