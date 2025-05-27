@@ -22,7 +22,7 @@ public class ChatMessageConsumer {
     private final SimpMessagingTemplate messagingTemplate;
     private final ObjectMapper objectMapper;
     private final UserRepository userRepository; // 🔥 UserEntity 조회를 위해 추가
-
+//
     @RabbitListener(queues = "${rabbitmq.queue}")
     public void receiveMessage(String message) {
         try {

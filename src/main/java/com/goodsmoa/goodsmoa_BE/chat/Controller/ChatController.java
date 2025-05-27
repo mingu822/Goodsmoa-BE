@@ -50,7 +50,7 @@ public class ChatController {
 //        } catch (Exception e) {
 //            log.error("❌ 메시지 처리 중 오류 발생", e);
 //        }
-//    }
+//    }//
     @MessageMapping("/chat/{chatRoomId}")
     public void sendMessage(@Payload ChatMessage chatMessage, Principal principal) {
         try {

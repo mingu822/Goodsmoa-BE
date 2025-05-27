@@ -18,7 +18,7 @@ public class ChatMessageEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+//
     // 메세지 내용
     @Column(nullable = false , columnDefinition = "TEXT")
     private String content;

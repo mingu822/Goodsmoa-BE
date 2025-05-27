@@ -24,7 +24,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ChatRoomService {
-
+//
     private final ChatRoomRepository chatRoomRepository;
 
     private final UserRepository userRepository;

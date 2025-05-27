@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ChatRoomConverter {
-
+//
     public static ChatRoomEntity toEntity(ChatRoom dto, UserEntity sender, UserEntity receiver) {
         return ChatRoomEntity.builder()
                 .title(dto.getTitle())

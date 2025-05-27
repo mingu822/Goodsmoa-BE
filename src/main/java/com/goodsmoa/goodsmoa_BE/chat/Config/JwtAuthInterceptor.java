@@ -23,7 +23,7 @@ public class JwtAuthInterceptor implements HandshakeInterceptor {
 
 //    public JwtAuthInterceptor(JwtProvider jwtProvider) {
 //        this.jwtProvider = jwtProvider;
-//    }
+//    }//
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request,

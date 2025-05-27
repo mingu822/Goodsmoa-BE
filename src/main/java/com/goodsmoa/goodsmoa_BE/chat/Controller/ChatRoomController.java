@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ChatRoomController {
-
+//
     private final ChatRoomService chatRoomService;
 
     private final ChatRoomRepository chatRoomRepository;
