@@ -63,18 +63,31 @@ public class ChatRoomService {
         chatRoom.addParticipant(user);
         return ResponseEntity.ok("채팅방 참가 완료");
     }
-    public ResponseEntity<ChatRoomResponse> createRandomRoom() {
-        // 랜덤 문자열 생성 (예: UUID)
+    public ResponseEntity<ChatRoomResponse> createRandomRoom(String senderId) {
         String randomTitle = "방-" + UUID.randomUUID().toString().substring(0, 8);
+
+        UserEntity sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new IllegalArgumentException("유저가 존재하지 않습니다."));
+
+        // 랜덤하게 receiver 선택 (예시)
+        List<UserEntity> allUsers = userRepository.findAll();
+        UserEntity receiver = allUsers.stream()
+                .filter(u -> !u.getId().equals(senderId))
+                .findAny()
+                .orElseThrow(() -> new IllegalArgumentException("다른 유저가 없습니다."));
 
         ChatRoomEntity chatRoom = ChatRoomEntity.builder()
                 .title(randomTitle)
                 .status(true)
+                .sender(sender)
+                .receiver(receiver)
                 .build();
 
         chatRoom = chatRoomRepository.save(chatRoom);
         return ResponseEntity.ok(ChatRoomConverter.toResponse(chatRoom));
     }
+
+
 
 
 

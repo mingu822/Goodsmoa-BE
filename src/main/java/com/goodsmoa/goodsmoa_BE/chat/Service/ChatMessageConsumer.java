@@ -23,7 +23,7 @@ public class ChatMessageConsumer {
     private final ObjectMapper objectMapper;
     private final UserRepository userRepository; // 🔥 UserEntity 조회를 위해 추가
 
-    @RabbitListener(queues = "#{'${rabbitmq.queue}'}")
+    @RabbitListener(queues = "${rabbitmq.queue}")
     public void receiveMessage(String message) {
         try {
             ChatMessage chatMessage = objectMapper.readValue(message, ChatMessage.class);

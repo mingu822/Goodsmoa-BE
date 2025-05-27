@@ -1,4 +1,4 @@
-package com.goodsmoa.goodsmoa_BE.chat.Config;
+package com.goodsmoa.goodsmoa_BE.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
