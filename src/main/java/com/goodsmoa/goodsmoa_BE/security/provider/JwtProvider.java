@@ -30,15 +30,10 @@ public class JwtProvider {
 
     private final JwtProps jwtProps;
 
-    @Lazy
-    private final UserService userService;
-
-
 
     public SecretKey getShaKey() {
         // JwtProps에서 시크릿 키를 가져온다.
         String secretKey = jwtProps.getSecretKey();
-
 
 
         // 바이트 배열로 변환하여 HMAC-SHA 알고리즘에서 사용할 수 있는 SecretKey 객체를 생성한다.
@@ -81,7 +76,7 @@ public class JwtProvider {
 
     //리프레시-30일
     public String createRefreshToken(UserEntity user) {
-        long exp = 1000L * 60 * 60 * 24 * 30;  // ✅ `long`으로 변경
+        long exp = 1000L * 60 * 60 * 24 * 30;  // ✅ long으로 변경
 
         SecretKey shaKey = getShaKey();
 
@@ -105,44 +100,6 @@ public class JwtProvider {
 
     }
 
-    /**
-     * 리프레시 토큰을 사용해 새로운 엑세스 토큰 발급
-     */
-    public String refreshAccessToken(String refreshToken) {
-        try {
-            // 🔹 리프레시 토큰 검증
-            Jws<Claims> claims = Jwts.parser()
-                    .setSigningKey(getShaKey()) // ✅ 서명 검증
-                    .build()
-                    .parseClaimsJws(refreshToken);
-
-            // 🔹 리프레시 토큰에서 유저 정보 가져오기
-            String id = claims.getBody().get("id").toString(); // 유저 ID 가져오기
-
-            // 🔹 DB에서 유저 정보 가져오기
-            UserEntity user = userService.getUserById(id);
-            if (user == null || !user.getRefreshToken().equals(refreshToken)) {
-                throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
-            }
-
-            // 🔹 새로운 엑세스 토큰 발급
-            return createAccessToken(user);
-
-        } catch (ExpiredJwtException e) {
-            log.error("리프레시 토큰 만료됨!");
-        } catch (JwtException e) {
-            log.error("리프레시 토큰이 유효하지 않음!");
-        }
-
-        return null;
-    }
-
-
-
-
-
-
-
 
     //jWT 토큰을 해석하여 사용자 인증 정보를 반환하는 메서드
 
@@ -164,17 +121,15 @@ public class JwtProvider {
                     .parseClaimsJws(jwt);
 
 
-
             log.info("parsedToken:" + parsedToken);
 
 
-
             // 사용자 id
-            String id =  parsedToken.getBody().get("id").toString();
+            String id = parsedToken.getBody().get("id").toString();
             // 회원 권한
             String role = (String) parsedToken.getBody().get("role");
 
-            String nickname= (String) parsedToken.getBody().get("nickname");
+            String nickname = (String) parsedToken.getBody().get("nickname");
 
             // 해당 유저의 정보 담기 위해 Users 객체 생성
             UserEntity user = new UserEntity();
@@ -204,29 +159,25 @@ public class JwtProvider {
     }
 
 
-
-
     public boolean validateToken(String jwt) {
 
-        try{
-            Jws<Claims> claims= Jwts.parser().verifyWith(getShaKey()).build().parseSignedClaims(jwt);
+        try {
+            Jws<Claims> claims = Jwts.parser().verifyWith(getShaKey()).build().parseSignedClaims(jwt);
             Date expiration = claims.getBody().getExpiration();
             log.info("만료기간:" + expiration.toString());
-            boolean result=expiration.after(new Date()); //만료안됐으면 true임
+            boolean result = expiration.after(new Date()); //만료안됐으면 true임
             return result;
 
-        } catch(ExpiredJwtException exception){
+        } catch (ExpiredJwtException exception) {
             log.error("토큰 만료");
-        }
-
-        catch (JwtException e) {
+        } catch (JwtException e) {
             log.error("토큰 손상");
 
-        }catch (NullPointerException e) {
+        } catch (NullPointerException e) {
             log.error("토큰 없음");
 
 
-        }catch( Exception e) {
+        } catch (Exception e) {
 
         }
         return false;
@@ -237,7 +188,8 @@ public class JwtProvider {
     // 암호화
     public String encrypt(String raw) throws Exception {
         Cipher cipher = Cipher.getInstance("AES");
-        SecretKeySpec key = new SecretKeySpec("MySuperSecretKey12".getBytes(), "AES"); // 16바이트!
+        SecretKeySpec key = new SecretKeySpec("MySuperSecretKey".getBytes(), "AES");
+
         cipher.init(Cipher.ENCRYPT_MODE, key);
         byte[] encrypted = cipher.doFinal(raw.getBytes());
         return Base64.getEncoder().encodeToString(encrypted);
@@ -246,14 +198,20 @@ public class JwtProvider {
     // 복호화
     public String decrypt(String encoded) throws Exception {
         Cipher cipher = Cipher.getInstance("AES");
-        SecretKeySpec key = new SecretKeySpec("MySuperSecretKey12".getBytes(), "AES");
+        SecretKeySpec key = new SecretKeySpec("MySuperSecretKey".getBytes(), "AES");
+
         cipher.init(Cipher.DECRYPT_MODE, key);
         byte[] decoded = Base64.getDecoder().decode(encoded);
         return new String(cipher.doFinal(decoded));
     }
 
-
-
-
-
+    //리프레시 토큰에서 유저id 추출
+    public String extractUserIdFromRefreshToken(String refreshToken) {
+        Claims body = Jwts.parser()
+                .setSigningKey(getShaKey())
+                .build()
+                .parseClaimsJws(refreshToken)
+                .getBody();
+        return body.get("id").toString();
+    }
 }

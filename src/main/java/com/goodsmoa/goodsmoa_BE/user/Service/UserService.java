@@ -74,16 +74,9 @@ public class UserService {
 
     public String reissueAccessTokenFromRefresh(String refreshToken) {
         try {
-            // 토큰 파싱해서 유저 ID만 추출 (JwtProvider는 변경 못하니 여기서 파싱)
-            Claims body = Jwts.parser()
-                    .setSigningKey(jwtProvider.getShaKey())
-                    .build()
-                    .parseClaimsJws(refreshToken)
-                    .getBody();
+            String userId = jwtProvider.extractUserIdFromRefreshToken(refreshToken);
 
-            String userId = body.get("id").toString();
             String redisKey = "RT:" + userId;
-
             String encryptedRT = redisTemplate.opsForValue().get(redisKey);
             if (encryptedRT == null) {
                 throw new RuntimeException("Redis에 리프레시 토큰 없음");
@@ -98,7 +91,6 @@ public class UserService {
             return jwtProvider.createAccessToken(user);
 
         } catch (Exception e) {
-
             throw new RuntimeException("엑세스 토큰 재발급 실패: " + e.getMessage());
         }
     }

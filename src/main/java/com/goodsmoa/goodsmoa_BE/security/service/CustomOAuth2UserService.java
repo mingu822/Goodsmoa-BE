@@ -118,7 +118,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // JWT 액세스 토큰 발급
-        // 👇 JWT 토큰 발급
         String accessToken = jwtProvider.createAccessToken(user);
 
         String refreshToken;
@@ -126,35 +125,44 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         String existingEncryptedRT = redisTemplate.opsForValue().get(redisKey);
 
+
         if (existingEncryptedRT != null) {
             try {
                 String decrypted = jwtProvider.decrypt(existingEncryptedRT);
+
+
                 if (jwtProvider.validateToken(decrypted)) {
+                    log.info("✅ 레디스에서 기존 리프레시 토큰 유효함. 그대로 사용");
                     refreshToken = decrypted;
                 } else {
+                    log.warn("⚠️ 기존 리프레시 토큰 만료됨. 새로 발급");
                     refreshToken = jwtProvider.createRefreshToken(user);
                     String encrypted = jwtProvider.encrypt(refreshToken);
                     redisTemplate.opsForValue().set(redisKey, encrypted, 30, TimeUnit.DAYS);
                 }
             } catch (Exception e) {
-                // 복호화 실패 시 새로 발급
+                log.error("❌ 기존 리프레시 토큰 복호화 실패. 새로 발급", e);
                 try {
                     refreshToken = jwtProvider.createRefreshToken(user);
                     String encrypted = jwtProvider.encrypt(refreshToken);
                     redisTemplate.opsForValue().set(redisKey, encrypted, 30, TimeUnit.DAYS);
                 } catch (Exception ex) {
+                    log.error("❌ 리프레시 토큰 암호화 실패", ex);
                     throw new RuntimeException("리프레시 토큰 암호화 실패", ex);
                 }
             }
         } else {
+            log.info(" Redis에 리프레시 토큰 없음. 새로 발급");
             try {
                 refreshToken = jwtProvider.createRefreshToken(user);
                 String encrypted = jwtProvider.encrypt(refreshToken);
                 redisTemplate.opsForValue().set(redisKey, encrypted, 30, TimeUnit.DAYS);
             } catch (Exception e) {
+                log.error("❌ 리프레시 토큰 암호화 실패", e);
                 throw new RuntimeException("리프레시 토큰 암호화 실패", e);
             }
         }
+
 
 
 
@@ -165,7 +173,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 "accessToken=" + accessToken + "; " +
                         "HttpOnly; " +
                         "Path=/; " +
-                        "Max-Age=1800; " + // ⏰ 30분!
+                        "Max-Age=1800; " +
                         "SameSite=Lax");
 
         //  RefreshToken → 30일짜리
@@ -173,7 +181,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 "refreshToken=" + refreshToken + "; " +
                         "HttpOnly; " +
                         "Path=/; " +
-                        "Max-Age=2592000; " + // ⏰ 30일!
+                        "Max-Age=2592000; " +
                         "SameSite=Lax");
 
 
