@@ -1,6 +1,6 @@
-package com.goodsmoa.goodsmoa_BE.demand.entity;
+package com.goodsmoa.goodsmoa_BE.search.document;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.goodsmoa.goodsmoa_BE.enums.Board;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,13 +14,23 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(indexName = "demand_post_entity")
-public class DemandPostDocument {
+@Document(indexName = "search_document")
+public class SearchDocument {
+
     @Id
-    private Long id;
+    @Field(type = FieldType.Text, index = false)
+    private String id;
+
+    @Field(type = FieldType.Text, name = "user_id", index = false)
+    private String userId;
+
+    @Field(type = FieldType.Text, name = "thumbnail_url", index = false)
+    private String thumbnailUrl;
+
+    @Field(type = FieldType.Long, name = "views", index = false)
+    private Long views;
 
     //검색할 대상
-//    @Field(type = FieldType.Text, analyzer = "nori")
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = "nori_analyzer"),
             otherFields = {
@@ -28,7 +38,7 @@ public class DemandPostDocument {
             }
     )
     private String title;
-//    @Field(type = FieldType.Text, analyzer = "nori")
+
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = "nori_analyzer"),
             otherFields = {
@@ -36,7 +46,7 @@ public class DemandPostDocument {
             }
     )
     private String description;
-//    @Field(type = FieldType.Text, analyzer = "nori")
+
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = "nori_analyzer"),
             otherFields = {
@@ -44,23 +54,13 @@ public class DemandPostDocument {
             }
     )
     private String hashtag;
-//    @Field(type = FieldType.Text, name = "nick_name", analyzer = "nori")
-    @MultiField(
-            mainField = @Field(type = FieldType.Text, analyzer = "nori_analyzer"),
-            otherFields = {
-                    @InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer")
-            }
-    )
-    private String nickname;
 
     //필터링용
-    @Field(type = FieldType.Integer, name = "category_id")
+    @Field(type = FieldType.Keyword, name = "board")
+    private Board boardType;
+    @Field(type = FieldType.Integer, name = "category")
     private Integer categoryId;
-    @Field(type = FieldType.Boolean, name = "is_safe_payment")
-    private Boolean isSafePayment;
-    @Field(type = FieldType.Boolean, name = "is_state")
-    private Boolean isState;
-    
+
     //정렬용
     @Field(type = FieldType.Date, name = "start_time", format = {},  pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS||epoch_millis")
     private LocalDateTime startTime;

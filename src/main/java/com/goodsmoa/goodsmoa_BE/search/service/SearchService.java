@@ -1,0 +1,186 @@
+package com.goodsmoa.goodsmoa_BE.search.service;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
+import co.elastic.clients.json.JsonData;
+import com.goodsmoa.goodsmoa_BE.enums.Board;
+import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
+import com.goodsmoa.goodsmoa_BE.search.converter.SearchConverter;
+import com.goodsmoa.goodsmoa_BE.search.document.SearchDocument;
+import com.goodsmoa.goodsmoa_BE.search.entity.SearchEntity;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import com.goodsmoa.goodsmoa_BE.user.Repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class SearchService {
+    private final UserRepository userRepository;
+    private final ElasticsearchOperations elasticsearchOperations;
+    private final SearchConverter searchConverter;
+
+    // 색인 추가/수정
+    public void saveOrUpdateDocument(SearchEntity searchEntity, Board board) {
+        elasticsearchOperations.save(searchConverter.toDocument(searchEntity, board));
+    }
+
+    // 색인 삭제
+    public void deletePostDocument(String id) {
+        elasticsearchOperations.delete(id, SearchDocument.class);
+    }
+
+    // 끌어올림
+    public void updatePulledAt(String id) {
+        LocalDateTime lastPulledAt = findSearchDocByIdAndBoardWithThrow(id).getPulledAt();
+        LocalDateTime fiveDaysAgo = LocalDateTime.now().minusDays(5);
+
+        if (lastPulledAt.isAfter(fiveDaysAgo)) {
+            throw new IllegalStateException("최근 5일 이내에 이미 끌어올림을 했습니다. 다음 가능 일자: "
+                    + lastPulledAt.plusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+
+        String pulledAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"));
+        Document updateDoc = Document.from(Collections.singletonMap("pulled_at", pulledAt));
+        UpdateQuery updateQuery = UpdateQuery.builder(id)
+                .withDocument(updateDoc)
+                .build();
+        elasticsearchOperations.update(updateQuery, IndexCoordinates.of("search_document"));
+    }
+
+    // 검색(키워드 + 게시판)
+    public Page<SearchDocWithUserResponse> search(String keyword,
+                                                  Board boardType,
+                                                  Integer category,
+                                                  String orderBy,
+                                                  boolean includeExpired,
+                                                  boolean includeScheduled,
+                                                  int page) {
+
+        // 제목/내용/해시태그/닉네임 키워드로 검색 + 카테고리/게시판 필터 + 정렬
+        // 1. BoolQuery 빌더 생성
+        BoolQuery.Builder boolQuery = QueryBuilders.bool();
+
+        // 2. 키워드 검색 조건
+        if (StringUtils.hasText(keyword)) {
+            List<String> tokens = Arrays.stream(keyword.trim().split("\\s+"))
+                    .filter(token -> !token.isEmpty())
+                    .toList();
+
+            // 2-1. 토큰이 여러 개인 경우: 모든 토큰 일치 (AND)
+            if (!tokens.isEmpty()) {
+                for (String token : tokens) {
+                    // 각 토큰마다 (nori OR ngram) 조건 추가
+                    BoolQuery.Builder tokenBool = QueryBuilders.bool();
+                    tokenBool.should(Query.of(q -> q
+                            .multiMatch(m -> m
+                                    .fields("title", "content", "hashtag", "nickname")
+                                    .query(token)
+                            )
+                    ));
+                    tokenBool.should(Query.of(q -> q
+                            .multiMatch(m -> m
+                                    .fields("title.ngram", "content.ngram", "hashtag.ngram", "nickname.ngram")
+                                    .query(token)
+                            )
+                    ));
+                    boolQuery.must(tokenBool.build()._toQuery()); // 모든 토큰 필수
+                }
+            }
+        }
+
+        // 3. 카테고리 필터링
+        if (category != null && category != 0) {
+            boolQuery.filter(Query.of(q -> q
+                    .term(t -> t.field("category").value(category))
+            ));
+        }
+
+        // 4. 게시판 필터링
+        if (!boardType.name().equals("ALL")) {
+            System.out.println(boardType.name());
+            boolQuery.filter(Query.of(q -> q.term(t -> t
+                    .field("board")  // ES 문서에 정의된 필드명
+                    .value(boardType.name())  // enum 이름을 문자열로 비교
+            )));
+        }
+        
+        // 5. 마감글/예정글 필터링
+        String now = String.valueOf(Instant.now().toEpochMilli());
+        if (!includeExpired) {
+            boolQuery.filter(Query.of(q -> q.range(r -> r
+                    .untyped(u -> u
+                            .field("end_time")
+                            .gte(JsonData.of(now))
+                    )
+            )));
+        }
+        if (!includeScheduled) {
+            boolQuery.filter(Query.of(q -> q.range(r -> r
+                    .untyped(u -> u
+                            .field("start_time")
+                            .lte(JsonData.of(now))
+                    )
+            )));
+        }
+
+        // 6. 정렬조건 추가
+        Sort sort = switch (orderBy) {
+            case "old" -> Sort.by(Sort.Direction.ASC, "pulled_at");
+            case "close" -> Sort.by(Sort.Direction.ASC, "end_time");
+            default -> Sort.by(Sort.Direction.DESC, "pulled_at");
+        };
+
+        NativeQuery nativeQuery = NativeQuery.builder()
+                .withQuery(Query.of(q -> q.bool(boolQuery.build())))
+                .withSort(sort)
+                .withPageable(PageRequest.of(page, 10))
+                .build();
+        SearchHits<SearchDocument> searchHits =  elasticsearchOperations.search(nativeQuery, SearchDocument.class);
+
+        List<String> userIds = searchHits.getSearchHits().stream()
+                .map(hit -> hit.getContent().getUserId())
+                .distinct()
+                .toList();
+
+        Map<String, UserEntity> userMap = userRepository.findAllById(userIds)
+                .stream().collect(Collectors.toMap(UserEntity::getId, Function.identity()));
+
+        List<SearchDocWithUserResponse> results = searchHits.getSearchHits().stream()
+                .map(hit -> {
+                    SearchDocument doc = hit.getContent();
+                    UserEntity user = userMap.get(doc.getUserId());
+                    return searchConverter.toSearchPostWithUserResponse(doc, user);
+                })
+                .toList();
+
+        return new PageImpl<>(results, PageRequest.of(page, 10), searchHits.getTotalHits());
+    }
+
+    private SearchDocument findSearchDocByIdAndBoardWithThrow(String id){
+        return Optional.ofNullable(elasticsearchOperations.get(id, SearchDocument.class))
+                .orElseThrow(() -> new EntityNotFoundException("Document not found"));
+    }
+}

@@ -1,11 +1,10 @@
 package com.goodsmoa.goodsmoa_BE.demand.controller;
 
-import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostCreateRequest;
-import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostListResponse;
-import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostResponse;
-import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostUpdateRequest;
-import com.goodsmoa.goodsmoa_BE.demand.service.DemandPostSearchService;
+import com.goodsmoa.goodsmoa_BE.enums.Board;
+import com.goodsmoa.goodsmoa_BE.demand.dto.post.*;
 import com.goodsmoa.goodsmoa_BE.demand.service.DemandPostService;
+import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
+import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,32 +21,25 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class DemandPostApiController {
 
+    private final SearchService searchService;
     private final DemandPostService demandPostService;
-    private final DemandPostSearchService demandPostSearchService;
-
-    // 모든 수요조사 조회
-//    @GetMapping
-//    public ResponseEntity<List<DemandPostListResponse>> findAll(@RequestParam boolean state){
-//        return ResponseEntity.ok(demandPostService.getDemandEntityList(state));
-//    }
 
     // 키워드 검색
     @GetMapping
-    public ResponseEntity<Page<DemandPostListResponse>> findByKeyword(@RequestParam Optional<String> search,
-                                                                    @RequestParam Optional<Integer> category,
-                                                                    @RequestParam(defaultValue = "new", name = "order_by") String orderBy,
-                                                                    @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
-                                                                    @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
-                                                                    @RequestParam(required = false, defaultValue = "true", name = "exclude_private")  boolean excludePrivate,
-                                                                    @RequestParam(defaultValue = "0") int page){
+    public ResponseEntity<Page<SearchDocWithUserResponse>> findByKeyword(@RequestParam Optional<String> query,
+                                                                         @RequestParam Optional<Integer> category,
+                                                                         @RequestParam(defaultValue = "new", name = "order_by") String orderBy,
+                                                                         @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
+                                                                         @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
+                                                                         @RequestParam(defaultValue = "0") int page){
         return ResponseEntity.ok(
-                demandPostService.searchDemandPosts(
-                        search.orElse(null),
+                searchService.search(
+                        query.orElse(null),
+                        Board.DEMAND,
                         category.orElse(0),
                         orderBy,
                         includeExpired,
                         includeScheduled,
-                        excludePrivate,
                         page
                 )
         );
@@ -87,18 +79,9 @@ public class DemandPostApiController {
         return ResponseEntity.ok(demandPostService.pullDemand(user, id));
     }
 
-    // 상태변경
-    @PostMapping("/stateSwitch/{id}")
-    public ResponseEntity<String> stateSwitch(@AuthenticationPrincipal UserEntity user,
-                                              @PathVariable Long id){
-        return ResponseEntity.ok(demandPostService.stateSwitch(user, id));
-    }
-
-
     @GetMapping("/reIndex")
     public ResponseEntity<String> reIndexing(){
-//        demandPostSearchService.deleteAllIndex();
-        demandPostSearchService.indexAllData();
+        demandPostService.indexAllData();
         return ResponseEntity.ok("기존 인덱스를 삭제하고 새로 인덱싱 했습니다.");
     }
 }
