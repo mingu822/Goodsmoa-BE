@@ -31,6 +31,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -70,14 +72,51 @@ public class SearchService {
         elasticsearchOperations.update(updateQuery, IndexCoordinates.of("search_document"));
     }
 
+    // 통합검색
+    public Map<Board, List<SearchDocWithUserResponse>> integratedSearch(
+            String keyword,
+            Integer category,
+            String orderBy,
+            boolean includeExpired,
+            boolean includeScheduled,
+            int pageSize
+    ) {
+        // 결과 저장용 Map (동기화된 Map 필요)
+        Map<Board, List<SearchDocWithUserResponse>> result = new ConcurrentHashMap<>();
+
+        // 비동기 작업 리스트
+        List<CompletableFuture<Void>> futures = Arrays.stream(Board.values())
+                .map(board -> CompletableFuture.runAsync(() -> {
+                    Page<SearchDocWithUserResponse> page = detailedSearch(
+                            keyword,
+                            board,
+                            category,
+                            orderBy,
+                            includeExpired,
+                            includeScheduled,
+                            0,
+                            pageSize
+                    );
+                    result.put(board, page.getContent());
+                }))
+                .toList();
+
+        // 모든 작업이 끝날 때까지 기다림
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        return result;
+    }
+
+
     // 검색(키워드 + 게시판)
-    public Page<SearchDocWithUserResponse> search(String keyword,
+    public Page<SearchDocWithUserResponse> detailedSearch(String keyword,
                                                   Board boardType,
                                                   Integer category,
                                                   String orderBy,
                                                   boolean includeExpired,
                                                   boolean includeScheduled,
-                                                  int page) {
+                                                  int page,
+                                                  int pageSize) {
 
         // 제목/내용/해시태그/닉네임 키워드로 검색 + 카테고리/게시판 필터 + 정렬
         // 1. BoolQuery 빌더 생성
@@ -119,14 +158,13 @@ public class SearchService {
         }
 
         // 4. 게시판 필터링
-        if (!boardType.name().equals("ALL")) {
-            System.out.println(boardType.name());
-            boolQuery.filter(Query.of(q -> q.term(t -> t
-                    .field("board")  // ES 문서에 정의된 필드명
-                    .value(boardType.name())  // enum 이름을 문자열로 비교
-            )));
-        }
-        
+        System.out.println(boardType.name());
+        boolQuery.filter(Query.of(q -> q.term(t -> t
+                .field("board")  // ES 문서에 정의된 필드명
+                .value(boardType.name())  // enum 이름을 문자열로 비교
+        )));
+
+
         // 5. 마감글/예정글 필터링
         String now = String.valueOf(Instant.now().toEpochMilli());
         if (!includeExpired) {
@@ -156,7 +194,7 @@ public class SearchService {
         NativeQuery nativeQuery = NativeQuery.builder()
                 .withQuery(Query.of(q -> q.bool(boolQuery.build())))
                 .withSort(sort)
-                .withPageable(PageRequest.of(page, 10))
+                .withPageable(PageRequest.of(page, pageSize))
                 .build();
         SearchHits<SearchDocument> searchHits =  elasticsearchOperations.search(nativeQuery, SearchDocument.class);
 
@@ -176,7 +214,7 @@ public class SearchService {
                 })
                 .toList();
 
-        return new PageImpl<>(results, PageRequest.of(page, 10), searchHits.getTotalHits());
+        return new PageImpl<>(results, PageRequest.of(page, pageSize), searchHits.getTotalHits());
     }
 
     private SearchDocument findSearchDocByIdAndBoardWithThrow(String id){

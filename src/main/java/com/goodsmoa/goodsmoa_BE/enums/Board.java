@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum Board {
-    ALL(0, "전체"),
     PRODUCT(1, "상품판매"),
     DEMAND(2, "수요조사"),
     TRADE(3, "중고거래"),

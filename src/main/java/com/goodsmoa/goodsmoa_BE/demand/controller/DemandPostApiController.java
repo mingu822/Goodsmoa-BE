@@ -31,16 +31,18 @@ public class DemandPostApiController {
                                                                          @RequestParam(defaultValue = "new", name = "order_by") String orderBy,
                                                                          @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
                                                                          @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
-                                                                         @RequestParam(defaultValue = "0") int page){
+                                                                         @RequestParam(defaultValue = "0", name = "page") int page,
+                                                                         @RequestParam(defaultValue = "0", name = "page_size") int pageSize){
         return ResponseEntity.ok(
-                searchService.search(
+                searchService.detailedSearch(
                         query.orElse(null),
                         Board.DEMAND,
                         category.orElse(0),
                         orderBy,
                         includeExpired,
                         includeScheduled,
-                        page
+                        page,
+                        pageSize
                 )
         );
     }
