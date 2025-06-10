@@ -14,17 +14,17 @@ public class DemandPostResponse {
     private Long id;
     private String title;
     private String description;
+    private String imageUrl;
+    private String hashtag;
+    private boolean state;
+    private Long views;
+    private String category;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime startTime;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime endTime;
-    private String imageUrl;
-    private boolean state;
-    private Long views;
-    private String hashtag;
-    private String category;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime createdAt;
@@ -34,8 +34,6 @@ public class DemandPostResponse {
     private String userName;
     private String userImage;
     private String userContent;
-//    private String email;
-//    private String phoneNumber;
 
     // 수요조사 제품 리스트
     private List<DemandProductResponse> products;

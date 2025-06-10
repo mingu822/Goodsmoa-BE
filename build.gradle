@@ -95,7 +95,7 @@ dependencies {
 	// Elasticsearch 클라이언트
 //	implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:8.18.0'
 
-	//Elasticsearch
+	//Elasticsearch spring-data-elasticSearch 5.5.x는 ElasticSearch 8.18.1와 호환
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 // RabbitMq
 	implementation 'org.springframework.boot:spring-boot-starter-amqp'

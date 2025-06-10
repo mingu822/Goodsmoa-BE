@@ -1,6 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.demand.entity;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
+import com.goodsmoa.goodsmoa_BE.search.entity.SearchEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,7 +17,7 @@ import java.util.List;
 @DynamicUpdate
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "demand_post")
-public class DemandPostEntity {
+public class DemandPostEntity implements SearchEntity {
     /**
      * TODO: 게시물 숨기기(신고횟수에 따른 비활성화)추가
      * FIXME: 자료형 확인, Valid 추가
@@ -34,22 +35,14 @@ public class DemandPostEntity {
     @Column(nullable = false)
     private String description;
 
-    // 시작일시
-    @Column(nullable = false)
-    private LocalDateTime startTime;
-
-    // 종료일시
-    @Column(nullable = false)
-    private LocalDateTime endTime;
-
     // 이미지 Url
     private String imageUrl;
 
     // 해시태그
     private String hashtag;
 
-    // 상태 false:비공개(참여불가, 검색불가, *수정불가*)
-    // 상태 true :공개(시작일시와 종료일시에 따른 상태 세분화)
+    // 상태 false:신고로 인한 비활성화(검색불가, 참여불가)
+    // 상태 true :활성화(시작일시와 종료일시에 따른 상태 세분화)
     //  ㄴ대기 : 검색 가능, 참여 불가능
     //  ㄴ진행 : 검색 가능, 참여 가능
     //  ㄴ종료 : 검색 가능, 참여 불가능
@@ -60,28 +53,28 @@ public class DemandPostEntity {
     @Column(nullable = false)
     private Long views;
 
+    // category N:1 연결, 즉시 조회
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    // 시작일시
+    @Column(nullable = false)
+    private LocalDateTime startTime;
+
+    // 종료일시
+    @Column(nullable = false)
+    private LocalDateTime endTime;
+
     // 생성일시
     @Column(nullable = false)
     private LocalDateTime createdAt;
-
-    // 끌어올림일시
-//    @Column(nullable = false)
-//    private LocalDateTime pulledAt;
-
-    // 삭제일시
-    @Column(nullable = true)
-    private LocalDateTime deletedAt;
 
     // user N:1 연결, 지연조회
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
-    // category N:1 연결, 즉시 조회
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "category_id")
-    private Category category;
-    
     // demand_product 1:N으로 연결
     @JsonIgnore
     @OneToMany(mappedBy = "demandPostEntity", orphanRemoval = true, cascade = CascadeType.ALL)
@@ -99,11 +92,6 @@ public class DemandPostEntity {
         this.imageUrl = imageUrl;
         this.hashtag = hashtag;
         this.category = category;
-    }
-
-    // 비공개
-    public void toggleState(){
-        this.state = !this.state;
     }
 
     // 조회수 증가

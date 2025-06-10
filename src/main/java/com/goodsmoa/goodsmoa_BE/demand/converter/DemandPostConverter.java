@@ -24,12 +24,12 @@ public class DemandPostConverter {
         return DemandPostEntity.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
-                .startTime(request.getStartTime())
-                .endTime(request.getEndTime())
                 .imageUrl(request.getImageUrl())
                 .hashtag(request.getHashtag())
                 .state(true)
                 .views(0L)
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
                 .createdAt(LocalDateTime.now())
                 .user(user)
                 .category(category)
@@ -45,36 +45,19 @@ public class DemandPostConverter {
                 .id(entity.getId())
                 .title(entity.getTitle())
                 .description(entity.getDescription())
-                .startTime(entity.getStartTime())
-                .endTime(entity.getEndTime())
                 .imageUrl(entity.getImageUrl())
+                .hashtag(entity.getHashtag())
                 .state(entity.isState())
                 .views(entity.getViews())
-                .hashtag(entity.getHashtag())
                 .category(entity.getCategory().getName())
+                .startTime(entity.getStartTime())
+                .endTime(entity.getEndTime())
                 .createdAt(entity.getCreatedAt())
-                .products(entity.getProducts().stream().map(demandPostProductConverter::toResponse).toList())
                 .userId(user.getId())
                 .userName(user.getName())
                 .userImage(user.getImage())
                 .userContent(user.getContent())
-                .build();
-    }
-
-    // DemandPostEntity -> DemandPostListResponse
-    public DemandPostListResponse toListResponse(DemandPostEntity entity) {
-        UserEntity user = entity.getUser();
-
-        return DemandPostListResponse.builder()
-                .id(entity.getId())
-                .title(entity.getTitle())
-                .views(entity.getViews())
-                .hashtag(entity.getHashtag())
-                .startTime(entity.getStartTime())
-                .endTime(entity.getEndTime())
-                .userId(user.getId())
-                .userNickName(user.getNickname())
-                .userImage(user.getImage())
+                .products(entity.getProducts().stream().map(demandPostProductConverter::toResponse).toList())
                 .build();
     }
 }
