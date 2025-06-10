@@ -113,7 +113,7 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfo -> userInfo
                         .userService(customOAuth2UserService))
                 .successHandler((request, response, authentication) -> {
-                    response.sendRedirect("http://192.168.0.84:5177/");
+                    response.sendRedirect("http://localhost:5177/");
                 }));
 
         return http.build();
