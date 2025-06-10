@@ -1,9 +1,7 @@
-package com.goodsmoa.goodsmoa_BE.cart.dto;
+package com.goodsmoa.goodsmoa_BE.cart.dto.payment;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
-import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor

@@ -1,6 +1,5 @@
 package com.goodsmoa.goodsmoa_BE.product.entity;
 
-import com.goodsmoa.goodsmoa_BE.product.dto.Delivery.ProductDeliveryRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,9 +28,4 @@ public class ProductDeliveryEntity {
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
     private ProductPostEntity productPostEntity;
-
-    public void updateFromRequest(ProductDeliveryRequest request) {
-        this.name = request.getName();
-        this.price = request.getPrice();
-    }
 }

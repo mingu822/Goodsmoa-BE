@@ -1,4 +1,4 @@
-package com.goodsmoa.goodsmoa_BE.cart.dto;
+package com.goodsmoa.goodsmoa_BE.cart.dto.order;
 
 import lombok.*;
 

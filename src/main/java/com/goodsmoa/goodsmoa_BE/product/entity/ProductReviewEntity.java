@@ -9,13 +9,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "product_report",
+@Table(name = "product_review",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"post_id", "user_id"})
         }
@@ -26,6 +28,7 @@ public class ProductReviewEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 구매자의 아이디
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false) // 리뷰와의 관계
     @JsonBackReference
@@ -39,9 +42,6 @@ public class ProductReviewEntity {
     @Column(name = "title", length = 50, nullable = false)
     private String title;
 
-    @Column(name = "file", length = 255)
-    private String file;
-
     @Column(name = "rating", nullable = false)
     private Double rating;
 
@@ -53,4 +53,7 @@ public class ProductReviewEntity {
 
     @Column(name = "update_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductReviewMediaEntity> mediaList = new ArrayList<>();
 }

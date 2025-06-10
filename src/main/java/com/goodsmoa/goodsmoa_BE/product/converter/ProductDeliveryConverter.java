@@ -1,7 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.product.converter;
 
-import com.goodsmoa.goodsmoa_BE.product.dto.Delivery.ProductDeliveryRequest;
-import com.goodsmoa.goodsmoa_BE.product.dto.Delivery.ProductDeliveryResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.delivery.ProductDeliveryRequest;
+import com.goodsmoa.goodsmoa_BE.product.dto.delivery.ProductDeliveryResponse;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductDeliveryEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductPostEntity;
 import org.springframework.stereotype.Component;

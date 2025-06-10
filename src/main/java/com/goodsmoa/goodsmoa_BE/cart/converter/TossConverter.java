@@ -1,15 +1,12 @@
 package com.goodsmoa.goodsmoa_BE.cart.converter;
 
-import com.goodsmoa.goodsmoa_BE.cart.dto.OrderResponse;
-import com.goodsmoa.goodsmoa_BE.cart.dto.TossPaymentRequest;
-import com.goodsmoa.goodsmoa_BE.cart.dto.TossSuccessResponse;
+import com.goodsmoa.goodsmoa_BE.cart.dto.payment.TossPaymentRequest;
+import com.goodsmoa.goodsmoa_BE.cart.dto.payment.TossSuccessResponse;
 import com.goodsmoa.goodsmoa_BE.cart.entity.OrderEntity;
 import com.goodsmoa.goodsmoa_BE.cart.entity.PaymentEntity;
-import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Component
 public class TossConverter {
@@ -29,7 +26,7 @@ public class TossConverter {
     public PaymentEntity toSucessPaymentEntity(String paymentKey, String orderId, int amount, TossSuccessResponse response, OrderEntity order) {
         return   PaymentEntity.builder()
                 .paymentKey(paymentKey)
-                .orderId(orderId)
+                .orderCode(orderId)
                 .amount(amount)
                 .method(response.getMethod())
                 .orderName(response.getOrderName())
@@ -43,7 +40,7 @@ public class TossConverter {
 
     public PaymentEntity toFailPaymentEntity(OrderEntity order, String orderId) {
         return   PaymentEntity.builder()
-                .orderId(orderId)
+                .orderCode(orderId)
                 .customerName(order.getUser().getName())
                 .status(PaymentEntity.PaymentStatus.FAILED)
                 .order(order)

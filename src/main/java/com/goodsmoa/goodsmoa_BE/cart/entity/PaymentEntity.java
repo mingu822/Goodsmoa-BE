@@ -23,7 +23,7 @@ public class PaymentEntity {
 
     private String paymentKey;    // 토스에서 받은 결제 키
 
-    private String orderId;       // order에서 orderCode
+    private String orderCode;       // order에서 orderCode
 
     private Integer amount;       // 가격
 

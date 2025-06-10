@@ -13,14 +13,13 @@ public class ProductImageUpdateRequest {
     // 새로운 썸네일 이미지
     private MultipartFile newThumbnailImage;
 
+    // 사용 x
     // 새로운 상세설명 이미지 및 삭제할 아이디
     private List<MultipartFile> newContentImages;
     private List<String> deleteContentImageIds;
 
     // 새로운 상품이미지 및 삭제할 아이디
     private List<MultipartFile> newProductImages;
-    private List<Long> deleteProductImageIds;
-
-
+    private List<Long> deleteProductIds;
 
 }

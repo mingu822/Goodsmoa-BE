@@ -2,10 +2,10 @@ package com.goodsmoa.goodsmoa_BE.product.converter;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 
-import com.goodsmoa.goodsmoa_BE.product.dto.Post.PostDetailResponse;
-import com.goodsmoa.goodsmoa_BE.product.dto.Post.PostRequest;
-import com.goodsmoa.goodsmoa_BE.product.dto.Post.PostResponse;
-import com.goodsmoa.goodsmoa_BE.product.dto.Post.PostsResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.post.PostDetailResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.post.PostRequest;
+import com.goodsmoa.goodsmoa_BE.product.dto.post.PostResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.post.PostsResponse;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductDeliveryEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductPostEntity;

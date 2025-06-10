@@ -1,14 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.product.controller;
 
-import com.goodsmoa.goodsmoa_BE.product.dto.Delivery.ProductDeliveryRequest;
-import com.goodsmoa.goodsmoa_BE.product.dto.Delivery.ProductDeliveryResponse;
-import com.goodsmoa.goodsmoa_BE.product.dto.Image.ProductImageUpdateRequest;
-import com.goodsmoa.goodsmoa_BE.product.dto.Post.*;
-import com.goodsmoa.goodsmoa_BE.product.dto.ProductRequest;
-import com.goodsmoa.goodsmoa_BE.product.dto.ProductResponse;
-import com.goodsmoa.goodsmoa_BE.product.service.ProductService;
-import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -16,10 +9,22 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import com.goodsmoa.goodsmoa_BE.product.dto.post.PostDetailResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.post.PostRequest;
+import com.goodsmoa.goodsmoa_BE.product.dto.post.PostsResponse;
+import com.goodsmoa.goodsmoa_BE.product.service.ProductService;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,8 +40,7 @@ public class ProductController {
             @RequestPart("postRequest") PostRequest request,
             @RequestPart("thumbnailImage") MultipartFile thumbnailImage,
             @RequestPart(value = "productImages", required = false) List<MultipartFile> productImages,
-            @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages
-    ) {
+            @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages) {
         return productService.createPost(user, request, thumbnailImage, productImages, contentImages);
     }
 
@@ -50,26 +54,29 @@ public class ProductController {
             @RequestPart(value = "newContentImages", required = false) List<MultipartFile> newContentImages,
             @RequestPart(value = "newProductImages", required = false) List<MultipartFile> newProductImages,
             @RequestPart(value = "deleteContentImageIds", required = false) List<String> deleteContentImageIds,
-            @RequestPart(value = "deleteProductImageIds", required = false) List<Long> deleteProductImageIds
-    ) {
-        return productService.updateProductPost(user, id, request,newThumbnailImage,
+            @RequestPart(value = "deleteProductImageIds", required = false) List<Long> deleteProductImageIds) {
+        return productService.updateProductPost(user, id, request, newThumbnailImage,
                 newContentImages,
                 newProductImages,
                 deleteContentImageIds,
                 deleteProductImageIds);
     }
 
-
     // 상품글 상세 조회
     @GetMapping("/post-detail/{id}")
-    public ResponseEntity<PostDetailResponse> detailProductPost(@PathVariable Long id){
+    public ResponseEntity<PostDetailResponse> detailProductPost(@PathVariable Long id) {
         return productService.detailProductPost(id);
     }
 
     // 상품글 삭제
     @DeleteMapping("/post-delete/{id}")
-    public ResponseEntity<String> deleteProductPost(@AuthenticationPrincipal UserEntity user, @PathVariable Long id){
-        return productService.deleteProductPost(user,id);
+    public ResponseEntity<String> deleteProductPost(
+            @AuthenticationPrincipal UserEntity user,
+            @PathVariable Long id) {
+
+        productService.deleteProductPost(user, id);
+
+        return ResponseEntity.ok("게시물이 성공적으로 삭제되었습니다.");
     }
 
     // 상품글 리스트 조회
@@ -78,42 +85,4 @@ public class ProductController {
             @PageableDefault(size = 10, sort = "createAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return productService.getProductPostList(pageable);
     }
-
-    // TODO 필요시 사용
-//    // 상품 추가
-//    @PostMapping("/create")
-//    public ResponseEntity<ProductResponse> createProduct(@RequestBody ProductRequest request){
-//        return productService.createProduct(request);
-//    }
-//
-//    // 상품 수정
-//    @PutMapping("/update")
-//    public ResponseEntity<ProductResponse> updateProduct(@AuthenticationPrincipal UserEntity user, @RequestBody ProductRequest request){
-//        return productService.updateProduct(user,request);
-//    }
-//
-//    // 상품 삭제
-//    @DeleteMapping("/delete/{id}")
-//    public ResponseEntity<String> deleteProduct(@AuthenticationPrincipal UserEntity user, Long id){
-//        return productService.deleteProduct(user, id);
-//    }
-//
-//    // 배송 방식 추가
-//    @PostMapping("/delivery-create")
-//    public ResponseEntity<ProductDeliveryResponse> createProductDelivery(@RequestBody ProductDeliveryRequest request) {
-//        return productService.createProductDelivery(request);
-//    }
-//
-//    // 배송 방식 수정
-//    @PutMapping("/delivery-update")
-//    public ResponseEntity<ProductDeliveryResponse> updateProductDelivery(@AuthenticationPrincipal UserEntity user, @RequestBody ProductDeliveryRequest request){
-//        return productService.updateProductDelivery(user,request);
-//    }
-//
-//    // 배송 방식 삭제
-//    @DeleteMapping("/delivery-delete/{id}")
-//    public ResponseEntity<String> deleteProductDelivery(@AuthenticationPrincipal UserEntity user, Long id){
-//        return productService.deleteProductDelivery(user, id);
-//    }
-
 }

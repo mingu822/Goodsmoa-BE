@@ -1,11 +1,9 @@
-package com.goodsmoa.goodsmoa_BE.cart.dto;
+package com.goodsmoa.goodsmoa_BE.cart.dto.order;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Builder
 @Getter
