@@ -1,9 +1,12 @@
 package com.goodsmoa.goodsmoa_BE.cart.service;
 
+import com.goodsmoa.goodsmoa_BE.cart.converter.DeliveryConverter;
 import com.goodsmoa.goodsmoa_BE.cart.converter.OrderConverter;
-import com.goodsmoa.goodsmoa_BE.cart.converter.TossConverter;
-import com.goodsmoa.goodsmoa_BE.cart.dto.OrderRequest;
-import com.goodsmoa.goodsmoa_BE.cart.dto.OrderResponse;
+import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.DeliveryRequest;
+import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.DeliveryResponse;
+import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.TrackingResponse;
+import com.goodsmoa.goodsmoa_BE.cart.dto.order.OrderRequest;
+import com.goodsmoa.goodsmoa_BE.cart.dto.order.OrderResponse;
 import com.goodsmoa.goodsmoa_BE.cart.entity.OrderEntity;
 import com.goodsmoa.goodsmoa_BE.cart.entity.OrderItemEntity;
 import com.goodsmoa.goodsmoa_BE.cart.repository.OrderItemRepository;
@@ -35,10 +38,10 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final ProductDeliveryRepository productDeliveryRepository;
 
-    private final TossConverter tossConverter;
+    private final DeliveryConverter deliveryConverter;
 
+    private final TrackingService trackingService;
 
-    // TODO 주문을 하면 결제를 하지 않아도 상품의 갯수가 줄어 들어야 하는가?
     // 주문서 생성
     @Transactional
     public ResponseEntity<OrderResponse> createOrder(OrderRequest request, UserEntity user) {
@@ -92,4 +95,31 @@ public class OrderService {
 
         return ResponseEntity.ok(orderResponse);
     }
+
+    // 판매자가 송장번호 등록시키는 메서드
+    public ResponseEntity<DeliveryResponse> createDelivery(DeliveryRequest request, UserEntity user) {
+
+        OrderEntity order = orderRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문서입니다."));
+
+        if(!order.getProductPost().getUser().getId().equals(user.getId())) {
+            return ResponseEntity.notFound().build();
+        }
+
+        order.setDeliveryName(request.getDeliveryName());
+        order.setTrackingNumber(request.getTrackingNumber());
+        orderRepository.save(order);
+
+        List<OrderItemEntity> orderItems = orderItemRepository.findByOrder(order);
+
+        DeliveryResponse response = deliveryConverter.toResponse(order, orderItems);
+
+        return ResponseEntity.ok(response);
+    }
+
+    // 구매자가 송장번호를 통해 정보를 확인할 때
+    public TrackingResponse trackDelivery(String companyCode, String invoiceNumber) throws Exception {
+        return trackingService.trackDelivery(companyCode, invoiceNumber);
+    }
+
 }

@@ -1,6 +1,6 @@
-package com.goodsmoa.goodsmoa_BE.product.dto.Post;
+package com.goodsmoa.goodsmoa_BE.product.dto.post;
 
-import com.goodsmoa.goodsmoa_BE.product.dto.Delivery.ProductDeliveryRequest;
+import com.goodsmoa.goodsmoa_BE.product.dto.delivery.ProductDeliveryRequest;
 import com.goodsmoa.goodsmoa_BE.product.dto.ProductRequest;
 import jakarta.validation.constraints.*;
 import lombok.*;

@@ -1,8 +1,8 @@
-package com.goodsmoa.goodsmoa_BE.product.dto.Post;
+package com.goodsmoa.goodsmoa_BE.product.dto.post;
 
-import com.goodsmoa.goodsmoa_BE.product.dto.Delivery.ProductDeliveryResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.delivery.ProductDeliveryResponse;
 import com.goodsmoa.goodsmoa_BE.product.dto.ProductResponse;
-import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import com.goodsmoa.goodsmoa_BE.product.dto.review.ProductReviewResponse;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -41,4 +41,6 @@ public class PostDetailResponse {
     private List<ProductResponse> products;
 
     private List<ProductDeliveryResponse> delivers;
+
+    private List<ProductReviewResponse> reviews;
 }

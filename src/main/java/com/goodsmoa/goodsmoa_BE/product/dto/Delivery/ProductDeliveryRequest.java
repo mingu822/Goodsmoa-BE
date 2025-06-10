@@ -1,4 +1,4 @@
-package com.goodsmoa.goodsmoa_BE.product.dto.Delivery;
+package com.goodsmoa.goodsmoa_BE.product.dto.delivery;
 
 import jakarta.validation.constraints.*;
 import lombok.*;

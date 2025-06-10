@@ -1,9 +1,7 @@
-package com.goodsmoa.goodsmoa_BE.product.dto.Post;
+package com.goodsmoa.goodsmoa_BE.product.dto.post;
 
-import com.goodsmoa.goodsmoa_BE.product.dto.Delivery.ProductDeliveryResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.delivery.ProductDeliveryResponse;
 import com.goodsmoa.goodsmoa_BE.product.dto.ProductResponse;
-import com.goodsmoa.goodsmoa_BE.product.entity.ProductDeliveryEntity;
-import com.goodsmoa.goodsmoa_BE.product.entity.ProductEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.*;
 

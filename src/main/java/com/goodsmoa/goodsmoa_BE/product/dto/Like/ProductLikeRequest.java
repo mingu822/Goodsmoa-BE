@@ -1,8 +1,5 @@
-package com.goodsmoa.goodsmoa_BE.product.dto.Like;
+package com.goodsmoa.goodsmoa_BE.product.dto.like;
 
-import com.goodsmoa.goodsmoa_BE.product.entity.ProductLikeEntity;
-import com.goodsmoa.goodsmoa_BE.product.entity.ProductPostEntity;
-import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 

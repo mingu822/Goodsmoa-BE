@@ -29,12 +29,12 @@ public class OrderEntity {
 
     // 구매자가 구매하는 상품글
     @ManyToOne
-    @JoinColumn(name = "post_id", nullable = false)
+    @JoinColumn(name = "post_id")
     private ProductPostEntity productPost;
 
-    // 구매자가 선택한 배달 옵션
+    // 판매글에서 구매자가 선택한 배달 옵션
     @ManyToOne
-    @JoinColumn(name = "delivery_id", nullable = false)
+    @JoinColumn(name = "delivery_id")
     private ProductDeliveryEntity productDelivery;
 
     // 주문 상태

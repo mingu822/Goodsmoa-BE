@@ -1,14 +1,13 @@
 package com.goodsmoa.goodsmoa_BE.product.entity;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
-import com.goodsmoa.goodsmoa_BE.product.dto.Post.PostRequest;
+import com.goodsmoa.goodsmoa_BE.product.dto.post.PostRequest;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Getter
@@ -70,7 +69,6 @@ public class ProductPostEntity {
                                   //, boolean status
     ) {
         if (request.getTitle() != null) this.title = request.getTitle();
-        if (request.getContent() != null) this.content = request.getContent();
         if (request.getThumbnailImage() != null) this.thumbnailImage = request.getThumbnailImage();
         if (request.getStartTime() != null) this.startTime = request.getStartTime();
         if (request.getEndTime() != null) this.endTime = request.getEndTime();
@@ -79,9 +77,6 @@ public class ProductPostEntity {
 
         // 카테고리 업데이트
         if (category != null) this.category = category;
-
-        // 상태 업데이트
-        // this.state = status;
     }
 
     public void setThumbnailImage(String thumbnailPath) {

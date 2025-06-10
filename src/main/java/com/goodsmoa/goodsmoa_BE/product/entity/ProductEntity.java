@@ -50,8 +50,10 @@ public class ProductEntity {
         this.name = request.getName();
         this.price = request.getPrice();
         this.quantity = request.getQuantity();
-        this.image = request.getImage();
-        this.available = AvailabilityStatus.판매중;
         this.maxQuantity = request.getMaxQuantity();
+        if (request.getImage() != null) {
+            this.image = request.getImage();
+        }
+        this.available = AvailabilityStatus.판매중;
     }
 }

@@ -1,8 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.config;
 
+import java.util.Arrays;
 
-import com.goodsmoa.goodsmoa_BE.security.provider.JwtProvider;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,24 +17,21 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import com.goodsmoa.goodsmoa_BE.security.filter.JwtRequestFilter;
-
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-
+import com.goodsmoa.goodsmoa_BE.security.provider.JwtProvider;
 import com.goodsmoa.goodsmoa_BE.security.service.CustomOAuth2UserService;
 
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
 
-    // 카카오 서비스 객체 주입
+    // ✅ 카카오 서비스 객체 주입
     @Autowired
     private CustomOAuth2UserService customOAuth2UserService; // ✅ 객체(Bean)로 주입
-
 
     // 비밀번호 암호화 빈 등록
     @Bean
@@ -43,14 +39,14 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-
     @Autowired
     private JwtProvider jwtProvider;
 
     // AuthenticationManager를 빈으로 등록
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        AuthenticationManagerBuilder authenticationManagerBuilder = http
+                .getSharedObject(AuthenticationManagerBuilder.class);
         return authenticationManagerBuilder.build();
     }
 
@@ -60,19 +56,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 모든 도메인(Origin) 허용 → React Native에서 API 요청 가능
-        configuration.addAllowedOriginPattern("*");
+        // ✅ 정확한 Origin 명시
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5177/"));
 
-        // 허용할 HTTP 메서드
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // 허용할 요청 헤더
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-
-        // 프론트엔드에서 응답 헤더에서 Authorization 확인 가능하도록 설정
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
-
-        // 쿠키 및 인증 정보 포함 허용
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -80,58 +69,52 @@ public class SecurityConfig {
         return source;
     }
 
-
     // HTTP 보안 설정을 위한 메서드
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
-        // 폼 로그인 비활성화
+        // 기존 설정 유지
         http.formLogin(login -> login.disable());
-
-        // HTTP 기본 인증 비활성화
         http.httpBasic(basic -> basic.disable());
-
-        // CSRF 비활성화
         http.csrf(csrf -> csrf.disable());
-
-        // 세션 비활성화
         http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // 이미 등록된 authenticationManager 빈을 사용
-        AuthenticationManager authenticationManager = authenticationManager(http);
-
-        // 필터 설정
-        http.addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider), UsernamePasswordAuthenticationFilter.class);
-
         // CORS 설정 적용
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource())); // CorsConfigurationSource 적용
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
-
-
+        // 인증 요청 경로 명확히 설정
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/ws/**").permitAll()
-                .requestMatchers("/login/**", "/oauth2/**", "/public/**", "/error").permitAll() //  로그인 관련 요청 모두 허용
-                .requestMatchers("/mypage/**", "/orders/**", "/cart/**").authenticated() // 로그인 필요
-                .anyRequest().permitAll()
-        );
+                .requestMatchers(
+                        "/login/**",
+                        "/oauth2/**",
+                        "/public/**",
+                        "/error",
+                        "/users/info", // 사용자 정보 조회 경로 추가
+                        "/product/post", // 상품 목록 조회는 허용
+                        "/product/post-detail/**", // 상품 상세 조회는 허용
+                        "/order/create"
+                ).permitAll()
+                .requestMatchers(
+                        "/mypage/**",
+                        //"/orders/**",
+                        "/cart/**",
+                        "/product/post-create",
+                        "/product/post-update",
+                        "/product/post-delete/**")
+                .authenticated() // 로그인 필요한 경로
+                .anyRequest().permitAll());
 
-        //requestfilter추가
-        http.addFilterBefore(new JwtRequestFilter(authenticationManager(http), jwtProvider), UsernamePasswordAuthenticationFilter.class);
+        // JWT 필터 한 번만 등록 (중복 제거)
+        http.addFilterBefore(
+                new JwtRequestFilter(authenticationManager(http), jwtProvider),
+                UsernamePasswordAuthenticationFilter.class);
 
-
-
-        // OAuth2 로그인 설정 (카카오 로그인)
+        // OAuth2 로그인 설정
         http.oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo
-                        // CustomOAuth2UserService: 🔹 로그인시 카카오 로그인 사용자 정보 처리하고 jwt 발급해줌
-                        .userService(customOAuth2UserService)
-                )
+                        .userService(customOAuth2UserService))
                 .successHandler((request, response, authentication) -> {
-                    // 로그인 성공 시 https://witchform.com/w/main으로 리디렉션
-                    response.sendRedirect("https://witchform.com/w/main");
-                })
-        );
-
+                    response.sendRedirect("http://192.168.0.84:5177/");
+                }));
 
         return http.build();
     }

@@ -5,15 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goodsmoa.goodsmoa_BE.cart.config.TossProperties;
 import com.goodsmoa.goodsmoa_BE.cart.converter.OrderConverter;
 import com.goodsmoa.goodsmoa_BE.cart.converter.TossConverter;
-import com.goodsmoa.goodsmoa_BE.cart.dto.OrderPHResponse;
-import com.goodsmoa.goodsmoa_BE.cart.dto.OrderResponse;
-import com.goodsmoa.goodsmoa_BE.cart.dto.TossPaymentRequest;
-import com.goodsmoa.goodsmoa_BE.cart.dto.TossSuccessResponse;
+import com.goodsmoa.goodsmoa_BE.cart.dto.order.OrderPHResponse;
+import com.goodsmoa.goodsmoa_BE.cart.dto.order.OrderResponse;
+import com.goodsmoa.goodsmoa_BE.cart.dto.payment.TossPaymentRequest;
+import com.goodsmoa.goodsmoa_BE.cart.dto.payment.TossSuccessResponse;
 import com.goodsmoa.goodsmoa_BE.cart.entity.OrderEntity;
+import com.goodsmoa.goodsmoa_BE.cart.entity.OrderItemEntity;
 import com.goodsmoa.goodsmoa_BE.cart.entity.PaymentEntity;
+import com.goodsmoa.goodsmoa_BE.cart.repository.OrderItemRepository;
 import com.goodsmoa.goodsmoa_BE.cart.repository.OrderRepository;
 import com.goodsmoa.goodsmoa_BE.cart.repository.PaymentRepository;
-import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import com.goodsmoa.goodsmoa_BE.product.entity.ProductEntity;
+import com.goodsmoa.goodsmoa_BE.product.repository.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -24,10 +27,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -42,6 +42,10 @@ public class TossPaymentService {
 
     private final PaymentRepository paymentRepository;
 
+    private final OrderItemRepository orderItemRepository;
+
+    private final ProductRepository productRepository;
+
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper;
 
@@ -54,32 +58,28 @@ public class TossPaymentService {
         return ResponseEntity.ok(request);
     }
 
+    // 결제 성공 했을 때
     @Transactional
-    public ResponseEntity<OrderPHResponse> confirmPayment(String paymentKey, String orderId, int amount) {
+    public ResponseEntity<OrderPHResponse> confirmPayment(String paymentKey, String orderCode, int amount) {
 
-        // 결제 승인을 위한 url
+        // (1) 결제 승인 요청
         String secretKey = tossProperties.getSecretKey();
         String url = "https://api.tosspayments.com/v1/payments/confirm";
         String encodedAuth = Base64.getEncoder().encodeToString((secretKey + ":").getBytes());
 
-        // HTTP 헤더 설정
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON_UTF8)); // 중요
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON_UTF8));
         headers.set("Authorization", "Basic " + encodedAuth);
 
-        // HTTP 바디 설정
         Map<String, Object> body = new HashMap<>();
         body.put("paymentKey", paymentKey);
-        body.put("orderId", orderId);
+        body.put("orderId", orderCode);
         body.put("amount", amount);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
-
-        // Toss 서버에 POST 요청
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
-        // JSON 응답을 TossSuccessResponse로 파싱
         TossSuccessResponse tossResponse;
         try {
             tossResponse = objectMapper.readValue(response.getBody(), TossSuccessResponse.class);
@@ -87,17 +87,40 @@ public class TossPaymentService {
             throw new RuntimeException("결제 응답 파싱 실패", e);
         }
 
-        // 주문 정보 조회
-        OrderEntity order = orderRepository.findByOrderCode(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않습니다: " + orderId));
+        // (2) 주문 조회
+        OrderEntity order = orderRepository.findByOrderCode(orderCode)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않습니다: " + orderCode));
 
-        PaymentEntity payment = tossConverter.toSucessPaymentEntity(paymentKey, orderId, amount, tossResponse, order);
+        // (3) ✅ 상품 수량 차감 및 품절 처리
+        List<OrderItemEntity> orderItems = orderItemRepository.findByOrder(order);
+        for (OrderItemEntity item : orderItems) {
+            ProductEntity product = item.getProduct();
+            int currentQty = product.getQuantity();
+            int orderQty = item.getQuantity();
+
+            if (currentQty < orderQty) {
+                throw new IllegalStateException("상품 재고가 부족합니다: " + product.getName());
+            }
+
+            // 수량 차감
+            product.setQuantity(currentQty - orderQty);
+
+            // 품절 상태 처리
+            if (product.getQuantity() <= 0) {
+                product.setAvailable(ProductEntity.AvailabilityStatus.품절);
+            }
+            productRepository.save(product);
+        }
+
+        // (4) 결제 정보 저장
+        PaymentEntity payment = tossConverter.toSucessPaymentEntity(paymentKey, orderCode, amount, tossResponse, order);
         paymentRepository.save(payment);
 
+        // (5) 응답 반환
         OrderPHResponse orderResponse = orderConverter.toOrderPHResponse(order);
-
         return ResponseEntity.ok(orderResponse);
     }
+
 
     @Transactional
     public ResponseEntity<TossPaymentRequest> failPayment(String code,String message, String orderId) {

@@ -33,4 +33,6 @@ public class ProductRequest {
 
     private Long postId;
 
+    private boolean imageUpdated;
+
 }
