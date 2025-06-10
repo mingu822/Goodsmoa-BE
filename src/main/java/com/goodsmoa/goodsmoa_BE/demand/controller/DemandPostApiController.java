@@ -26,13 +26,17 @@ public class DemandPostApiController {
 
     // 키워드 검색
     @GetMapping
-    public ResponseEntity<Page<SearchDocWithUserResponse>> findByKeyword(@RequestParam Optional<String> query,
-                                                                         @RequestParam Optional<Integer> category,
-                                                                         @RequestParam(defaultValue = "new", name = "order_by") String orderBy,
-                                                                         @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
-                                                                         @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
-                                                                         @RequestParam(defaultValue = "0", name = "page") int page,
-                                                                         @RequestParam(defaultValue = "0", name = "page_size") int pageSize){
+    public ResponseEntity<Page<SearchDocWithUserResponse>> findByKeyword
+    (
+            @RequestParam Optional<String> query,
+            @RequestParam Optional<Integer> category,
+            @RequestParam(defaultValue = "new", name = "order_by") String orderBy,
+            @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
+            @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
+            @RequestParam(defaultValue = "0", name = "page") int page,
+            @RequestParam(defaultValue = "0", name = "page_size") int pageSize
+    )
+    {
         return ResponseEntity.ok(
                 searchService.detailedSearch(
                         query.orElse(null),
