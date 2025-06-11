@@ -23,7 +23,6 @@ public class ProductRequest {
     @Min(value = 0, message = "수량은 0개 이상이어야 합니다.")
     private Integer quantity;
 
-    @NotBlank(message = "이미지 URL은 필수입니다.")
     @Size(max = 255, message = "이미지 URL은 최대 255자까지 가능합니다.")
     private String image;
 

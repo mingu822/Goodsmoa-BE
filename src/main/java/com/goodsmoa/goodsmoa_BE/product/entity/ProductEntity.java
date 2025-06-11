@@ -27,7 +27,7 @@ public class ProductEntity {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "image", length = 255, nullable = false)
+    @Column(name = "image")
     private String image;
 
     @Enumerated(EnumType.STRING)

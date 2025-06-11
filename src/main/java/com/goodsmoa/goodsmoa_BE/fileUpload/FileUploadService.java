@@ -74,6 +74,8 @@ public class FileUploadService {
 
     // 기존에 폴더에 존재했던 이미지 파일 삭제
     public void deleteImage(String relativePath) {
+        if(relativePath == null)
+            return;
         try {
             Path imagePath = Paths.get(baseUploadDir, relativePath);
             Files.deleteIfExists(imagePath);

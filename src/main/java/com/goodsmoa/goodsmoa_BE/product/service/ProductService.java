@@ -11,12 +11,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.goodsmoa.goodsmoa_BE.product.entity.*;
 import com.goodsmoa.goodsmoa_BE.product.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -149,7 +150,17 @@ public class ProductService {
             List<MultipartFile> newContentImages,
             List<MultipartFile> newProductImages,
             List<String> deleteContentImagePaths,
-            List<Long> deleteProductIds) {
+            String deleteProductImageIdsJson) {
+
+        List<Long> deleteProductIds;
+        try {
+            deleteProductIds = new ObjectMapper().readValue(
+                    deleteProductImageIdsJson,
+                    new TypeReference<>() {}
+            );
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         // 이미지 DTO로 변환
         ProductImageUpdateRequest imageRequest = productImageUpdateConverter.toUpdate(
@@ -222,6 +233,8 @@ public class ProductService {
         int imageIndex = 0;
 
         for (ProductRequest productRequest : request.getProducts()) {
+            log.info("productRequest.getName() : "+productRequest.getName());
+            log.info("productRequest.isImageUpdated() : "+productRequest.isImageUpdated());
             if (productRequest.getId() != null && productRequest.getId() > 0) {
                 // 기존 상품
                 ProductEntity existingProduct = productRepository.findById(productRequest.getId())
@@ -229,7 +242,7 @@ public class ProductService {
 
                 existingProduct.updateFromRequest(productRequest);
 
-                if (productRequest.isImageUpdated() && imageIndex < newImages.size()) {
+                if (productRequest.isImageUpdated()) {
                     MultipartFile image = newImages.get(imageIndex++);
 
                     // 기존 이미지 삭제
@@ -249,7 +262,7 @@ public class ProductService {
                 // 먼저 저장해서 ID 확보
                 newProduct = productRepository.save(newProduct);
 
-                if (productRequest.isImageUpdated() && imageIndex < newImages.size()) {
+                if (productRequest.isImageUpdated()) {
                     MultipartFile image = newImages.get(imageIndex++);
 
                     // ✅ 방금 생성된 상품의 ID로 저장
