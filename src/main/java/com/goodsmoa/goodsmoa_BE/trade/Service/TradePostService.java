@@ -3,7 +3,7 @@ package com.goodsmoa.goodsmoa_BE.trade.Service;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
-import com.goodsmoa.goodsmoa_BE.elasticsearch.Service.TradePostSearchService;
+//import com.goodsmoa.goodsmoa_BE.elasticsearch.Service.TradePostSearchService;
 import com.goodsmoa.goodsmoa_BE.fileUpload.FileUploadService;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeImageConverter;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostConverter;
@@ -51,7 +51,7 @@ public class TradePostService {
     private final TradeImageRepository tradeImageRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
-    private final TradePostSearchService tradePostSearchService;
+//    private final TradePostSearchService tradePostSearchService;
     private final FileUploadService fileUploadService;
     private final TradePostHiddenRepository tradePostHiddenRepository;
     private final TradePostDescriptionRepository tradePostDescriptionRepository;
@@ -136,7 +136,7 @@ public class TradePostService {
         TradePostResponse response = tradePostConverter.toResponse(tradePostEntity, tradeImageEntities, descriptionEntity);
 //        response.setContentImageUrls(contentUrls); // setter 통해 별도 전달
         // 엘라스틱 서치 저장
-        tradePostSearchService.savePost(tradePostEntity);
+//        tradePostSearchService.savePost(tradePostEntity);
 
         return ResponseEntity.ok(response);
     }
