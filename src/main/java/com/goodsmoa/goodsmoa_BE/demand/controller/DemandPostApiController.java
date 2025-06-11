@@ -9,10 +9,14 @@ import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -58,18 +62,45 @@ public class DemandPostApiController {
     }
     
     // 수요조사 글 작성
-    @PostMapping("/create")
-    public ResponseEntity<DemandPostResponse> create(@AuthenticationPrincipal UserEntity user,
-                                                 @RequestBody DemandPostCreateRequest request) {
-        return ResponseEntity.ok(demandPostService.createDemand(user, request));
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> create(
+            @AuthenticationPrincipal UserEntity user,
+            @RequestPart("demandPostCreateRequest") DemandPostCreateRequest request,
+            @RequestPart("thumbnailImage") MultipartFile thumbnailImage,
+            @RequestPart(value = "productImages", required = false) List<MultipartFile> productImages,
+            @RequestPart(value = "descriptionImages", required = false) List<MultipartFile> descriptionImages
+    ) {
+        if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
+        return ResponseEntity.ok(demandPostService.createDemand(user, request, thumbnailImage, productImages, descriptionImages));
     }
+//    @PostMapping("/create")
+//    public ResponseEntity<DemandPostResponse> create(@AuthenticationPrincipal UserEntity user,
+//                                                     @RequestBody DemandPostCreateRequest request) {
+//        return ResponseEntity.ok(demandPostService.createDemand(user, request));
+//    }
 
     // 수요조사 글 수정
-    @PutMapping("/update")
-    public ResponseEntity<DemandPostResponse> update(@AuthenticationPrincipal UserEntity user,
-                                                   @RequestBody DemandPostUpdateRequest request){
-        return ResponseEntity.ok(demandPostService.updateDemand(user, request));
+    @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<DemandPostResponse> update(
+            @AuthenticationPrincipal UserEntity user,
+            @PathVariable Long id,
+            @RequestPart("demandPostUpdateRequest") DemandPostUpdateRequest request,
+            @RequestPart(value = "newThumbnailImage", required = false) MultipartFile newThumbnailImage,
+            @RequestPart(value = "newProductImages", required = false) List<MultipartFile> newProductImages,
+            @RequestPart(value = "newDescriptionImages", required = false) List<MultipartFile> newDescriptionImages
+    ){
+        return ResponseEntity.ok(demandPostService.updateDemand(
+                user, id, request,
+                newThumbnailImage,
+                newProductImages,
+                newDescriptionImages)
+        );
     }
+//    @PutMapping("/update")
+//    public ResponseEntity<DemandPostResponse> update(@AuthenticationPrincipal UserEntity user,
+//                                                   @RequestBody DemandPostUpdateRequest request){
+//        return ResponseEntity.ok(demandPostService.updateDemand(user, request));
+//    }
 
     // 수요조사 글 삭제
     @DeleteMapping("/delete/{id}")

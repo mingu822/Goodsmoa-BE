@@ -18,8 +18,8 @@ import java.util.List;
 @AllArgsConstructor
 public class DemandPostCreateRequest {
 
-    @Nullable
-    private Long id;
+//    @Nullable
+//    private Long id;
 
     @NotBlank(message = "제목을 작성해주십시오")
     @Size(max = 200)
@@ -36,6 +36,7 @@ public class DemandPostCreateRequest {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime endTime;
 
+    @NotBlank(message = "썸네일 이미지는 필수입니다")
     @Size(max=255)
     private String imageUrl;
 

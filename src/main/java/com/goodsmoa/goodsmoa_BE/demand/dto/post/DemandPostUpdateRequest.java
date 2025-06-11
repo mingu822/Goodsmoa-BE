@@ -17,9 +17,6 @@ import java.util.List;
 @AllArgsConstructor
 public class DemandPostUpdateRequest {
 
-    @NotBlank(message = "수정할 수요조사가 없습니다")
-    private Long id;
-
     @NotBlank(message = "제목을 작성해주십시오")
     @Size(max = 200)
     private String title;
