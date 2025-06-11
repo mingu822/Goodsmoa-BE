@@ -13,6 +13,10 @@ import lombok.NoArgsConstructor;
 public class ChatRoomResponse {
     private Long id;
 
-    private String title;
-////
+    private String buyer;
+
+    private String seller;
+
+
+
 }

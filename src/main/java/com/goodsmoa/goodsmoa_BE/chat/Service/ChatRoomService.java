@@ -30,50 +30,56 @@ public class ChatRoomService {
     @Transactional
     public ResponseEntity<ChatRoomResponse> createChatRoom(ChatRoom chat) {
         // sender, receiver ID로 유저 조회
-        UserEntity sender = userRepository.findById(chat.getSenderId())
+        UserEntity buyer = userRepository.findById(chat.getBuyerId())
                 .orElseThrow(() -> new IllegalArgumentException("보내는 유저가 존재하지 않습니다."));
-        UserEntity receiver = userRepository.findById(chat.getReceiverId())
+        UserEntity seller = userRepository.findById(chat.getSellerId())
                 .orElseThrow(() -> new IllegalArgumentException("받는 유저가 존재하지 않습니다."));
 
         // 중복 채팅방 체크
-        Optional<ChatRoomEntity> existingRoom = chatRoomRepository.findBySenderAndReceiver(sender, receiver)
-                .or(()-> chatRoomRepository.findBySenderAndReceiver(receiver, sender));
+        Optional<ChatRoomEntity> existingRoom = chatRoomRepository.findByBuyerAndSeller(buyer, seller)
+                .or(() -> chatRoomRepository.findByBuyerAndSeller(seller, buyer)); // ✅ 이 부분이 중요합니다.
         if (existingRoom.isPresent()) {
-            throw new IllegalStateException("이미 존재하는 채팅방입니다.");
+            ChatRoomResponse response = ChatRoomConverter.toResponse(existingRoom.get());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+
         }
 
         // 채팅방 생성
-        ChatRoomEntity chatRoom = ChatRoomConverter.toEntity(chat, sender, receiver);
+        ChatRoomEntity chatRoom = ChatRoomConverter.toEntity(chat, buyer, seller);
         ChatRoomEntity savedRoom = chatRoomRepository.save(chatRoom);
 
         // 4. 응답 DTO 생성
         ChatRoomResponse response = ChatRoomConverter.toResponse(savedRoom);
         return ResponseEntity.ok(response);
     }
+    @Transactional
     public ResponseEntity<ChatRoomResponse> createRandomRoom(String senderId) {
-        String randomTitle = "방-" + UUID.randomUUID().toString().substring(0, 8);
-
+        // sender 조회
         UserEntity sender = userRepository.findById(senderId)
                 .orElseThrow(() -> new IllegalArgumentException("유저가 존재하지 않습니다."));
 
-        // 랜덤하게 receiver 선택 (예시)
+        // 다른 유저 중 무작위로 receiver 선택
         List<UserEntity> allUsers = userRepository.findAll();
         UserEntity receiver = allUsers.stream()
                 .filter(u -> !u.getId().equals(senderId))
                 .findAny()
                 .orElseThrow(() -> new IllegalArgumentException("다른 유저가 없습니다."));
 
+        // buyer/seller 역할 무작위 할당
+        UserEntity buyer = Math.random() < 0.5 ? sender : receiver;
+        UserEntity seller = buyer == sender ? receiver : sender;
+
         ChatRoomEntity chatRoom = ChatRoomEntity.builder()
-                .title(randomTitle)
-                .status(true)
-                .sender(sender)
-                .receiver(receiver)
+                .buyer(buyer)
+                .seller(seller)
                 .build();
 
-        chatRoom = chatRoomRepository.save(chatRoom);
-        return ResponseEntity.ok(ChatRoomConverter.toResponse(chatRoom));
+        ChatRoomEntity savedRoom = chatRoomRepository.save(chatRoom);
 
+        ChatRoomResponse response = ChatRoomConverter.toResponse(savedRoom);
+        return ResponseEntity.ok(response);
     }
+
     public List<ChatRoomEntity> getAllChatRooms() {
                 return chatRoomRepository.findAll();
             }
