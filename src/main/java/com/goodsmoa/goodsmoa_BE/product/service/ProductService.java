@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.goodsmoa.goodsmoa_BE.product.dto.delivery.ProductDeliveryRequest;
 import com.goodsmoa.goodsmoa_BE.product.entity.*;
 import com.goodsmoa.goodsmoa_BE.product.repository.*;
 import org.springframework.data.domain.Page;
@@ -149,8 +150,8 @@ public class ProductService {
             MultipartFile newThumbnailImage,
             List<MultipartFile> newContentImages,
             List<MultipartFile> newProductImages,
-            List<String> deleteContentImagePaths,
-            String deleteProductImageIdsJson) {
+            String deleteProductImageIdsJson,
+            String deleteDeliveryIds) {
 
         List<Long> deleteProductIds;
         try {
@@ -161,11 +162,21 @@ public class ProductService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        List<Long> deleteDelivers;
+        try {
+            deleteDelivers = new ObjectMapper().readValue(
+                    deleteDeliveryIds,
+                    new TypeReference<>() {}
+            );
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
 
         // 이미지 DTO로 변환
         ProductImageUpdateRequest imageRequest = productImageUpdateConverter.toUpdate(
                 newThumbnailImage, newContentImages, newProductImages,
-                deleteContentImagePaths, deleteProductIds);
+                deleteProductIds);
 
         // 게시글 조회
         ProductPostEntity post = productPostRepository.findById(postId)
@@ -308,6 +319,29 @@ public class ProductService {
                 // ✅ DB에서 상품 삭제
                 productRepository.deleteAllByIdInBatch(deletableIds);
             }
+        }
+
+        // 배달 방식 수정
+        List<ProductDeliveryEntity> newDelivers = new ArrayList<>();
+
+        for(ProductDeliveryRequest deliveryRequest : request.getDelivers()){
+            if(deliveryRequest.getId() != null && deliveryRequest.getId() > 0){
+                // 기존 배달 상품
+                ProductDeliveryEntity existingDelivers = productDeliveryRepository.findById(deliveryRequest.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("배달방식을 찾을 수 없습니다: " + deliveryRequest.getId()));
+
+                existingDelivers.updateFromRequest(deliveryRequest);
+            }else{
+                // 신규 상품
+                ProductDeliveryEntity newDelivery = productDeliveryConverter.toEntity(deliveryRequest,post);
+
+                newDelivers.add(newDelivery);
+            }
+            productDeliveryRepository.saveAll(newDelivers);
+        }
+        // 배달방식 삭제
+        if(deleteDelivers != null && !deleteDelivers.isEmpty()){
+            productDeliveryRepository.deleteAllByIdInBatch(deleteDelivers);
         }
 
         // ✅ 카테고리 및 기타 정보 수정
