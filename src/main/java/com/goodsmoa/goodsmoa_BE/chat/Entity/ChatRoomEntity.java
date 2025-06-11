@@ -11,37 +11,32 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @Getter
+@Table(name = "chatRoom")
 public class ChatRoomEntity {
     // 채팅방 아이디
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 채팅방 제목
-    @Column(nullable = false , length = 50 )
-    private String title;
-
-    // 채팅방이 활성화 된건지 아닌지
-    @Column(nullable = false)
-    private Boolean status; // 진행(true) 종료(false)
-//
     // 채팅방 만드는 사람의 유저아이디
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name= "sender_id", nullable = false)
-    private UserEntity sender;
+    @JoinColumn(name= "seller_id", nullable = false)
+    private UserEntity seller;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name= "receiver_id", nullable = false)
-    private UserEntity receiver;
+    @JoinColumn(name= "buyer_id", nullable = false)
+    private UserEntity buyer;
+
+    private Long postId;
 // 채팅 메시지 목록 (양방향 매핑 필요 시)
     // @OneToMany(mappedBy = "chatRoomEntity", cascade = CascadeType.ALL)
     // private List<ChatMessageEntity> messages;
 
     public void addParticipant(UserEntity user) {
-        if(sender == null) {
-            sender = user;
-        }else if(receiver == null) {
-            receiver = user;
+        if(seller == null) {
+            seller = user;
+        }else if(buyer == null) {
+            buyer = user;
         }
     }
 

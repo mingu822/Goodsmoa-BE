@@ -15,9 +15,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -66,6 +68,19 @@ public class TradeLikeService {
         Page<TradeLikeResponse> responsePage = likedPage.map(tradeLikeConverter::toResponse);
 
         return ResponseEntity.ok(responsePage);
+    }
+    @Transactional
+    public TradeLikeResponse getSingleLiked(UserEntity user, Long tradeId) {
+        // 1. 좋아요한 게시글(TradePostEntity)을 먼저 찾습니다.
+        TradePostEntity tradePost = tradePostRepository.findById(tradeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trade post not found with ID: " + tradeId));
+
+        // 2. 찾아낸 TradePostEntity와 UserEntity를 사용하여 TradeLikeEntity를 조회합니다.
+        TradeLikeEntity tradeLikeEntity = tradeLikeRepository.findByTradeAndUser(tradePost, user)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trade like not found for user and trade ID: " + tradeId));
+
+        // 3. TradeLikeEntity를 TradeLikeResponse DTO로 변환하여 반환합니다.
+        return tradeLikeConverter.toResponse(tradeLikeEntity);
     }
 
 

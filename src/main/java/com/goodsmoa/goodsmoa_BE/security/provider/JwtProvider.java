@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.security.provider;
 
+
 import com.goodsmoa.goodsmoa_BE.security.constrants.SecurityConstants;
 import com.goodsmoa.goodsmoa_BE.security.props.JwtProps;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.Principal;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -158,6 +161,22 @@ public class JwtProvider {
         return null;
     }
 
+    public UsernamePasswordAuthenticationToken getAuthenticationTokenForStomp(String jwt) {
+        Jws<Claims> parsedToken = Jwts.parser()
+                .setSigningKey(getShaKey())
+                .build()
+                .parseClaimsJws(jwt);
+
+        String id = parsedToken.getBody().get("id").toString(); // userId
+        log.info("유저인포에 대한 아이디 {}",id);
+        String role = (String) parsedToken.getBody().get("role");
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
+
+        // 반드시 principal에 id(String)만!
+        return new UsernamePasswordAuthenticationToken(id, null, authorities);
+    }
+
+
 
     public boolean validateToken(String jwt) {
 
@@ -214,4 +233,8 @@ public class JwtProvider {
                 .getBody();
         return body.get("id").toString();
     }
+
+
+
+
 }

@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.trade.Controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeImageUpdateConverter;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageRequest;
@@ -42,41 +43,37 @@ public class TradePostController {
                 .contentImages(contentImages)
                 .productImages(productImages)
                 .build();
-//        TradeImageRequest imageRequest = new TradeImageRequest();
-//        imageRequest.setThumbnailImage(thumbnailImage);
-//        imageRequest.setContentImages(contentImages);
-//        imageRequest.setProductImages(productImages);
         return tradePostService.createTradePost(user, request,imageRequest);
     }
-
-    // 중고거래 글에 이미지 추가
-//    @PostMapping("/{id}/image/add")
-//    public ResponseEntity<String> addImage(
-//            @PathVariable Long id,
-//            @RequestBody TradeImageRequest imageRequests) {
-//        tradePostService.addImage(id, imageRequests);
-//        return ResponseEntity.ok("이미지 추가 완료");
-//    }
 
     @PostMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TradePostUpdateResponse> updateTradePost(
             @AuthenticationPrincipal UserEntity user,
             @PathVariable Long id,
-            @RequestPart("request") TradePostRequest request,
+            @RequestPart("request") String requestJson,
             @RequestPart(value = "newThumbnailImage", required = false) MultipartFile newThumbnailImage,
             @RequestPart(value = "newContentImages", required = false) List<MultipartFile> newContentImages,
-            @RequestPart(value = "newProductImages" , required = false) List<MultipartFile> newProductImages,
-            @RequestPart(value = "deleteContentImageIds" , required = false) List<String> deleteContentImageIds,
-            @RequestPart(value = "deleteProductImageIds", required = false) List<Long> deleteProductImageIds
+            @RequestPart(value = "newProductImages", required = false) List<MultipartFile> newProductImages,
+            @RequestPart(value = "deleteContentImageIds", required = false) List<String> deleteContentImageIds,
+            @RequestParam(value = "deleteProductImageIds", required = false) List<Long> deleteProductImageIds // <- 변경
     ) {
-        TradeImageUpdateRequest imageRequest = TradeImageUpdateConverter.toUpdate(
-                newThumbnailImage,
-                newContentImages,
-                newProductImages,
-                deleteContentImageIds,
-                deleteProductImageIds
-        );
-        return tradePostService.updateTradePost(user, id, request, imageRequest);
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            TradePostRequest request = objectMapper.readValue(requestJson, TradePostRequest.class);
+
+            TradeImageUpdateRequest imageRequest = TradeImageUpdateConverter.toUpdate(
+                    newThumbnailImage,
+                    newContentImages,
+                    newProductImages,
+                    deleteContentImageIds,
+                    deleteProductImageIds
+            );
+
+            return tradePostService.updateTradePost(user, id, request, imageRequest);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
     }
 
 

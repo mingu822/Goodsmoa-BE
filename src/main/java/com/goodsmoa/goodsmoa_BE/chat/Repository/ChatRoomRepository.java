@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoomEntity , Long> {
     // sender와 receiver 조합으로 기존 채팅방이 있는지 찾기
-    Optional<ChatRoomEntity> findBySenderAndReceiver(UserEntity sender, UserEntity receiver);
+    Optional<ChatRoomEntity> findByBuyerAndSeller(UserEntity buyer, UserEntity seller);
 //
 }

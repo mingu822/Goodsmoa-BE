@@ -48,5 +48,12 @@ public class TradeLikeController {
     ) {
         return tradeLikeService.getPagedLiked(user, pageable);
     }
+    @GetMapping("/my-likes/{tradeId}") // 특정 tradeId에 대한 좋아요 여부 조회 엔드포인트
+    public ResponseEntity<TradeLikeResponse> getSingleLikedTrade(
+            @AuthenticationPrincipal UserEntity user,
+            @PathVariable("tradeId") Long tradeId) { // 경로 변수로 tradeId를 받습니다.
+        TradeLikeResponse tradeLikeResponse = tradeLikeService.getSingleLiked(user, tradeId);
+        return ResponseEntity.ok(tradeLikeResponse);
+    }
 
 }

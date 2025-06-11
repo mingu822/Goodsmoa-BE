@@ -128,7 +128,7 @@ public class SecurityConfig {
                 )
                 .successHandler((request, response, authentication) -> {
                     // 로그인 성공 시 https://witchform.com/w/main으로 리디렉션
-                    response.sendRedirect("https://witchform.com/w/main");
+                    response.sendRedirect("http://localhost:5177/");
                 })
         );
 

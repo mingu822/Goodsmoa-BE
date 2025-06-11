@@ -4,6 +4,7 @@ import com.goodsmoa.goodsmoa_BE.security.provider.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -17,41 +18,45 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Slf4j
 @RequiredArgsConstructor
 public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer {
-//
-    private final JwtProvider jwtProvider;
-
-
-    private final JwtAuthInterceptor jwtAuthInterceptor;
 
     private final StompJwtChannelInterceptor stompJwtChannelInterceptor;
 
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-//        registry.addEndpoint("/ws")
-//                .addInterceptors(new JwtAuthInterceptor(jwtProvider))
-//                .setAllowedOrigins("*");
-//
-//        registry.addEndpoint("/ws-sockjs") // SockJS용
-//                .setAllowedOriginPatterns("*")
-////                .addInterceptors(new JwtAuthInterceptor(jwtProvider))
-//                .withSockJS();
-        registry.addEndpoint("/ws")
-                .addInterceptors(jwtAuthInterceptor)
-                .setAllowedOriginPatterns("*");
+    private final JwtAuthInterceptor jwtAuthInterceptor;
+    @Value("${spring.rabbitmq.host}")
+    private String host;
 
-        registry.addEndpoint("/ws-sockjs")
-                .addInterceptors(jwtAuthInterceptor)
-                .setAllowedOriginPatterns("*")
-                .withSockJS();
-    }
+    @Value("${spring.rabbitmq.username}")
+    private String username;
+
+    @Value("${spring.rabbitmq.password}")
+    private String password;
+
+//    @Override
+//    public void configureClientInboundChannel(ChannelRegistration registration) {
+//        registration.interceptors(stompJwtChannelInterceptor);
+//    }
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/sub");
         registry.setApplicationDestinationPrefixes("/pub");
+        registry.enableSimpleBroker("/topic", "/queue");
     }
+
+//    @Override
+//    public void registerStompEndpoints(StompEndpointRegistry registry) {
+//        registry.addEndpoint("/ws")
+//                .setAllowedOriginPatterns("*")
+//                .withSockJS()
+//                .setInterceptors(jwtAuthInterceptor);
+//    }
     @Override
-    public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(stompJwtChannelInterceptor);
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*")  // 또는 .setAllowedOrigins()
+                .addInterceptors(jwtAuthInterceptor) // 여기서 인터셉터 등록
+                .withSockJS();  // 마지막에 withSockJS() 호출
     }
+
+
 
 }

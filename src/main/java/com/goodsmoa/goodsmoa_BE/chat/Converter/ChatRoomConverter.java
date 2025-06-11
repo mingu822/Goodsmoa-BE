@@ -9,19 +9,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class ChatRoomConverter {
 //
-    public static ChatRoomEntity toEntity(ChatRoom dto, UserEntity sender, UserEntity receiver) {
+    public static ChatRoomEntity toEntity(ChatRoom dto, UserEntity buyer, UserEntity seller) {
         return ChatRoomEntity.builder()
-                .title(dto.getTitle())
-                .status(dto.getStatus() != null ? dto.getStatus() : true) // 기본값 true
-                .sender(sender)
-                .receiver(receiver)
+                .postId(dto.getId())
+                .seller(seller)
+                .buyer(buyer)
                 .build();
     }
 
     public static ChatRoomResponse toResponse(ChatRoomEntity entity) {
         return ChatRoomResponse.builder()
                 .id(entity.getId())
-                .title(entity.getTitle())
+                .buyer(entity.getBuyer().getId())
+                .seller(entity.getSeller().getId())
                 .build();
     }
 }

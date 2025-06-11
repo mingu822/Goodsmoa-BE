@@ -9,9 +9,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @Builder
 @Getter
+@Table(name="chat_message_entity")
 public class ChatMessageEntity {
 
     // 메세지 보낸 아이디
@@ -22,6 +23,9 @@ public class ChatMessageEntity {
     // 메세지 내용
     @Column(nullable = false , columnDefinition = "TEXT")
     private String content;
+
+    @Setter
+    private Boolean isRead = false;
 
     // 메세지 타입 글,이미지,영상
     @Column(nullable = false )
@@ -36,6 +40,11 @@ public class ChatMessageEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id")
     private UserEntity senderId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_id")
+    private UserEntity receiverId; // 👈 추가! (받는 사람)
+
 
     // 채팅방 아이디
     @ManyToOne(fetch = FetchType.LAZY)
