@@ -26,6 +26,8 @@ public class DemandPostProductRequest {
     @Size(max=255)
     private String imageUrl;  // 이미지
 
+    private boolean imageUpdated; // 이미지 수정 여부
+
     @NotNull(message = "목표 수량은 필수입니다")
     private int targetCount;  // 목표 수량
 }

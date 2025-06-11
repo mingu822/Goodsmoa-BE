@@ -32,10 +32,12 @@ public class DemandPostEntity implements SearchEntity {
     private String title;
 
     // 내용,설명
+    @Setter
     @Column(nullable = false)
     private String description;
 
     // 이미지 Url
+    @Setter
     private String imageUrl;
 
     // 해시태그

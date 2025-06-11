@@ -1,10 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.demand.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity @Getter @Builder
 @AllArgsConstructor
@@ -26,6 +23,7 @@ public class DemandPostProductEntity {
     private int price;
 
     // 이미지
+    @Setter
     @Column(nullable = false)
     private String imageUrl;
 
