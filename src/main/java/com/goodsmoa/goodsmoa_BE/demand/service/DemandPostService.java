@@ -10,7 +10,6 @@ import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostProductEntity;
 import com.goodsmoa.goodsmoa_BE.demand.repository.DemandPostRepository;
 import com.goodsmoa.goodsmoa_BE.fileUpload.FileUploadService;
-import com.goodsmoa.goodsmoa_BE.search.converter.SearchConverter;
 import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.EntityManager;
@@ -113,6 +112,8 @@ public class DemandPostService {
         }
 
         // 7. 검색 서비스 동기화
+        String noTag = postEntity.getDescription().replaceAll("<.*?>", " ");
+        postEntity.setDescription(noTag.replaceAll("<.*?>", " "));
         searchService.saveOrUpdateDocument(postEntity, Board.DEMAND);
         log.info("생성 후 색인 시작");
 
@@ -217,7 +218,7 @@ public class DemandPostService {
         });
         postEntity.getProducts().removeAll(productsToRemove);
 
-        
+
         // 본문 업데이트
         String originalDescription = postEntity.getDescription();
         List<String> oldImageUrls = extractImageUrls(originalDescription);

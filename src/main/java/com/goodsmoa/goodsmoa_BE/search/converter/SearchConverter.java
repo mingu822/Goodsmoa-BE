@@ -31,6 +31,7 @@ public class SearchConverter {
     public SearchDocWithUserResponse toSearchPostWithUserResponse(SearchDocument doc, UserEntity user){
         return SearchDocWithUserResponse.builder()
                 .id(doc.getId())
+                .boardType(doc.getBoardType().getName())
                 .title(doc.getTitle())
                 .hashtag(doc.getHashtag())
                 .thumbnailUrl(doc.getThumbnailUrl())
