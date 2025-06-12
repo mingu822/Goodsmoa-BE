@@ -23,11 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -112,9 +107,7 @@ public class DemandPostService {
         }
 
         // 7. 검색 서비스 동기화
-        String noTag = postEntity.getDescription().replaceAll("<.*?>", " ");
-        postEntity.setDescription(noTag.replaceAll("<.*?>", " "));
-        searchService.saveOrUpdateDocument(postEntity, Board.DEMAND);
+        trimDescription(postEntity);
         log.info("생성 후 색인 시작");
 
         return demandPostConverter.toResponse(postEntity);
@@ -249,8 +242,7 @@ public class DemandPostService {
                 request.getHashtag(),
                 findCategoryByIdWithThrow(request.getCategoryId())
         );
-        searchService.saveOrUpdateDocument(postEntity, Board.DEMAND);
-
+        trimDescription(postEntity);
         return demandPostConverter.toResponse(postEntity);
     }
 //    @Transactional
@@ -433,6 +425,13 @@ public class DemandPostService {
 //        return result.toString();
 //    }
 
+    // 내용 <tag>, 띄워쓰기 다듬어주기
+    private void trimDescription(DemandPostEntity postEntity){
+        String noTag = postEntity.getDescription().replaceAll("<.*?>", " ");
+        postEntity.setDescription(noTag.replaceAll("<.*?>", " "));
+        searchService.saveOrUpdateDocument(postEntity, Board.DEMAND);
+    }
+
     @Transactional
     public void indexAllData() {
         // DB 에서 모든 데이터를 가져옵니다.
@@ -440,7 +439,7 @@ public class DemandPostService {
 
         // 모든 데이터를 Elasticsearch 에 색인
         for (DemandPostEntity demandPostEntity : allDemandPosts) {
-            searchService.saveOrUpdateDocument(demandPostEntity, Board.DEMAND);
+            trimDescription(demandPostEntity);
         }
         log.info("All data has been indexed.");
     }

@@ -46,7 +46,6 @@ public class SearchService {
 
     // 색인 추가/수정
     public void saveOrUpdateDocument(SearchEntity searchEntity, Board board) {
-        log.info("SearchService에서 색인중...");
         elasticsearchOperations.save(searchConverter.toDocument(searchEntity, board));
     }
 
@@ -136,13 +135,13 @@ public class SearchService {
                     BoolQuery.Builder tokenBool = QueryBuilders.bool();
                     tokenBool.should(Query.of(q -> q
                             .multiMatch(m -> m
-                                    .fields("title", "content", "hashtag", "nickname")
+                                    .fields("title", "description", "hashtag")
                                     .query(token)
                             )
                     ));
                     tokenBool.should(Query.of(q -> q
                             .multiMatch(m -> m
-                                    .fields("title.ngram", "content.ngram", "hashtag.ngram", "nickname.ngram")
+                                    .fields("title.ngram", "description.ngram", "hashtag.ngram")
                                     .query(token)
                             )
                     ));
