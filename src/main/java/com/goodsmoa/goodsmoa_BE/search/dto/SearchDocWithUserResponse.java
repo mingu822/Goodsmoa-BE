@@ -3,6 +3,8 @@ package com.goodsmoa.goodsmoa_BE.search.dto;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Builder @Getter
 public class SearchDocWithUserResponse {
     // 식별용
@@ -14,6 +16,7 @@ public class SearchDocWithUserResponse {
     private final String hashtag;
     private final String thumbnailUrl;
     private final Long views;
+    private final LocalDateTime endTime;
 
     // 작성자 정보
     private final String nickname;
