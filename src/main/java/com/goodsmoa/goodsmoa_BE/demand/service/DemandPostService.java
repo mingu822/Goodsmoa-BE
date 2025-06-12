@@ -24,6 +24,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,7 +45,6 @@ public class DemandPostService {
     private final DemandPostRepository demandPostRepository;
     private final DemandPostProductConverter demandPostProductConverter;
     private final SearchService searchService;
-    private final SearchConverter searchConverter;
     private final FileUploadService fileUploadService;
 
     // 선택한 글의 id로 검색하여 가져오기
@@ -51,6 +55,13 @@ public class DemandPostService {
         demandPostRepository.save(postEntity);
 
         return demandPostConverter.toResponse(postEntity);
+    }
+
+    // 선택한 글의 id로 탐색하여 판매글로 전환할 데이터 보내기
+    public DemandPostToSaleResponse convertToProduct(Long id, UserEntity user) {
+        DemandPostEntity postEntity = findByIdWithThrow(id);
+        validateUserAuthorization(user.getId(), postEntity);
+        return demandPostConverter.toSaleResponse(postEntity);
     }
 
     // 수요조사 글 생성하기
@@ -103,6 +114,7 @@ public class DemandPostService {
 
         // 7. 검색 서비스 동기화
         searchService.saveOrUpdateDocument(postEntity, Board.DEMAND);
+        log.info("생성 후 색인 시작");
 
         return demandPostConverter.toResponse(postEntity);
     }
@@ -308,7 +320,26 @@ public class DemandPostService {
         validateUserAuthorization(user.getId(), postEntity);
         demandPostRepository.delete(postEntity);
         searchService.deletePostDocument("DEMAND_"+id);
+        deleteAllImagesByPostId(postEntity);
+
         return "글을 삭제하였습니다";
+    }
+
+    private void deleteAllImagesByPostId(DemandPostEntity postEntity) {
+
+        // 썸네일 삭제
+        fileUploadService.deleteImage(postEntity.getImageUrl());
+
+        // 본문 이미지 삭제
+        List<String> deleteImgUrls = extractImageUrls(postEntity.getDescription());
+        for(String imgUrl:deleteImgUrls){
+            fileUploadService.deleteImage(imgUrl);
+        }
+        
+        // 상품 이미지 삭제
+        for(DemandPostProductEntity entity : postEntity.getProducts()){
+            fileUploadService.deleteImage(entity.getImageUrl());
+        }
     }
 
     // 수요조사 글 끌어올리기

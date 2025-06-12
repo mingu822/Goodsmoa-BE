@@ -33,7 +33,7 @@ public class DemandPostEntity implements SearchEntity {
 
     // 내용,설명
     @Setter
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String description;
 
     // 이미지 Url

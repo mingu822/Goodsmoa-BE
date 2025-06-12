@@ -42,9 +42,10 @@ public class DemandOrderService {
     }
 
     // 수요조사 주문 생성하기
-    public DemandOrderResponse createDemandOrder(UserEntity user, DemandOrderCreateRequest request) {
+    @Transactional
+    public DemandOrderResponse createDemandOrder(UserEntity user, Long id, DemandOrderCreateRequest request) {
         // 수요조사글 유무 확인
-        DemandPostEntity postEntity = demandPostService.findByIdWithThrow(request.getDemandPostId());
+        DemandPostEntity postEntity = demandPostService.findByIdWithThrow(id);
         
         // 수요조사 주문 엔티티 생성
         DemandOrderEntity orderEntity = demandOrderConverter.toEntity(user, postEntity);
@@ -61,9 +62,9 @@ public class DemandOrderService {
 
     // 수요조사 주문 수정하기
     @Transactional
-    public DemandOrderResponse updateDemandOrder(UserEntity user, DemandOrderUpdateRequest request) {
+    public DemandOrderResponse updateDemandOrder(UserEntity user, Long id, DemandOrderUpdateRequest request) {
         // 주문의 유무 확인
-        DemandOrderEntity orderEntity = findOrderByIdWithThrow(request.getOrderEntityId());
+        DemandOrderEntity orderEntity = findOrderByIdWithThrow(id);
 
         // 글 작성자 본인 확인
         validateUserAuthorization(user.getId(), orderEntity.getUser().getId());

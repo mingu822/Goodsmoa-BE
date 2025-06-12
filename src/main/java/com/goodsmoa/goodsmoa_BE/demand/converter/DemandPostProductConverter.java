@@ -2,6 +2,7 @@ package com.goodsmoa.goodsmoa_BE.demand.converter;
 
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostProductRequest;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandProductResponse;
+import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandProductToSaleResponse;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostProductEntity;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,14 @@ public class DemandPostProductConverter {
                 .price(entity.getPrice())
                 .imageUrl(entity.getImageUrl())
                 .targetCount(entity.getTargetCount())
+                .build();
+    }
+
+    public DemandProductToSaleResponse toSaleResponse(DemandPostProductEntity entity) {
+        return DemandProductToSaleResponse.builder()
+                .name(entity.getName())
+                .price(entity.getPrice())
+                .imageUrl(entity.getImageUrl())
                 .build();
     }
 }

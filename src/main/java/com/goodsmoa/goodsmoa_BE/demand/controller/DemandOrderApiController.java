@@ -35,17 +35,19 @@ public class DemandOrderApiController {
     }
     
     // 수요조사 주문 생성
-    @PostMapping("/create")
+    @PostMapping("/create/{id}")
     public ResponseEntity<DemandOrderResponse> create(@AuthenticationPrincipal UserEntity user,
+                                                     @PathVariable Long id,
                                                      @RequestBody DemandOrderCreateRequest request) {
-        return ResponseEntity.ok(demandOrderService.createDemandOrder(user, request));
+        return ResponseEntity.ok(demandOrderService.createDemandOrder(user, id, request));
     }
 
     // 수요조사 주문 수정
-    @PutMapping("/update")
+    @PutMapping("/update/{id}")
     public ResponseEntity<DemandOrderResponse> update(@AuthenticationPrincipal UserEntity user,
+                                                   @PathVariable Long id,
                                                    @RequestBody DemandOrderUpdateRequest request){
-        return ResponseEntity.ok(demandOrderService.updateDemandOrder(user, request));
+        return ResponseEntity.ok(demandOrderService.updateDemandOrder(user, id, request));
     }
 
     // 수요조사 주문 삭제

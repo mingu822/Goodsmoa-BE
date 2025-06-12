@@ -116,6 +116,14 @@ public class DemandPostApiController {
         return ResponseEntity.ok(demandPostService.pullDemand(user, id));
     }
 
+    @PostMapping("/convert/{id}")
+    public ResponseEntity<DemandPostToSaleResponse> convertToProduct(
+            @AuthenticationPrincipal UserEntity user,
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(demandPostService.convertToProduct(id, user));
+    }
+
     @GetMapping("/reIndex")
     public ResponseEntity<String> reIndexing(){
         demandPostService.indexAllData();

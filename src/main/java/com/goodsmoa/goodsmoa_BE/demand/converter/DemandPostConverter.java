@@ -4,6 +4,7 @@ import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostCreateRequest;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostListResponse;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostResponse;
+import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostToSaleResponse;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.AllArgsConstructor;
@@ -58,6 +59,20 @@ public class DemandPostConverter {
                 .userImage(user.getImage())
                 .userContent(user.getContent())
                 .products(entity.getProducts().stream().map(demandPostProductConverter::toResponse).toList())
+                .build();
+    }
+
+    public DemandPostToSaleResponse toSaleResponse(DemandPostEntity entity) {
+        return DemandPostToSaleResponse.builder()
+                .id(entity.getId())
+                .title(entity.getTitle())
+                .description(entity.getDescription())
+                .imageUrl(entity.getImageUrl())
+                .hashtag(entity.getHashtag())
+                .category(entity.getCategory().getId())
+                .startTime(entity.getStartTime())
+                .endTime(entity.getEndTime())
+                .products(entity.getProducts().stream().map(demandPostProductConverter::toSaleResponse).toList())
                 .build();
     }
 }

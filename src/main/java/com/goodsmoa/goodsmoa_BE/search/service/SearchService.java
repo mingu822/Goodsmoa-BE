@@ -46,6 +46,7 @@ public class SearchService {
 
     // 색인 추가/수정
     public void saveOrUpdateDocument(SearchEntity searchEntity, Board board) {
+        log.info("SearchService에서 색인중...");
         elasticsearchOperations.save(searchConverter.toDocument(searchEntity, board));
     }
 
