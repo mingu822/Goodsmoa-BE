@@ -53,13 +53,14 @@ public class ProductController {
             @RequestPart(value = "newThumbnailImage", required = false) MultipartFile newThumbnailImage,
             @RequestPart(value = "newContentImages", required = false) List<MultipartFile> newContentImages,
             @RequestPart(value = "newProductImages", required = false) List<MultipartFile> newProductImages,
-            @RequestPart(value = "deleteContentImageIds", required = false) List<String> deleteContentImageIds,
-            @RequestPart("deleteProductImageIds") String deleteProductImageIdsJson) {
+            @RequestPart("deleteProductImageIds") String deleteProductImageIdsJson,
+            @RequestPart("deleteDeliveryIds") String deleteDeliveryIds)
+    {
         return productService.updateProductPost(user, id, request, newThumbnailImage,
                 newContentImages,
                 newProductImages,
-                deleteContentImageIds,
-                deleteProductImageIdsJson);
+                deleteProductImageIdsJson,
+                deleteDeliveryIds);
     }
 
     // 상품글 상세 조회

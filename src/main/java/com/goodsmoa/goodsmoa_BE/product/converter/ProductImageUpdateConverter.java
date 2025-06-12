@@ -12,14 +12,12 @@ public class ProductImageUpdateConverter {
             MultipartFile newThumbnailImage,
             List<MultipartFile> newContentImages,
             List<MultipartFile> newProductImages,
-            List<String> deleteContentImageIds,
             List<Long> deleteProductImageIds
     ){
         return ProductImageUpdateRequest.builder()
                 .newThumbnailImage(newThumbnailImage)
                 .newContentImages(newContentImages)
                 .newProductImages(newProductImages)
-                .deleteContentImageIds(deleteContentImageIds)
                 .deleteProductIds(deleteProductImageIds)
                 .build();
     }
