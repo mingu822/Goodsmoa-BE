@@ -8,6 +8,7 @@ import com.goodsmoa.goodsmoa_BE.chat.Entity.ChatRoomEntity;
 import com.goodsmoa.goodsmoa_BE.chat.Repository.ChatRoomRepository;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import com.goodsmoa.goodsmoa_BE.user.Repository.UserRepository;
+import com.goodsmoa.goodsmoa_BE.user.DTO.UserInfo;
 import com.goodsmoa.goodsmoa_BE.user.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,12 +20,14 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomConverter chatRoomConverter; // ✅ 컨버터 주입
 
     private final UserRepository userRepository;
     @Transactional
@@ -80,9 +83,9 @@ public class ChatRoomService {
         return ResponseEntity.ok(response);
     }
 
-    public List<ChatRoomEntity> getAllChatRooms() {
-                return chatRoomRepository.findAll();
-            }
+//    public List<ChatRoomEntity> getAllChatRooms() {
+//                return chatRoomRepository.findAll();
+//            }
 
     @Transactional
     public ResponseEntity<String> joinRoom(Long roomId, String userId) {
@@ -93,6 +96,13 @@ public class ChatRoomService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저가 존재하지 않습니다."));
         chatRoom.addParticipant(user);
         return ResponseEntity.ok("채팅방 참가 완료");
+    }
+
+    public List<ChatRoomResponse> getMyChatRooms(UserEntity currentUser) {
+        List<ChatRoomEntity> chatRoomEntities = chatRoomRepository.findByBuyerOrSeller(currentUser, currentUser);
+        return chatRoomEntities.stream()
+                .map(room -> chatRoomConverter.toChatRoomResponse(room, currentUser))
+                .collect(Collectors.toList());
     }
 
 

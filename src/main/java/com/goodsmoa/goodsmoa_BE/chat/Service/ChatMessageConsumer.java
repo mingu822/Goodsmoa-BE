@@ -15,6 +15,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // ✅ 트랜잭션 추가
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service // 서비스 계층으로 유지
 @RequiredArgsConstructor
@@ -41,11 +42,17 @@ public class ChatMessageConsumer {
             // 2. ChatRoomEntity 조회
             ChatRoomEntity chatRoom = chatRoomRepository.findById(chatMessage.getChatRoomId())
                     .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다. ID: " + chatMessage.getChatRoomId()));
-
+            UserEntity receiver = null;
+            if (chatRoom.getBuyer().getId().equals(senderId)) {
+                receiver = chatRoom.getSeller();
+            } else {
+                receiver = chatRoom.getBuyer();
+            }
             // 3. DB 저장
             ChatMessageEntity chatMessageEntity = ChatMessageEntity.builder()
                     .chatRoomEntity(chatRoom) // 올바른 ChatRoomEntity 연결
                     .senderId(sender)
+                    .receiverId(receiver)
                     .content(chatMessage.getContent())
                     .type(chatMessage.getType())
                     .sendAt(chatMessage.getSendAt() != null ? chatMessage.getSendAt() : LocalDateTime.now()) // 발행 시점 사용, 없으면 현재 시점
@@ -61,10 +68,26 @@ public class ChatMessageConsumer {
             chatMessage.setId(savedEntity.getId());
             chatMessage.setSendAt(savedEntity.getSendAt());
             chatMessage.setIsRead(savedEntity.getIsRead());
-
+            chatMessage.setSenderNickname(sender.getNickname());
+            chatMessage.setSenderImage(sender.getImage());
             // 5. 구독자에게 브로드캐스트
             String destination = "/queue/chat/" + chatMessage.getChatRoomId();
             messagingTemplate.convertAndSend(destination, chatMessage); // ✅ ID, isRead가 채워진 DTO 전송
+
+            if (sender != null) {
+                String senderDestination = "/queue/user/" + sender.getId() + "/update";
+                Map<String, Object> notification = Map.of("type", "NEW_MESSAGE_SENT", "chatRoomId", chatMessage.getChatRoomId());
+                messagingTemplate.convertAndSend(senderDestination, notification);
+                log.info("✅ 발신자 개인 큐로 알림 전송 완료: {}", senderDestination);
+            }
+
+            if (receiver != null) {
+                String receiverDestination = "/queue/user/" + receiver.getId() + "/update";
+                Map<String, Object> notification = Map.of("type", "NEW_MESSAGE_RECEIVED", "chatRoomId", chatMessage.getChatRoomId());
+                messagingTemplate.convertAndSend(receiverDestination, notification);
+                log.info("✅ 수신자 개인 큐로 알림 전송 완료: {}", receiverDestination);
+            }
+
 
         } catch (Exception e) {
             log.error("❌ MQ 메시지 처리 중 오류 발생 (메시지: {})", chatMessage != null ? chatMessage : "null", e);

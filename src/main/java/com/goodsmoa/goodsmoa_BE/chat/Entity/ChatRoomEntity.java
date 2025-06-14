@@ -28,9 +28,6 @@ public class ChatRoomEntity {
     private UserEntity buyer;
 
     private Long postId;
-// 채팅 메시지 목록 (양방향 매핑 필요 시)
-    // @OneToMany(mappedBy = "chatRoomEntity", cascade = CascadeType.ALL)
-    // private List<ChatMessageEntity> messages;
 
     public void addParticipant(UserEntity user) {
         if(seller == null) {

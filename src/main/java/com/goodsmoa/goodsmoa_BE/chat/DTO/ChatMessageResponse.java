@@ -15,6 +15,8 @@ public class ChatMessageResponse {
     private final Long id;      // DB에 생성된 메시지 ID
     private final Long chatRoomId;     // 메시지가 속한 채팅방 ID
     private final String senderId;         // 메시지를 보낸 사람의 ID
+    private final String senderImage;
+    private final String senderNickname;
     private final String content;        // 메시지 내용
     private final LocalDateTime sendAt;  // 메시지 발송 시간
     private final boolean isRead;        // 메시지 읽음 여부
@@ -26,9 +28,10 @@ public class ChatMessageResponse {
     public ChatMessageResponse(ChatMessageEntity entity) {
         this.id = entity.getId();
         this.chatRoomId = entity.getChatRoomEntity().getId();
-
         // ChatMessageEntity의 senderId 필드(UserEntity 타입)에서 id와 nickname을 가져옵니다.
         this.senderId = entity.getSenderId().getId();
+        this.senderImage = entity.getSenderId().getImage();
+        this.senderNickname = entity.getSenderId().getNickname();
         this.content = entity.getContent();
         this.sendAt = entity.getSendAt();
         this.isRead = entity.getIsRead();
