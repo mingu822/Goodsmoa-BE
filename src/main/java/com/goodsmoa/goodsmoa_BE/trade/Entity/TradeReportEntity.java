@@ -33,14 +33,17 @@ public class TradeReportEntity {
     @Column(nullable = false)
     private String title;
 
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
     public void updateReport(TradeReportRequest request){
         if(request.getTitle() != null) this.title = request.getTitle();
         if(request.getContent() != null) this.content = request.getContent();
-
     }
-
 }
 

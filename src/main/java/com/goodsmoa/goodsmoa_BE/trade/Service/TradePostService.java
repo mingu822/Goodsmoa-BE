@@ -4,7 +4,9 @@ package com.goodsmoa.goodsmoa_BE.trade.Service;
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 //import com.goodsmoa.goodsmoa_BE.elasticsearch.Service.TradePostSearchService;
+import com.goodsmoa.goodsmoa_BE.enums.Board;
 import com.goodsmoa.goodsmoa_BE.fileUpload.FileUploadService;
+import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeImageConverter;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostConverter;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostDescriptionConverter;
@@ -51,7 +53,7 @@ public class TradePostService {
     private final TradeImageRepository tradeImageRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
-//    private final TradePostSearchService tradePostSearchService;
+    private final SearchService searchService;
     private final FileUploadService fileUploadService;
     private final TradePostHiddenRepository tradePostHiddenRepository;
     private final TradePostDescriptionRepository tradePostDescriptionRepository;
@@ -138,6 +140,7 @@ public class TradePostService {
         // 엘라스틱 서치 저장
 //        tradePostSearchService.savePost(tradePostEntity);
 
+//        searchService.saveOrUpdateDocument(tradePostEntity, Board.TRADE);
         return ResponseEntity.ok(response);
     }
 
@@ -308,20 +311,28 @@ public class TradePostService {
     }
     // 로그인한 유저 기준으로 숨김 처리된 게시물 제외하고 조회
     public ResponseEntity<Page<TradePostLookResponse>> getTradePostList(UserEntity user, Pageable pageable) {
-        List<Long> hiddenPostIds = tradePostHiddenRepository.findAllByUser(user).stream()
-                .map(h -> h.getTradePost().getId())
-                .toList();
-
         Page<TradePostEntity> tradePostEntityPage;
 
-        if (hiddenPostIds.isEmpty()) {
-            // 숨긴 게시물이 없으면 전체 조회
+        // ✅ 1. 로그인 여부 확인
+        if (user == null) {
+            // 로그인하지 않은 사용자: 모든 게시물을 보여줌
             tradePostEntityPage = tradePostRepository.findAll(pageable);
         } else {
-            // 숨긴 게시물 제외하고 조회
-            tradePostEntityPage = tradePostRepository.findByIdNotIn(hiddenPostIds, pageable);
+            // 로그인한 사용자: 기존 로직을 그대로 실행
+            List<Long> hiddenPostIds = tradePostHiddenRepository.findAllByUser(user).stream()
+                    .map(h -> h.getTradePost().getId())
+                    .toList();
+
+            if (hiddenPostIds.isEmpty()) {
+                // 숨긴 게시물이 없으면 전체 조회
+                tradePostEntityPage = tradePostRepository.findAll(pageable);
+            } else {
+                // 숨긴 게시물을 제외하고 조회
+                tradePostEntityPage = tradePostRepository.findByIdNotIn(hiddenPostIds, pageable);
+            }
         }
 
+        // DTO 변환 및 반환 로직은 공통이므로 그대로 둡니다.
         Page<TradePostLookResponse> responsePage = tradePostEntityPage.map(tradePostConverter::lookResponse);
         return ResponseEntity.ok(responsePage);
     }

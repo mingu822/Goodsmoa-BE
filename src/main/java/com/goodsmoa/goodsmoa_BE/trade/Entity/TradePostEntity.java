@@ -2,6 +2,7 @@ package com.goodsmoa.goodsmoa_BE.trade.Entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
+import com.goodsmoa.goodsmoa_BE.search.entity.SearchEntity;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.TradePostRequest;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
@@ -43,6 +44,8 @@ public class TradePostEntity {
     @OneToMany(mappedBy = "tradePost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TradePostDescription> contentDescriptions = new ArrayList<>();
 
+
+
     private Integer productPrice;
 
     @Enumerated(EnumType.STRING)
@@ -79,6 +82,8 @@ public class TradePostEntity {
 
     @OneToMany(mappedBy = "tradePost", fetch = FetchType.LAZY)
     private List<UserHiddenPost> hiddenByUsers;
+
+
 
     public boolean isHiddenByUser(UserEntity user){
         return hiddenByUsers.stream().anyMatch(hiddenPost ->hiddenPost.getUser().equals(user));

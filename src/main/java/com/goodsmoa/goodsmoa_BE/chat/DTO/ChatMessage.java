@@ -19,11 +19,16 @@ public class ChatMessage {
 
     private String senderId; // 보낸 사람
 
+    private String senderImage;
+
+    private String senderNickname;
+
     private String content; // 메시지 내용
 
     private LocalDateTime sendAt;
 
     private Boolean isRead;
+
 
     public enum MessageType {
         ENTER, CHAT, LEAVE ;
@@ -34,6 +39,8 @@ public class ChatMessage {
                 .id(entity.getId())
                 .chatRoomId(entity.getChatRoomEntity().getId())
                 .senderId(entity.getSenderId().getId()) // UserEntity의 ID를 가져옴
+                .senderImage(entity.getSenderId().getImage())
+                .senderNickname(entity.getSenderId().getNickname())
                 .content(entity.getContent())
                 .sendAt(entity.getSendAt())
                 .isRead(entity.getIsRead())
