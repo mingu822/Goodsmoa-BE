@@ -2,6 +2,7 @@ package com.goodsmoa.goodsmoa_BE.cart.entity;
 
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductDeliveryEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductPostEntity;
+import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -36,6 +37,10 @@ public class OrderEntity {
     @ManyToOne
     @JoinColumn(name = "delivery_id")
     private ProductDeliveryEntity productDelivery;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trade_post_id")
+    private TradePostEntity tradePost;
 
     // 주문 상태
     @Enumerated(EnumType.STRING)

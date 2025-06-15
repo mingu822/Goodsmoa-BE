@@ -5,6 +5,8 @@ import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.DeliveryResponse;
 import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.TrackingResponse;
 import com.goodsmoa.goodsmoa_BE.cart.dto.order.OrderRequest;
 import com.goodsmoa.goodsmoa_BE.cart.dto.order.OrderResponse;
+import com.goodsmoa.goodsmoa_BE.cart.dto.order.TradeOrderRequest;
+import com.goodsmoa.goodsmoa_BE.cart.dto.order.TradeOrderResponse;
 import com.goodsmoa.goodsmoa_BE.cart.service.OrderService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,14 @@ public class OrderController {
         return orderService.createDelivery(request, user);
     }
 
+    // ✅ [신규 기능] 중고거래 상품 주문 생성
+    @PostMapping("/trade/create")
+    public ResponseEntity<TradeOrderResponse> createTradeOrder(
+            @RequestBody TradeOrderRequest request,
+            @AuthenticationPrincipal UserEntity user) {
+        TradeOrderResponse  orderResponse = orderService.createOrderFromTrade(request, user);
+        return ResponseEntity.ok(orderResponse);
+    }
     // TODO 택배를 조회할 때 택배사 별로 코드를 줘야 하는데 어떻게 줘야 하는가?
     // 구매자가 송장번호를 통해 정보를 확인 할 때
     @GetMapping("/tracking")

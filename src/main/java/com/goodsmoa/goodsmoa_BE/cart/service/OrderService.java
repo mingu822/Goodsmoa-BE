@@ -7,6 +7,8 @@ import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.DeliveryResponse;
 import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.TrackingResponse;
 import com.goodsmoa.goodsmoa_BE.cart.dto.order.OrderRequest;
 import com.goodsmoa.goodsmoa_BE.cart.dto.order.OrderResponse;
+import com.goodsmoa.goodsmoa_BE.cart.dto.order.TradeOrderRequest;
+import com.goodsmoa.goodsmoa_BE.cart.dto.order.TradeOrderResponse;
 import com.goodsmoa.goodsmoa_BE.cart.entity.OrderEntity;
 import com.goodsmoa.goodsmoa_BE.cart.entity.OrderItemEntity;
 import com.goodsmoa.goodsmoa_BE.cart.repository.OrderItemRepository;
@@ -17,9 +19,12 @@ import com.goodsmoa.goodsmoa_BE.product.entity.ProductPostEntity;
 import com.goodsmoa.goodsmoa_BE.product.repository.ProductDeliveryRepository;
 import com.goodsmoa.goodsmoa_BE.product.repository.ProductPostRepository;
 import com.goodsmoa.goodsmoa_BE.product.repository.ProductRepository;
+import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
+import com.goodsmoa.goodsmoa_BE.trade.Repository.TradePostRepository;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +33,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -42,6 +48,7 @@ public class OrderService {
 
     private final TrackingService trackingService;
 
+    private final TradePostRepository tradePostRepository;
     // 주문서 생성
     @Transactional
     public ResponseEntity<OrderResponse> createOrder(OrderRequest request, UserEntity user) {
@@ -102,8 +109,15 @@ public class OrderService {
         OrderEntity order = orderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문서입니다."));
 
+        // 판매자 본인 확인 (일반 상품과 중고거래 상품 둘 다 고려)
+        boolean isSeller = (order.getProductPost() != null && order.getProductPost().getUser().getId().equals(user.getId())) ||
+                (order.getTradePost() != null && order.getTradePost().getUser().getId().equals(user.getId()));
+
         if(!order.getProductPost().getUser().getId().equals(user.getId())) {
             return ResponseEntity.notFound().build();
+        }
+        if (!isSeller) {
+            return ResponseEntity.status(403).body(null); // 권한 없음
         }
 
         order.setDeliveryName(request.getDeliveryName());
@@ -120,6 +134,27 @@ public class OrderService {
     // 구매자가 송장번호를 통해 정보를 확인할 때
     public TrackingResponse trackDelivery(String companyCode, String invoiceNumber) throws Exception {
         return trackingService.trackDelivery(companyCode, invoiceNumber);
+    }
+    // ✅ [신규 기능] 중고거래 상품 주문서 생성
+    @Transactional
+    public TradeOrderResponse createOrderFromTrade(TradeOrderRequest request, UserEntity buyer) {
+        TradePostEntity tradePost = tradePostRepository.findById(request.getTradePostId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 중고거래 게시글입니다."));
+
+        if (Boolean.FALSE.equals(tradePost.getDelivery())) {
+            throw new IllegalStateException("택배 거래가 불가능한 상품입니다.");
+        }
+        if (tradePost.getTradeStatus() != TradePostEntity.TradeStatus.판매중) {
+            throw new IllegalStateException("이미 판매가 진행중이거나 완료된 상품입니다.");
+        }
+
+        OrderEntity order = orderConverter.toOrderEntityFromTrade(request, buyer, tradePost);
+        log.info("### DB 저장 직전 order 객체의 productDelivery 필드 값: [{}]", order.getProductDelivery());
+        orderRepository.save(order);
+
+        tradePost.setTradeStatus(TradePostEntity.TradeStatus.거래중);
+
+        return orderConverter.toTradeOrderResponse(order);
     }
 
 }

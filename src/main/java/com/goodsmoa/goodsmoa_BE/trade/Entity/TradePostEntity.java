@@ -52,6 +52,7 @@ public class TradePostEntity {
     private ConditionStatus conditionStatus;
 
     @Enumerated(EnumType.STRING)
+    @Setter
     private TradeStatus tradeStatus;
 
     private Boolean delivery;
