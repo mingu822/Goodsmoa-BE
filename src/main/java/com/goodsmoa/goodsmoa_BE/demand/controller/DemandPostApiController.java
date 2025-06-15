@@ -55,6 +55,18 @@ public class DemandPostApiController {
         );
     }
 
+    // 로그인한 유저가 작성한 글 목록
+    @GetMapping("/user")
+    public ResponseEntity<Page<DemandPostResponse>> findByUser(
+            @AuthenticationPrincipal UserEntity user,
+            @RequestParam Optional<Integer> category,
+            @RequestParam(defaultValue = "0", name = "page") int page,
+            @RequestParam(defaultValue = "10", name = "page_size") int pageSize
+    ) {
+        DemandSearchRequest searchRequest = new DemandSearchRequest(category.orElse(0), page, pageSize);
+        return ResponseEntity.ok(demandPostService.getDemandPostListByUser(user, searchRequest));
+    }
+
     // 수요조사 상세 조회
     @GetMapping("/{id}")
     public ResponseEntity<DemandPostResponse> findById(@PathVariable Long id) {
@@ -73,11 +85,6 @@ public class DemandPostApiController {
         if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
         return ResponseEntity.ok(demandPostService.createDemand(user, request, thumbnailImage, productImages, descriptionImages));
     }
-//    @PostMapping("/create")
-//    public ResponseEntity<DemandPostResponse> create(@AuthenticationPrincipal UserEntity user,
-//                                                     @RequestBody DemandPostCreateRequest request) {
-//        return ResponseEntity.ok(demandPostService.createDemand(user, request));
-//    }
 
     // 수요조사 글 수정
     @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -96,11 +103,6 @@ public class DemandPostApiController {
                 newDescriptionImages)
         );
     }
-//    @PutMapping("/update")
-//    public ResponseEntity<DemandPostResponse> update(@AuthenticationPrincipal UserEntity user,
-//                                                   @RequestBody DemandPostUpdateRequest request){
-//        return ResponseEntity.ok(demandPostService.updateDemand(user, request));
-//    }
 
     // 수요조사 글 삭제
     @DeleteMapping("/delete/{id}")

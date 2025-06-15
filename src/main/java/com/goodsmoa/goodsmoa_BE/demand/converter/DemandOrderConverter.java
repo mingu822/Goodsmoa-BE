@@ -52,7 +52,7 @@ public class DemandOrderConverter {
                 .id(entity.getId())
                 .title(postEntity.getTitle())
                 .imageUrl(postEntity.getImageUrl())
-                .creatAt(entity.getCreatedAt())
+                .createdAt(entity.getCreatedAt())
                 .build();
     }
 }

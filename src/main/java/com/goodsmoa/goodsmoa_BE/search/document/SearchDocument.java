@@ -1,10 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.search.document;
 
 import com.goodsmoa.goodsmoa_BE.enums.Board;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
@@ -45,6 +42,7 @@ public class SearchDocument {
                     @InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer")
             }
     )
+    @Setter
     private String description;
 
     @MultiField(

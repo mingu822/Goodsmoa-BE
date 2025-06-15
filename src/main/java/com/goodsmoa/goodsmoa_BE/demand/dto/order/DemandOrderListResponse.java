@@ -17,5 +17,5 @@ public class DemandOrderListResponse {
 
     // 주문 생성일
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
-    private LocalDateTime creatAt;
+    private LocalDateTime createdAt;
 }

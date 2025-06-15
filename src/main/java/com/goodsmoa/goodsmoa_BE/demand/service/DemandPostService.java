@@ -18,6 +18,9 @@ import jakarta.persistence.PersistenceContext;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +59,31 @@ public class DemandPostService {
         DemandPostEntity postEntity = findByIdWithThrow(id);
         validateUserAuthorization(user.getId(), postEntity);
         return demandPostConverter.toSaleResponse(postEntity);
+    }
+
+    // 로그인 한 유저가 작성한 글 목록
+    public Page<DemandPostResponse> getDemandPostListByUser(UserEntity user, DemandSearchRequest request){
+        Page<DemandPostEntity> pageResult;
+        PageRequest pageRequest = PageRequest.of(
+                request.getPage(),
+                request.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        if(request.getCategoryId()==0){
+            pageResult = demandPostRepository.findByUserId(
+                    user.getId(),
+                    pageRequest
+            );
+        }else{
+            Category category = findCategoryByIdWithThrow(request.getCategoryId());
+            pageResult = demandPostRepository.findByUserIdAndCategory(
+                    user.getId(),
+                    category,
+                    pageRequest
+            );
+        }
+        return pageResult.map(demandPostConverter::toResponse);
     }
 
     // 수요조사 글 생성하기
@@ -107,26 +135,11 @@ public class DemandPostService {
         }
 
         // 7. 검색 서비스 동기화
-        trimDescription(postEntity);
+        searchService.saveOrUpdateDocument(postEntity,Board.DEMAND);
         log.info("생성 후 색인 시작");
 
         return demandPostConverter.toResponse(postEntity);
     }
-//    @Transactional
-//    public DemandPostResponse createDemand(UserEntity user, DemandPostCreateRequest request) {
-//        Category category = findCategoryByIdWithThrow(request.getCategoryId());
-//
-//        DemandPostEntity postEntity = demandPostConverter.toEntity(user, category, request);
-//        List<DemandPostProductEntity> products = request.getProducts().stream()
-//                .map(product -> demandPostProductConverter.toEntity(postEntity, product))
-//                .toList();
-//
-//        postEntity.getProducts().addAll(products);
-//        demandPostRepository.save(postEntity);
-//        searchService.saveOrUpdateDocument(postEntity, Board.DEMAND);
-//
-//        return demandPostConverter.toResponse(postEntity);
-//    }
 
     // 수요조사 글 수정하기
     @Transactional
@@ -242,70 +255,9 @@ public class DemandPostService {
                 request.getHashtag(),
                 findCategoryByIdWithThrow(request.getCategoryId())
         );
-        trimDescription(postEntity);
+        searchService.saveOrUpdateDocument(postEntity,Board.DEMAND);
         return demandPostConverter.toResponse(postEntity);
     }
-//    @Transactional
-//    public DemandPostResponse updateDemand(UserEntity user, DemandPostUpdateRequest request) {
-//        // 기존글 조회 및 수정 권한 확인
-//        DemandPostEntity postEntity = findByIdWithThrow(request.getId());
-//        validateUserAuthorization(user.getId(), postEntity);
-//        List<DemandPostProductEntity> products = postEntity.getProducts();
-//
-//        // 기존 상품 목록을 Map 으로 변환 (ID -> 상품 객체)
-//        Map<Long, DemandPostProductEntity> existingProductsMap = new HashMap<>();
-//        for (DemandPostProductEntity product : postEntity.getProducts()) {
-//            existingProductsMap.put(product.getId(), product);
-//        }
-//
-//        // 요청 받은 상품 ID 목록
-//        Set<Long> incomingProductIds = new HashSet<>();
-//
-//        // 상품 추가 또는 수정
-//        for (DemandPostProductRequest productRequest : request.getProducts()) {
-//            Long productId = productRequest.getId();
-//
-//            if (productId == null) { // 신규 상품 추가
-//                DemandPostProductEntity postProductEntity = demandPostProductConverter.toEntity(postEntity, productRequest);
-//                entityManager.persist(postProductEntity);
-//            } else { // 기존 상품 수정
-//                incomingProductIds.add(productId);
-//                DemandPostProductEntity existingProduct = existingProductsMap.get(productId);
-//                if (existingProduct == null) {
-//                    throw new IllegalStateException("해당 ID를 가진 상품을 찾을 수 없습니다: " + productId);
-//                }
-//                existingProduct.DemandPostProductUpdate(
-//                        productRequest.getPrice(),
-//                        productRequest.getImageUrl(),
-//                        productRequest.getTargetCount()
-//                );
-//            }
-//        }
-//
-//        // 상품 삭제
-//        List<DemandPostProductEntity> productsToRemove = new ArrayList<>();
-//        for (DemandPostProductEntity product : postEntity.getProducts()) {
-//            // 요청 받은 상품 ID 리스트에 기존 상품이 없으면 삭제 대상
-//            if (!incomingProductIds.contains(product.getId())) {
-//                productsToRemove.add(product);
-//            }
-//        }
-//        products.removeAll(productsToRemove);
-//
-//        // 상품 목록을 제외한 필드 업데이트
-//        postEntity.updateDemandEntity(
-//                request.getTitle(),
-//                request.getDescription(),
-//                request.getStartTime(),
-//                request.getEndTime(),
-//                request.getImageUrl(),
-//                request.getHashtag(),
-//                findCategoryByIdWithThrow(request.getCategoryId())
-//        );
-//        searchService.saveOrUpdateDocument(postEntity, Board.DEMAND);
-//
-//        return demandPostConverter.toResponse(postEntity);
-//    }
 
     // 수요조사 글 삭제
     public String deleteDemand(UserEntity user, Long id){
@@ -319,19 +271,30 @@ public class DemandPostService {
     }
 
     private void deleteAllImagesByPostId(DemandPostEntity postEntity) {
-
-        // 썸네일 삭제
-        fileUploadService.deleteImage(postEntity.getImageUrl());
+        try {
+            // 썸네일 삭제 (단일 항목)
+            fileUploadService.deleteImage(postEntity.getImageUrl());
+        } catch (Exception e) {
+            log.error("썸네일 삭제 실패: {}", postEntity.getImageUrl(), e);
+        }
 
         // 본문 이미지 삭제
         List<String> deleteImgUrls = extractImageUrls(postEntity.getDescription());
-        for(String imgUrl:deleteImgUrls){
-            fileUploadService.deleteImage(imgUrl);
+        for (String imgUrl : deleteImgUrls) {
+            try {
+                fileUploadService.deleteImage(imgUrl);
+            } catch (Exception e) {
+                log.error("본문 이미지 삭제 실패: {}", imgUrl, e);
+            }
         }
-        
+
         // 상품 이미지 삭제
-        for(DemandPostProductEntity entity : postEntity.getProducts()){
-            fileUploadService.deleteImage(entity.getImageUrl());
+        for (DemandPostProductEntity entity : postEntity.getProducts()) {
+            try {
+                fileUploadService.deleteImage(entity.getImageUrl());
+            } catch (Exception e) {
+                log.error("상품 이미지 삭제 실패: {}", entity.getImageUrl(), e);
+            }
         }
     }
 
@@ -398,39 +361,6 @@ public class DemandPostService {
 
         return result.toString();
     }
-//    private String processContentImages(String originalContent, List<String> descriptionImagePaths) {
-//        Pattern pattern = Pattern.compile("src=[\"'](.*?)[\"']");
-//        Matcher matcher = pattern.matcher(originalContent);
-//
-//        int i = 0;
-//        StringBuilder result = new StringBuilder();
-//
-//        while (matcher.find() && i < descriptionImagePaths.size()) {
-//            String newPath = "src='" + descriptionImagePaths.get(i++) + "'";
-//            matcher.appendReplacement(result, newPath);
-//        }
-//        while (matcher.find()) {
-//            String replacement;
-//            if (i < descriptionImagePaths.size()) {
-//                // 새 이미지로 치환
-//                replacement = "src='" + descriptionImagePaths.get(i++) + "'";
-//            } else {
-//                // 이미지가 부족할 경우 원본 유지 (또는 예외 처리)
-//                replacement = matcher.group(0);
-//            }
-//            matcher.appendReplacement(result, replacement);
-//        }
-//        matcher.appendTail(result);
-//
-//        return result.toString();
-//    }
-
-    // 내용 <tag>, 띄워쓰기 다듬어주기
-    private void trimDescription(DemandPostEntity postEntity){
-        String noTag = postEntity.getDescription().replaceAll("<.*?>", " ");
-        postEntity.setDescription(noTag.replaceAll("<.*?>", " "));
-        searchService.saveOrUpdateDocument(postEntity, Board.DEMAND);
-    }
 
     @Transactional
     public void indexAllData() {
@@ -439,7 +369,7 @@ public class DemandPostService {
 
         // 모든 데이터를 Elasticsearch 에 색인
         for (DemandPostEntity demandPostEntity : allDemandPosts) {
-            trimDescription(demandPostEntity);
+            searchService.saveOrUpdateDocument(demandPostEntity,Board.DEMAND);
         }
         log.info("All data has been indexed.");
     }

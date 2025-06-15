@@ -46,7 +46,12 @@ public class SearchService {
 
     // 색인 추가/수정
     public void saveOrUpdateDocument(SearchEntity searchEntity, Board board) {
-        elasticsearchOperations.save(searchConverter.toDocument(searchEntity, board));
+        SearchDocument doc = searchConverter.toDocument(searchEntity, board);
+        String cleanedDescription = searchEntity.getDescription()
+                .replaceAll("<.*?>", " ")
+                .replaceAll("\\s+", " ");
+        doc.setDescription(cleanedDescription);
+        elasticsearchOperations.save(doc);
     }
 
     // 색인 삭제
