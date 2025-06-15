@@ -172,20 +172,42 @@ public class SearchService {
 
         // 5. 마감글/예정글 필터링
         String now = String.valueOf(Instant.now().toEpochMilli());
+//        if (!includeExpired) {
+//            boolQuery.filter(Query.of(q -> q.range(r -> r
+//                    .untyped(u -> u
+//                            .field("end_time")
+//                            .gte(JsonData.of(now))
+//                    )
+//            )));
+//        }
+//        if (!includeScheduled) {
+//            boolQuery.filter(Query.of(q -> q.range(r -> r
+//                    .untyped(u -> u
+//                            .field("start_time")
+//                            .lte(JsonData.of(now))
+//                    )
+//            )));
+//        }
         if (!includeExpired) {
-            boolQuery.filter(Query.of(q -> q.range(r -> r
-                    .untyped(u -> u
-                            .field("end_time")
-                            .gte(JsonData.of(now))
-                    )
+            boolQuery.filter(Query.of(q -> q.bool(b -> b
+                    .should(s -> s.range(r -> r
+                            .untyped(u -> u
+                                    .field("end_time")
+                                    .gte(JsonData.of(now))
+                            )
+                    ))
+                    .should(s -> s.bool(bb -> bb.mustNot(m -> m.exists(e -> e.field("end_time")))))
             )));
         }
         if (!includeScheduled) {
-            boolQuery.filter(Query.of(q -> q.range(r -> r
-                    .untyped(u -> u
-                            .field("start_time")
-                            .lte(JsonData.of(now))
-                    )
+            boolQuery.filter(Query.of(q -> q.bool(b -> b
+                    .should(s -> s.range(r -> r
+                            .untyped(u -> u
+                                    .field("start_time")
+                                    .lte(JsonData.of(now))
+                            )
+                    ))
+                    .should(s -> s.bool(bb -> bb.mustNot(m -> m.exists(e -> e.field("start_time")))))
             )));
         }
 

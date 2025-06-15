@@ -41,6 +41,7 @@ public class DemandPostService {
     private final DemandPostConverter demandPostConverter;
     private final DemandPostRepository demandPostRepository;
     private final DemandPostProductConverter demandPostProductConverter;
+    private final DemandPostViewService demandPostViewService;
     private final SearchService searchService;
     private final FileUploadService fileUploadService;
 
@@ -48,8 +49,7 @@ public class DemandPostService {
     public DemandPostResponse getDemandPostResponse(Long id) {
         DemandPostEntity postEntity = findByIdWithThrow(id);
         // 조회수 증가
-        postEntity.increaseViewCount();
-        demandPostRepository.save(postEntity);
+        demandPostViewService.increaseViewCount(postEntity.getId());
 
         return demandPostConverter.toResponse(postEntity);
     }
