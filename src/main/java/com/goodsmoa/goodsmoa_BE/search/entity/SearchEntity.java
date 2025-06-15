@@ -16,4 +16,6 @@ public interface SearchEntity {
     LocalDateTime getStartTime();
     LocalDateTime getEndTime();
     UserEntity getUser();
+
+    void setDescription(String s);
 }

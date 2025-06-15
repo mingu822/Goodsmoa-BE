@@ -46,7 +46,12 @@ public class SearchService {
 
     // 색인 추가/수정
     public void saveOrUpdateDocument(SearchEntity searchEntity, Board board) {
-        elasticsearchOperations.save(searchConverter.toDocument(searchEntity, board));
+        SearchDocument doc = searchConverter.toDocument(searchEntity, board);
+        String cleanedDescription = searchEntity.getDescription()
+                .replaceAll("<.*?>", " ")
+                .replaceAll("\\s+", " ");
+        doc.setDescription(cleanedDescription);
+        elasticsearchOperations.save(doc);
     }
 
     // 색인 삭제
@@ -167,20 +172,42 @@ public class SearchService {
 
         // 5. 마감글/예정글 필터링
         String now = String.valueOf(Instant.now().toEpochMilli());
+//        if (!includeExpired) {
+//            boolQuery.filter(Query.of(q -> q.range(r -> r
+//                    .untyped(u -> u
+//                            .field("end_time")
+//                            .gte(JsonData.of(now))
+//                    )
+//            )));
+//        }
+//        if (!includeScheduled) {
+//            boolQuery.filter(Query.of(q -> q.range(r -> r
+//                    .untyped(u -> u
+//                            .field("start_time")
+//                            .lte(JsonData.of(now))
+//                    )
+//            )));
+//        }
         if (!includeExpired) {
-            boolQuery.filter(Query.of(q -> q.range(r -> r
-                    .untyped(u -> u
-                            .field("end_time")
-                            .gte(JsonData.of(now))
-                    )
+            boolQuery.filter(Query.of(q -> q.bool(b -> b
+                    .should(s -> s.range(r -> r
+                            .untyped(u -> u
+                                    .field("end_time")
+                                    .gte(JsonData.of(now))
+                            )
+                    ))
+                    .should(s -> s.bool(bb -> bb.mustNot(m -> m.exists(e -> e.field("end_time")))))
             )));
         }
         if (!includeScheduled) {
-            boolQuery.filter(Query.of(q -> q.range(r -> r
-                    .untyped(u -> u
-                            .field("start_time")
-                            .lte(JsonData.of(now))
-                    )
+            boolQuery.filter(Query.of(q -> q.bool(b -> b
+                    .should(s -> s.range(r -> r
+                            .untyped(u -> u
+                                    .field("start_time")
+                                    .lte(JsonData.of(now))
+                            )
+                    ))
+                    .should(s -> s.bool(bb -> bb.mustNot(m -> m.exists(e -> e.field("start_time")))))
             )));
         }
 

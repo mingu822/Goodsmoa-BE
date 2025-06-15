@@ -2,7 +2,6 @@ package com.goodsmoa.goodsmoa_BE.demand.converter;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostCreateRequest;
-import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostListResponse;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostResponse;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostToSaleResponse;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
@@ -55,7 +54,7 @@ public class DemandPostConverter {
                 .endTime(entity.getEndTime())
                 .createdAt(entity.getCreatedAt())
                 .userId(user.getId())
-                .userName(user.getName())
+                .userName(user.getNickname())
                 .userImage(user.getImage())
                 .userContent(user.getContent())
                 .products(entity.getProducts().stream().map(demandPostProductConverter::toResponse).toList())

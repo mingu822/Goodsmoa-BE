@@ -31,7 +31,7 @@ public class DemandOrderService {
 
     // 로그인 중인 유저가 주문한 모든 수요조사
     public List<DemandOrderListResponse> getDemandOrderList(@AuthenticationPrincipal UserEntity user) {
-        return demandOrderRepository.findDemandOrderEntityByUserId(user.getId()).stream()
+        return demandOrderRepository.findDemandOrderEntitiesByUserId(user.getId()).stream()
                 .map(demandOrderConverter::toListResponse)
                 .toList();
     }
@@ -122,9 +122,9 @@ public class DemandOrderService {
         }
     }
 
-    // 수요조사 주문 조회
+    // 수요조사 주문 상세 조회
     private DemandOrderEntity findOrderByIdWithThrow(Long id) {
-        return demandOrderRepository.findById(id)
+        return demandOrderRepository.findDemandOrderEntitiesById(id)
                 .orElseThrow(() -> new EntityNotFoundException("해당 수요조사 참여는 존재하지 않습니다"));
     }
 

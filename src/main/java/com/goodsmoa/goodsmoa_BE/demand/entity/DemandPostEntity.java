@@ -52,6 +52,7 @@ public class DemandPostEntity implements SearchEntity {
     private boolean state;
 
     // 조회수
+    @Setter
     @Column(nullable = false)
     private Long views;
 
