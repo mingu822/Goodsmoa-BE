@@ -26,7 +26,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
@@ -136,11 +138,11 @@ public class TradePostService {
 
         // 응답 준비
         TradePostResponse response = tradePostConverter.toResponse(tradePostEntity, tradeImageEntities, descriptionEntity);
-//        response.setContentImageUrls(contentUrls); // setter 통해 별도 전달
         // 엘라스틱 서치 저장
-//        tradePostSearchService.savePost(tradePostEntity);
 
-//        searchService.saveOrUpdateDocument(tradePostEntity, Board.TRADE);
+        tradePostEntity.setContentDescriptions(descriptionEntity);
+
+        searchService.saveOrUpdateDocument(tradePostEntity, Board.TRADE);
         return ResponseEntity.ok(response);
     }
 
@@ -274,6 +276,7 @@ public class TradePostService {
         TradePostUpdateResponse response = tradePostConverter.upResponse(tradePost);
 //        response.setContentImageUrls(newContentUrl);
         tradePostRepository.save(tradePost);
+        searchService.saveOrUpdateDocument(tradePost, Board.TRADE);
         // 응답에 DTO를 사용하여 변환
         return ResponseEntity.ok(response);
     }
@@ -296,7 +299,7 @@ public class TradePostService {
             return ResponseEntity.status(403).build();
         }
         tradePostRepository.deleteById(id);
-
+        searchService.deletePostDocument("TRADE_"+id);
         return ResponseEntity.ok("삭제가 완료되었습니다.");
     }
 
@@ -337,12 +340,48 @@ public class TradePostService {
         return ResponseEntity.ok(responsePage);
     }
 
-//    public List<TradePostEntity> getVisiblePosts(UserEntity user) {
+//    @Transactional(readOnly = true)
+//    public Page<TradePostLookResponse> getTradePostListByUser(UserEntity user, TradeSearchRequest request) {
+//        // 1. 숨김 처리한 게시글 ID 목록 조회
 //        List<Long> hiddenPostIds = tradePostHiddenRepository.findAllByUser(user).stream()
 //                .map(h -> h.getTradePost().getId())
 //                .toList();
 //
-//        return tradePostRepository.findAllByIdNotIn(hiddenPostIds);
+//        // 2. 페이징 정보 생성 (최신순 정렬)
+//        PageRequest pageRequest = PageRequest.of(
+//                request.getPage(),
+//                request.getPageSize(),
+//                Sort.by(Sort.Direction.DESC, "createdAt")
+//        );
+//
+//        Page<TradePostEntity> pageResult;
+//
+//        // 3. 조건에 따라 분기 처리하여 데이터 조회
+//        boolean hasCategory = request.getCategoryId() != null && request.getCategoryId() != 0;
+//        boolean hasHiddenPosts = !hiddenPostIds.isEmpty();
+//
+//        if (hasCategory) {
+//            Category category = categoryRepository.findById(request.getCategoryId())
+//                    .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다."));
+//            if (hasHiddenPosts) {
+//                // 카테고리 필터 O, 숨김 글 O
+//                pageResult = tradePostRepository.findByUserAndCategoryAndIdNotIn(user, category, hiddenPostIds, pageRequest);
+//            } else {
+//                // 카테고리 필터 O, 숨김 글 X
+//                pageResult = tradePostRepository.findByUserAndCategory(user, category, pageRequest);
+//            }
+//        } else {
+//            if (hasHiddenPosts) {
+//                // 카테고리 필터 X, 숨김 글 O
+//                pageResult = tradePostRepository.findByUserAndIdNotIn(user, hiddenPostIds, pageRequest);
+//            } else {
+//                // 카테고리 필터 X, 숨김 글 X
+//                pageResult = tradePostRepository.findByUser(user, pageRequest);
+//            }
+//        }
+//
+//        // 4. 조회 결과를 DTO로 변환하여 반환
+//        return pageResult.map(tradePostConverter::lookResponse); // toLookResponse는 너의 컨버터 메소드 이름에 맞게 수정
 //    }
 
 

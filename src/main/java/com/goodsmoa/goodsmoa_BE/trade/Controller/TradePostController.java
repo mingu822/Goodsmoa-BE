@@ -2,6 +2,9 @@ package com.goodsmoa.goodsmoa_BE.trade.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
+import com.goodsmoa.goodsmoa_BE.enums.Board;
+import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
+import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeImageUpdateConverter;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/tradePost")
@@ -28,7 +32,7 @@ import java.util.List;
 public class TradePostController {
 
     private final TradePostService tradePostService;
-
+    private final SearchService searchService;
     // 중고거래 글 작성
     @PostMapping(value="/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TradePostResponse> createTradePost(
@@ -102,6 +106,32 @@ public class TradePostController {
             @AuthenticationPrincipal UserEntity user,
             @PageableDefault(size = 10 , sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
         return tradePostService.getTradePostList(user,pageable);
+    }
+    @GetMapping
+    public ResponseEntity<Page<SearchDocWithUserResponse>> findTradePosts(
+            @RequestParam Optional<String> query,
+            @RequestParam Optional<Integer> category,
+            @RequestParam(defaultValue = "new", name = "order_by") String orderBy,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size)
+    {
+        // 'close' 정렬 옵션은 중고거래에 의미가 없으므로 'new'로 처리
+        if ("close".equals(orderBy)) {
+            orderBy = "new";
+        }
+
+        return ResponseEntity.ok(
+                searchService.detailedSearch(
+                        query.orElse(null),
+                        Board.TRADE, // ✨ Board 타입을 TRADE로 고정
+                        category.orElse(0),
+                        orderBy,
+                        false, // ✨ includeExpired는 false로 고정
+                        false, // ✨ includeScheduled는 false로 고정
+                        page,
+                        size
+                )
+        );
     }
 
 }

@@ -42,6 +42,7 @@ public class TradePostEntity {
     private String title;
 
     @OneToMany(mappedBy = "tradePost", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Setter
     private List<TradePostDescription> contentDescriptions = new ArrayList<>();
 
 

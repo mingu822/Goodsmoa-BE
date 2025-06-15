@@ -9,6 +9,7 @@ import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
 import com.goodsmoa.goodsmoa_BE.search.converter.SearchConverter;
 import com.goodsmoa.goodsmoa_BE.search.document.SearchDocument;
 import com.goodsmoa.goodsmoa_BE.search.entity.SearchEntity;
+import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import com.goodsmoa.goodsmoa_BE.user.Repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -45,12 +46,34 @@ public class SearchService {
     private final SearchConverter searchConverter;
 
     // 색인 추가/수정
-    public void saveOrUpdateDocument(SearchEntity searchEntity, Board board) {
-        SearchDocument doc = searchConverter.toDocument(searchEntity, board);
-        String cleanedDescription = searchEntity.getDescription()
-                .replaceAll("<.*?>", " ")
-                .replaceAll("\\s+", " ");
-        doc.setDescription(cleanedDescription);
+//    public void saveOrUpdateDocument(SearchEntity searchEntity, Board board) {
+//        SearchDocument doc = searchConverter.toDocument(searchEntity, board);
+//        String cleanedDescription = searchEntity.getDescription()
+//                .replaceAll("<.*?>", " ")
+//                .replaceAll("\\s+", " ");
+//        doc.setDescription(cleanedDescription);
+//        elasticsearchOperations.save(doc);
+//    }
+    public void saveOrUpdateDocument(Object entity, Board board) {
+        // ✨ 1. SearchService가 entity의 타입을 확인
+        SearchDocument doc;
+        if (entity instanceof TradePostEntity tradeEntity) {
+            // ✨ 2. TradePostEntity면 toTradeDocument 호출
+            doc = searchConverter.toTradeDocument(tradeEntity);
+        } else if (entity instanceof SearchEntity searchEntity) {
+            // ✨ 3. 다른 SearchEntity면 toSearchEntityDocument 호출
+            doc = searchConverter.toDocument(searchEntity, board);
+        } else {
+            throw new IllegalArgumentException("SearchDocument로 변환할 수 없는 타입입니다: " + entity.getClass().getName());
+        }
+
+        // 4. description 정제 및 저장 로직은 동일
+        if (doc.getDescription() != null) {
+            String cleanedDescription = doc.getDescription()
+                    .replaceAll("<.*?>", " ")
+                    .replaceAll("\\s+", " ").trim();
+            doc.setDescription(cleanedDescription);
+        }
         elasticsearchOperations.save(doc);
     }
 
