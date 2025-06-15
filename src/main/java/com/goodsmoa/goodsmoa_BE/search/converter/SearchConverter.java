@@ -1,34 +1,42 @@
 package com.goodsmoa.goodsmoa_BE.search.converter;
 
-import com.goodsmoa.goodsmoa_BE.enums.Board;
 import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
 import com.goodsmoa.goodsmoa_BE.search.document.SearchDocument;
-import com.goodsmoa.goodsmoa_BE.search.entity.SearchEntity;
-import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostDescription;
-import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.util.stream.Collectors;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class SearchConverter {
-    public SearchDocument toDocument(SearchEntity entity, Board board){
-        return SearchDocument.builder()
-                .id(board.name()+"_"+entity.getId())
-                .userId(entity.getUser().getId())
-                .thumbnailUrl(entity.getImageUrl())
-                .views(entity.getViews())
-                .title(entity.getTitle())
-                .description(entity.getDescription())
-                .hashtag(entity.getHashtag())
-                .boardType(board)
-                .categoryId(entity.getCategory().getId())
-                .startTime(entity.getStartTime())
-                .endTime(entity.getEndTime())
-                .pulledAt(LocalDateTime.now())
-                .build();
+    private final Map<Class<?>, DocumentConverter<?>> converters = new HashMap<>();
+
+    @Autowired
+    public SearchConverter(List<DocumentConverter<?>> converterList) {
+        for (DocumentConverter<?> converter : converterList) {
+            // 리플렉션으로 제네릭 타입 추출 (예: TradePostEntity)
+            Class<?> entityType = getEntityType(converter);
+            converters.put(entityType, converter);
+        }
+    }
+
+    private Class<?> getEntityType(DocumentConverter<?> converter) {
+        Type[] interfaces = converter.getClass().getGenericInterfaces();
+        ParameterizedType type = (ParameterizedType) interfaces[0];
+        return (Class<?>) type.getActualTypeArguments()[0];
+    }
+
+    public <T> SearchDocument toDocument(T entity){
+        DocumentConverter<T> converter = (DocumentConverter<T>)converters.get(entity.getClass());
+        if(converter == null){
+            throw new IllegalArgumentException("변환기 없음"+entity.getClass().getName());
+        }
+        return converter.convert(entity);
     }
 
     public SearchDocWithUserResponse toSearchPostWithUserResponse(SearchDocument doc, UserEntity user){
@@ -44,28 +52,4 @@ public class SearchConverter {
                 .profileUrl(user.getImage())
                 .build();
     }
-
-    public SearchDocument toTradeDocument(TradePostEntity tradeEntity) {
-        String description = "";
-        if (tradeEntity.getContentDescriptions() != null && !tradeEntity.getContentDescriptions().isEmpty()) {
-            description = tradeEntity.getContentDescriptions().stream()
-                    .filter(desc -> desc.getContentType() == TradePostDescription.contentType.TEXT)
-                    .map(TradePostDescription::getValue)
-                    .collect(Collectors.joining("\n"));
-        }
-
-        return SearchDocument.builder()
-                .id(Board.TRADE.name() + "_" + tradeEntity.getId())
-                .userId(tradeEntity.getUser().getId())
-                .thumbnailUrl(tradeEntity.getThumbnailImage())
-                .views(tradeEntity.getViews())
-                .title(tradeEntity.getTitle())
-                .description(description)
-                .hashtag(tradeEntity.getHashtag())
-                .boardType(Board.TRADE)
-                .categoryId(tradeEntity.getCategory().getId())
-                .pulledAt(tradeEntity.getPulledAt() != null ? tradeEntity.getPulledAt() : LocalDateTime.now())
-                .build();
-    }
-
 }

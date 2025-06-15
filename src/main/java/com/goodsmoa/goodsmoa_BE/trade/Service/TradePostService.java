@@ -4,14 +4,11 @@ package com.goodsmoa.goodsmoa_BE.trade.Service;
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 //import com.goodsmoa.goodsmoa_BE.elasticsearch.Service.TradePostSearchService;
-import com.goodsmoa.goodsmoa_BE.enums.Board;
 import com.goodsmoa.goodsmoa_BE.fileUpload.FileUploadService;
 import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
-import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeImageConverter;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostConverter;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostDescriptionConverter;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageRequest;
-import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImgUpdateRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostDescription;
@@ -26,14 +23,11 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 
 import java.time.LocalDateTime;
@@ -142,7 +136,7 @@ public class TradePostService {
 
         tradePostEntity.setContentDescriptions(descriptionEntity);
 
-        searchService.saveOrUpdateDocument(tradePostEntity, Board.TRADE);
+        searchService.saveOrUpdateDocument(tradePostEntity);
         return ResponseEntity.ok(response);
     }
 
@@ -276,7 +270,7 @@ public class TradePostService {
         TradePostUpdateResponse response = tradePostConverter.upResponse(tradePost);
 //        response.setContentImageUrls(newContentUrl);
         tradePostRepository.save(tradePost);
-        searchService.saveOrUpdateDocument(tradePost, Board.TRADE);
+        searchService.saveOrUpdateDocument(tradePost);
         // 응답에 DTO를 사용하여 변환
         return ResponseEntity.ok(response);
     }

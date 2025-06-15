@@ -1,6 +1,5 @@
 package com.goodsmoa.goodsmoa_BE.demand.service;
 
-import com.goodsmoa.goodsmoa_BE.enums.Board;
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 import com.goodsmoa.goodsmoa_BE.demand.converter.DemandPostConverter;
@@ -135,7 +134,7 @@ public class DemandPostService {
         }
 
         // 7. 검색 서비스 동기화
-        searchService.saveOrUpdateDocument(postEntity,Board.DEMAND);
+        searchService.saveOrUpdateDocument(postEntity);
         log.info("생성 후 색인 시작");
 
         return demandPostConverter.toResponse(postEntity);
@@ -255,7 +254,7 @@ public class DemandPostService {
                 request.getHashtag(),
                 findCategoryByIdWithThrow(request.getCategoryId())
         );
-        searchService.saveOrUpdateDocument(postEntity,Board.DEMAND);
+        searchService.saveOrUpdateDocument(postEntity);
         return demandPostConverter.toResponse(postEntity);
     }
 
@@ -369,7 +368,8 @@ public class DemandPostService {
 
         // 모든 데이터를 Elasticsearch 에 색인
         for (DemandPostEntity demandPostEntity : allDemandPosts) {
-            searchService.saveOrUpdateDocument(demandPostEntity,Board.DEMAND);
+//            searchService.saveOrUpdateDocument(demandPostEntity,Board.DEMAND);
+            searchService.saveOrUpdateDocument(demandPostEntity);
         }
         log.info("All data has been indexed.");
     }
