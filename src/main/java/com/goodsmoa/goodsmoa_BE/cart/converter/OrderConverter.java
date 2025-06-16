@@ -3,6 +3,7 @@ package com.goodsmoa.goodsmoa_BE.cart.converter;
 import com.goodsmoa.goodsmoa_BE.cart.dto.order.*;
 import com.goodsmoa.goodsmoa_BE.cart.entity.OrderEntity;
 import com.goodsmoa.goodsmoa_BE.cart.entity.OrderItemEntity;
+import com.goodsmoa.goodsmoa_BE.cart.entity.PaymentEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductDeliveryEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductPostEntity;
@@ -10,6 +11,7 @@ import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -56,10 +58,11 @@ public class OrderConverter {
     }
 
     // todo nickname인걸 전부 name으로 변경
-    public OrderPHResponse toOrderPHResponse(OrderEntity order) {
+    public OrderPHResponse toOrderPHResponse(OrderEntity order, PaymentEntity payment) {
         return OrderPHResponse.builder()
                 .id(order.getId())
-                .userName(order.getUser().getName())
+                .userName(order.getUser().getNickname())
+                .paidAt(payment.getPaidAt())
                 .userPhone(order.getUser().getPhoneNumber())
                 .postName(order.getProductPost().getTitle())
                 .postThumbnail(order.getProductPost().getThumbnailImage())
@@ -110,6 +113,43 @@ public class OrderConverter {
                 .postTitle(order.getTradePost().getTitle()) // TradePost에서 정보 가져오기
                 .postThumbnail(order.getTradePost().getThumbnailImage()) // TradePost에서 정보 가져오기
                 .sellerNickname(order.getTradePost().getUser().getNickname()) // TradePost에서 정보 가져오기
+                .build();
+    }
+
+    public PurchaseHistoryResponse mapToDto(OrderEntity order, PaymentEntity payment) {
+
+        List<PurchaseHistoryResponse.ProductDto> productDtos = order.getOrderItems().stream()
+                .map(item -> PurchaseHistoryResponse.ProductDto.builder()
+                        .name(item.getProduct().getName())
+                        .imageUrl(item.getProduct().getImage()) // 가정
+                        .price(item.getProduct().getPrice())
+                        .quantity(item.getQuantity())
+                        .build())
+                .toList();
+
+        String saleLabel;
+        if (order.getProductPost() != null) {
+            saleLabel = "판매";}
+//         else if (order.getTradePost() != null) {
+//            saleLabel = "중고 거래";}
+        else {
+            saleLabel = "알 수 없음";
+        }
+
+        int totalQuantity = productDtos.stream().mapToInt(PurchaseHistoryResponse.ProductDto::getQuantity).sum();
+
+        return PurchaseHistoryResponse.builder()
+                .orderId(order.getId())
+                .orderCode(order.getOrderCode())
+                .recipientName(order.getRecipientName())
+                .saleLabel(saleLabel)
+                .category(order.getProductPost().getCategory().getName())
+                .status(order.getStatus().name())
+                .orderName(payment.getOrderName())
+                .totalQuantity(totalQuantity)
+                .totalPrice(payment.getAmount())
+                .paymentDate(payment.getPaidAt())
+                .products(productDtos)
                 .build();
     }
 }

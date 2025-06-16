@@ -3,13 +3,14 @@ package com.goodsmoa.goodsmoa_BE.cart.controller;
 import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.DeliveryRequest;
 import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.DeliveryResponse;
 import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.TrackingResponse;
-import com.goodsmoa.goodsmoa_BE.cart.dto.order.OrderRequest;
-import com.goodsmoa.goodsmoa_BE.cart.dto.order.OrderResponse;
-import com.goodsmoa.goodsmoa_BE.cart.dto.order.TradeOrderRequest;
-import com.goodsmoa.goodsmoa_BE.cart.dto.order.TradeOrderResponse;
+import com.goodsmoa.goodsmoa_BE.cart.dto.order.*;
 import com.goodsmoa.goodsmoa_BE.cart.service.OrderService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,14 @@ public class OrderController {
     @PostMapping("/delivery")
     public ResponseEntity<DeliveryResponse> createDelivery(@RequestBody DeliveryRequest request, @AuthenticationPrincipal UserEntity user){
         return orderService.createDelivery(request, user);
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<Page<PurchaseHistoryResponse>> listOrder(
+            @AuthenticationPrincipal UserEntity user,
+            @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return orderService.getList(user, pageable);
     }
 
     // ✅ [신규 기능] 중고거래 상품 주문 생성

@@ -5,14 +5,13 @@ import com.goodsmoa.goodsmoa_BE.cart.converter.OrderConverter;
 import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.DeliveryRequest;
 import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.DeliveryResponse;
 import com.goodsmoa.goodsmoa_BE.cart.dto.delivery.TrackingResponse;
-import com.goodsmoa.goodsmoa_BE.cart.dto.order.OrderRequest;
-import com.goodsmoa.goodsmoa_BE.cart.dto.order.OrderResponse;
-import com.goodsmoa.goodsmoa_BE.cart.dto.order.TradeOrderRequest;
-import com.goodsmoa.goodsmoa_BE.cart.dto.order.TradeOrderResponse;
+import com.goodsmoa.goodsmoa_BE.cart.dto.order.*;
 import com.goodsmoa.goodsmoa_BE.cart.entity.OrderEntity;
 import com.goodsmoa.goodsmoa_BE.cart.entity.OrderItemEntity;
+import com.goodsmoa.goodsmoa_BE.cart.entity.PaymentEntity;
 import com.goodsmoa.goodsmoa_BE.cart.repository.OrderItemRepository;
 import com.goodsmoa.goodsmoa_BE.cart.repository.OrderRepository;
+import com.goodsmoa.goodsmoa_BE.cart.repository.PaymentRepository;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductDeliveryEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductPostEntity;
@@ -25,6 +24,8 @@ import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -49,6 +50,9 @@ public class OrderService {
     private final TrackingService trackingService;
 
     private final TradePostRepository tradePostRepository;
+
+    private final PaymentRepository paymentRepository;
+
     // 주문서 생성
     @Transactional
     public ResponseEntity<OrderResponse> createOrder(OrderRequest request, UserEntity user) {
@@ -157,4 +161,13 @@ public class OrderService {
         return orderConverter.toTradeOrderResponse(order);
     }
 
+    public ResponseEntity<Page<PurchaseHistoryResponse>> getList(UserEntity user, Pageable pageable) {
+        Page<PaymentEntity> paymentPage = paymentRepository.findByUserAndStatus(user, PaymentEntity.PaymentStatus.SUCCESS, pageable);
+
+        Page<PurchaseHistoryResponse> responses = paymentPage.map(payment ->
+                orderConverter.mapToDto(payment.getOrder(), payment)
+        );
+
+        return ResponseEntity.ok(responses);
+    }
 }
