@@ -1,7 +1,5 @@
 package com.goodsmoa.goodsmoa_BE.demand.dto.post;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -17,4 +15,8 @@ public class DemandProductResponse {
     private String imageUrl;  // 이미지
 
     private int targetCount;  // 목표 수량
+    
+    private int orderCount; // 주문 수량
+    
+    private float achievementRate; // 달성도
 }

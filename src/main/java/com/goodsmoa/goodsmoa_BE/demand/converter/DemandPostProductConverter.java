@@ -24,12 +24,15 @@ public class DemandPostProductConverter {
 
     // DemandProductEntity -> DemandProductEntityResponse
     public DemandProductResponse toResponse(DemandPostProductEntity entity) {
+        float achievementRate = ((float) entity.getOrderCount() / entity.getTargetCount()) * 100;
         return DemandProductResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())
                 .price(entity.getPrice())
                 .imageUrl(entity.getImageUrl())
                 .targetCount(entity.getTargetCount())
+                .orderCount(entity.getOrderCount())
+                .achievementRate(achievementRate)
                 .build();
     }
 

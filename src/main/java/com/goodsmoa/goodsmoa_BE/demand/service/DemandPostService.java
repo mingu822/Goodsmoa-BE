@@ -5,8 +5,10 @@ import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 import com.goodsmoa.goodsmoa_BE.demand.converter.DemandPostConverter;
 import com.goodsmoa.goodsmoa_BE.demand.converter.DemandPostProductConverter;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.*;
+import com.goodsmoa.goodsmoa_BE.demand.entity.DemandOrderEntity;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostProductEntity;
+import com.goodsmoa.goodsmoa_BE.demand.repository.DemandOrderRepository;
 import com.goodsmoa.goodsmoa_BE.demand.repository.DemandPostRepository;
 import com.goodsmoa.goodsmoa_BE.fileUpload.FileUploadService;
 import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
@@ -43,6 +45,7 @@ public class DemandPostService {
     private final DemandPostViewService demandPostViewService;
     private final SearchService searchService;
     private final FileUploadService fileUploadService;
+    private final DemandOrderRepository demandOrderRepository;
 
     // 선택한 글의 id로 검색하여 가져오기
     public DemandPostResponse getDemandPostResponse(Long id) {
@@ -262,6 +265,10 @@ public class DemandPostService {
     public String deleteDemand(UserEntity user, Long id){
         DemandPostEntity postEntity = findByIdWithThrow(id);
         validateUserAuthorization(user.getId(), postEntity);
+
+        List<DemandOrderEntity> list = demandOrderRepository.findByDemandPostEntity(postEntity);
+        demandOrderRepository.deleteAll(list);
+
         demandPostRepository.delete(postEntity);
         searchService.deletePostDocument("DEMAND_"+id);
         deleteAllImagesByPostId(postEntity);

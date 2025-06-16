@@ -1,9 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.demand.dto.order;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.goodsmoa.goodsmoa_BE.demand.entity.DemandOrderProductEntity;
-import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
-import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostOmittedResponse;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -20,12 +18,14 @@ public class DemandOrderResponse {
     private LocalDateTime creatAt;
 
     // 주문한 유저 정보
-    // FIXME: 유저정보 DTO 로 변경
-    private UserEntity user;
+    private String userId;
+
+    private String userNickName;
+
+    private String userImage;
     
     // 주문한 수요조사 글
-    // FIXME: 수요조사 DTO 로 변경
-    private DemandPostEntity postEntity;
+    private DemandPostOmittedResponse demandPostOmittedResponse;
     
     // 주문한 상품 목록
     private List<DemandOrderProductResponse> demandOrderProducts;
