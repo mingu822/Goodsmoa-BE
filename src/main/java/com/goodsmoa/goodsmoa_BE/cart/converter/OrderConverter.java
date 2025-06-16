@@ -130,8 +130,8 @@ public class OrderConverter {
         String saleLabel;
         if (order.getProductPost() != null) {
             saleLabel = "판매";}
-//         else if (order.getTradePost() != null) {
-//            saleLabel = "중고 거래";}
+         else if (order.getTradePost() != null) {
+            saleLabel = "중고 거래";}
         else {
             saleLabel = "알 수 없음";
         }
