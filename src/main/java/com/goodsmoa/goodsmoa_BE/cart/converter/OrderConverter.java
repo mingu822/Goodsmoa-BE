@@ -88,9 +88,9 @@ public class OrderConverter {
                 .user(user)
                 .tradePost(tradePost) // ✅ tradePost 필드에 TradePostEntity 객체를 직접 설정
                 .status(OrderEntity.OrderStatus.배송준비)
-                .recipientName(request.getRecipientName())
-                .phoneNumber(request.getPhoneNumber())
-                .zipCode(request.getZipCode())
+//                .recipientName(request.getRecipientName())
+//                .phoneNumber(request.getPhoneNumber())
+//                .zipCode(request.getZipCode())
                 .mainAddress(request.getMainAddress())
                 .detailedAddress(request.getDetailedAddress())
                 .postMemo(request.getPostMemo())

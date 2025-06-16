@@ -13,9 +13,9 @@ public  class TradeOrderRequest {
     private Long tradePostId;
 
     // 수령인 정보 (이 부분은 공통)
-    private String recipientName;
-    private String phoneNumber;
-    private String zipCode;
+//    private String recipientName;
+//    private String phoneNumber;
+//    private String zipCode;
     private String mainAddress;
     private String detailedAddress;
     private String postMemo;

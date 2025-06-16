@@ -62,10 +62,10 @@ public class OrderEntity {
     private LocalDateTime confirmedAt;
 
     // ✅ 배송 정보: 주문 시점 기준으로 복사된 값
-    @Column(name = "recipient_name", length = 15, nullable = false)
+    @Column(name = "recipient_name", length = 15)
     private String recipientName;
 
-    @Column(name = "phone_number", length = 15, nullable = false)
+    @Column(name = "phone_number", length = 15)
     private String phoneNumber;
 
     @Column(name = "zip_code")
