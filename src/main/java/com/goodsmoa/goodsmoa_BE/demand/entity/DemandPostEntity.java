@@ -83,7 +83,6 @@ public class DemandPostEntity implements SearchEntity {
     @OneToMany(mappedBy = "demandPostEntity", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<DemandPostProductEntity> products = new ArrayList<>();
 
-
     // 글 수정(상품 목록 제외)
     public void updateDemandEntity(String title, String description,
                                    LocalDateTime startTime, LocalDateTime endTime,

@@ -1,13 +1,14 @@
 package com.goodsmoa.goodsmoa_BE.demand.service;
 
-import com.goodsmoa.goodsmoa_BE.enums.Board;
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 import com.goodsmoa.goodsmoa_BE.demand.converter.DemandPostConverter;
 import com.goodsmoa.goodsmoa_BE.demand.converter.DemandPostProductConverter;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.*;
+import com.goodsmoa.goodsmoa_BE.demand.entity.DemandOrderEntity;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostProductEntity;
+import com.goodsmoa.goodsmoa_BE.demand.repository.DemandOrderRepository;
 import com.goodsmoa.goodsmoa_BE.demand.repository.DemandPostRepository;
 import com.goodsmoa.goodsmoa_BE.fileUpload.FileUploadService;
 import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
@@ -44,6 +45,7 @@ public class DemandPostService {
     private final DemandPostViewService demandPostViewService;
     private final SearchService searchService;
     private final FileUploadService fileUploadService;
+    private final DemandOrderRepository demandOrderRepository;
 
     // 선택한 글의 id로 검색하여 가져오기
     public DemandPostResponse getDemandPostResponse(Long id) {
@@ -135,7 +137,7 @@ public class DemandPostService {
         }
 
         // 7. 검색 서비스 동기화
-        searchService.saveOrUpdateDocument(postEntity,Board.DEMAND);
+        searchService.saveOrUpdateDocument(postEntity);
         log.info("생성 후 색인 시작");
 
         return demandPostConverter.toResponse(postEntity);
@@ -255,7 +257,7 @@ public class DemandPostService {
                 request.getHashtag(),
                 findCategoryByIdWithThrow(request.getCategoryId())
         );
-        searchService.saveOrUpdateDocument(postEntity,Board.DEMAND);
+        searchService.saveOrUpdateDocument(postEntity);
         return demandPostConverter.toResponse(postEntity);
     }
 
@@ -263,6 +265,10 @@ public class DemandPostService {
     public String deleteDemand(UserEntity user, Long id){
         DemandPostEntity postEntity = findByIdWithThrow(id);
         validateUserAuthorization(user.getId(), postEntity);
+
+        List<DemandOrderEntity> list = demandOrderRepository.findByDemandPostEntity(postEntity);
+        demandOrderRepository.deleteAll(list);
+
         demandPostRepository.delete(postEntity);
         searchService.deletePostDocument("DEMAND_"+id);
         deleteAllImagesByPostId(postEntity);
@@ -369,7 +375,8 @@ public class DemandPostService {
 
         // 모든 데이터를 Elasticsearch 에 색인
         for (DemandPostEntity demandPostEntity : allDemandPosts) {
-            searchService.saveOrUpdateDocument(demandPostEntity,Board.DEMAND);
+//            searchService.saveOrUpdateDocument(demandPostEntity,Board.DEMAND);
+            searchService.saveOrUpdateDocument(demandPostEntity);
         }
         log.info("All data has been indexed.");
     }

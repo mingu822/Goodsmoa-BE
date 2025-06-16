@@ -30,6 +30,11 @@ public class DemandPostProductEntity {
     // 목표 수량
     @Column(nullable = false)
     private int targetCount;
+
+    // 달성율
+    @Setter
+    @Column(nullable = false)
+    private int orderCount;
     
     // 상품이 속한 수요조사 폼 id
     @ManyToOne(fetch = FetchType.LAZY)
