@@ -91,7 +91,8 @@ public class SecurityConfig {
                         "/users/info", // 사용자 정보 조회 경로 추가
                         "/product/post", // 상품 목록 조회는 허용
                         "/product/post-detail/**", // 상품 상세 조회는 허용
-                        "/order/create"
+                        "/order/create",
+                        "/payment/**"
                 ).permitAll()
                 .requestMatchers(
                         "/mypage/**",

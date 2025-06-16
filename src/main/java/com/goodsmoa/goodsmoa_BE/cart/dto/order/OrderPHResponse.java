@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
 @Builder
 @Getter
 @NoArgsConstructor
@@ -19,7 +21,9 @@ public class OrderPHResponse {
 
     // 상품글 이름
     private String postName;
-    
+
+    private LocalDateTime paidAt;
+
     // 상품글 대표 이미지
     private String postThumbnail;
     
@@ -61,4 +65,7 @@ public class OrderPHResponse {
 
     // 최종 결제 금액
     private Integer totalPrice;
+
+    private List<OrderItemResponse> products;
+
 }

@@ -55,18 +55,23 @@ public class TossPaymentService {
         OrderEntity orderEntity = orderRepository.findById(response.getOrderId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문서 입니다."));
         TossPaymentRequest request = tossConverter.toTossPaymentRequest(orderEntity);
+        log.info(" request.getOrderCode() : " + request.getOrderCode());
+        log.info(" request.getOrderName() : " + request.getOrderName());
+        log.info(request.getCustomerName());
+        log.info(request.getFailUrl());
+        log.info(request.getSuccessUrl());
         return ResponseEntity.ok(request);
     }
 
     // 결제 성공 했을 때
     @Transactional
     public ResponseEntity<OrderPHResponse> confirmPayment(String paymentKey, String orderCode, int amount) {
-
+        log.info("서비스 진입");
         // (1) 결제 승인 요청
         String secretKey = tossProperties.getSecretKey();
         String url = "https://api.tosspayments.com/v1/payments/confirm";
         String encodedAuth = Base64.getEncoder().encodeToString((secretKey + ":").getBytes());
-
+        log.info("결제 승인 된거임");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON_UTF8));
@@ -86,7 +91,7 @@ public class TossPaymentService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("결제 응답 파싱 실패", e);
         }
-
+        log.info("tossResponse : " + tossResponse);
         // (2) 주문 조회
         OrderEntity order = orderRepository.findByOrderCode(orderCode)
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않습니다: " + orderCode));
@@ -114,10 +119,13 @@ public class TossPaymentService {
 
         // (4) 결제 정보 저장
         PaymentEntity payment = tossConverter.toSucessPaymentEntity(paymentKey, orderCode, amount, tossResponse, order);
+        log.info("payment 저장되는거 맞냐????? :::: "+payment);
         paymentRepository.save(payment);
 
+
+
         // (5) 응답 반환
-        OrderPHResponse orderResponse = orderConverter.toOrderPHResponse(order);
+        OrderPHResponse orderResponse = orderConverter.toOrderPHResponse(order,payment);
         return ResponseEntity.ok(orderResponse);
     }
 
