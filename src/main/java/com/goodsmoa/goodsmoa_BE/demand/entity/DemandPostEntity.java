@@ -96,8 +96,7 @@ public class DemandPostEntity implements SearchEntity {
         this.category = category;
     }
 
-    // 조회수 증가
-    public void increaseViewCount(){
-        this.views++;
+    private String calculateState(LocalDateTime endTime){
+        return LocalDateTime.now().isBefore(endTime) ? "진행중" : "마감";
     }
 }

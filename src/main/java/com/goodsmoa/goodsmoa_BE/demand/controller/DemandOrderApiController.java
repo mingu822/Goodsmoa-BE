@@ -26,10 +26,6 @@ public class DemandOrderApiController {
     private final DemandOrderService demandOrderService;
 
     // 유저의 모든 주문 목록 조회
-//    @GetMapping
-//    public ResponseEntity<List<DemandOrderResponse>> findAll(@AuthenticationPrincipal UserEntity user){
-//        return ResponseEntity.ok(demandOrderService.getDemandOrderList(user));
-//    }
     @GetMapping
     public ResponseEntity<Page<DemandOrderResponse>> findAll(
             @AuthenticationPrincipal UserEntity user,

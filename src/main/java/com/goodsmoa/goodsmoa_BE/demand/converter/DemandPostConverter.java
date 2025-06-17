@@ -84,6 +84,7 @@ public class DemandPostConverter {
                 .hashtag(entity.getHashtag())
                 .views(entity.getViews())
                 .category(entity.getCategory().getName())
+                .state(LocalDateTime.now().isBefore(entity.getEndTime()) ? "진행중" : "마감")
                 .build();
     }
 }
