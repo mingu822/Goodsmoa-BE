@@ -63,12 +63,14 @@ public class OrderConverter {
 
         String postName;
         String postThumbnail;
+        String checkLabel;
 
         // 1. 일반 상품 판매 게시글인 경우
         if (order.getProductPost() != null) {
             ProductPostEntity productPost = order.getProductPost();
             postName = productPost.getTitle();
             postThumbnail = productPost.getThumbnailImage(); // ProductPost의 썸네일 사용
+            checkLabel = "sale";
         }
         // 2. 중고 거래 게시글인 경우
         else if (order.getTradePost() != null) {
@@ -83,6 +85,7 @@ public class OrderConverter {
                 representativeImageUrl = tradePost.getThumbnailImage();
             }
             postThumbnail = representativeImageUrl;
+            checkLabel = "trade";
         }
         // 3. 둘 다 없는 예외적인 경우
         else {
@@ -92,6 +95,7 @@ public class OrderConverter {
 
         return OrderPHResponse.builder()
                 .id(order.getId())
+                .checkLabel(checkLabel)
                 .userName(order.getUser().getNickname())
                 .paidAt(payment.getPaidAt())
                 .userPhone(order.getUser().getPhoneNumber())
@@ -156,6 +160,8 @@ public class OrderConverter {
                 .orderId(order.getId())
                 .orderCode(order.getOrderCode())
                 .recipientName(order.getRecipientName())
+                .postMemo(order.getPostMemo())
+                .mainAddress(order.getMainAddress())
                 .status(order.getStatus().name())
                 .totalPrice(payment.getAmount())
                 .paymentDate(payment.getPaidAt());

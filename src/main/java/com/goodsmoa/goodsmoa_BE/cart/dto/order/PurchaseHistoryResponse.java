@@ -33,6 +33,10 @@ public class PurchaseHistoryResponse {
     // 상품 목록
     private List<ProductDto> products;
 
+    private String postMemo;
+
+    private String mainAddress;
+
     @Getter
     @Builder
     public static class ProductDto {

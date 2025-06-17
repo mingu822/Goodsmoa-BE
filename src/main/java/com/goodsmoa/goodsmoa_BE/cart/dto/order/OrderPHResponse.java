@@ -24,6 +24,8 @@ public class OrderPHResponse {
 
     private LocalDateTime paidAt;
 
+    private String checkLabel;
+
     // 상품글 대표 이미지
     private String postThumbnail;
     
