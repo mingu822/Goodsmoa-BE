@@ -60,6 +60,12 @@ public class OrderController {
     ) throws Exception {
         return ResponseEntity.ok(orderService.trackDelivery(companyCode, invoiceNumber));
     }
+    @GetMapping("/{orderId}")
+    public ResponseEntity<PurchaseHistoryResponse> getOrder(@PathVariable Long orderId)
+             {
+        PurchaseHistoryResponse response = orderService.getPurchaseDetails(orderId);
+        return ResponseEntity.ok(response);
+    }
 
 
 }

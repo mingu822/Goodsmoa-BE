@@ -21,12 +21,14 @@ import com.goodsmoa.goodsmoa_BE.product.repository.ProductRepository;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Repository.TradePostRepository;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -169,5 +171,19 @@ public class OrderService {
         );
 
         return ResponseEntity.ok(responses);
+    }
+    // ✅ [신규 기능] 구매 내역 상세 조회
+    public PurchaseHistoryResponse getPurchaseDetails(Long orderId) {
+        // 1. Repository에서 쿼리 한 방으로 주문과 관련 정보를 모두 가져온다.
+        //    (OrderRepository에 findByIdWithDetails 메서드 추가 필요!)
+        OrderEntity order = orderRepository.findByIdWithDetails(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("주문 내역을 찾을 수 없습니다. ID: " + orderId));
+
+        // 3. 주문에 연결된 '성공(SUCCESS)' 상태의 결제 정보를 찾는다.
+        PaymentEntity payment = paymentRepository.findByOrderAndStatus(order, PaymentEntity.PaymentStatus.SUCCESS)
+                .orElseThrow(() -> new EntityNotFoundException("성공한 결제 정보를 찾을 수 없습니다. Order ID: " + orderId));
+
+        // 4. 컨버터를 사용해 DTO로 변환하여 반환한다.
+        return orderConverter.mapToDto(order, payment);
     }
 }

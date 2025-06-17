@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -133,6 +135,18 @@ public class TradePostController {
                 )
         );
     }
+    @PatchMapping("/status/{id}")
+    public ResponseEntity<TradeStatusUpdateResponse> updateTradeStatus(
+            @PathVariable Long id,
+            @RequestBody TradeStatusUpdateRequest request) {
+
+        // 1. 서비스 호출해서 로직 처리하고, 결과 DTO를 받음
+        TradeStatusUpdateResponse responseDto = tradePostService.updateTradeStatus(id, request.getTradeStatus());
+
+        // 2. 성공 응답(200 OK)과 함께, 변경된 상태 정보가 담긴 DTO를 body에 넣어 반환
+        return ResponseEntity.ok(responseDto);
+    }
+
 
 }
 

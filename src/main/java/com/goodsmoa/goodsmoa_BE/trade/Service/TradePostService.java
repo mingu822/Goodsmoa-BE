@@ -378,6 +378,33 @@ public class TradePostService {
 //        return pageResult.map(tradePostConverter::lookResponse); // toLookResponse는 너의 컨버터 메소드 이름에 맞게 수정
 //    }
 
+    @Transactional
+    public TradeStatusUpdateResponse updateTradeStatus(Long tradePostId, String newStatusString) {
+        // 1. ID로 게시글을 찾고, 없으면 예외 발생
+        TradePostEntity post = tradePostRepository.findById(tradePostId)
+                .orElseThrow(() -> new IllegalArgumentException("ID에 해당하는 게시글이 없습니다: " + tradePostId));
+
+        // 2. 문자열로 받은 상태 값을 Enum 타입으로 변환
+        TradePostEntity.TradeStatus newStatus;
+        try {
+            // "완료" 라는 문자열을 TradeStatus.완료 Enum으로 변환
+            newStatus = TradePostEntity.TradeStatus.valueOf(newStatusString);
+        } catch (IllegalArgumentException e) {
+            // 만약 "판매중", "완료"가 아닌 다른 이상한 문자열이 들어오면 예외 발생
+            throw new IllegalArgumentException("유효하지 않은 거래 상태 값입니다: " + newStatusString);
+        }
+
+        // 3. 게시글의 상태를 변경
+        post.setTradeStatus(newStatus);
+
+        // 4. @Transactional 어노테이션 덕분에 메서드가 끝나면 변경된 내용이 자동으로 DB에 저장(save)돼.
+        // tradePostRepository.save(post); // 명시적으로 호출해도 괜찮아.
+
+        // 5. 변경된 상태를 포함한 응답 DTO를 생성해서 반환
+        return TradeStatusUpdateResponse.builder()
+                .tradeStatus(post.getTradeStatus().name()) // "완료"
+                .build();
+    }
 
 
 
