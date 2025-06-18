@@ -2,6 +2,7 @@ package com.goodsmoa.goodsmoa_BE.demand.converter;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.*;
+import com.goodsmoa.goodsmoa_BE.demand.entity.DemandOrderEntity;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandOrderProductEntity;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
@@ -63,10 +64,10 @@ public class DemandPostConverter {
                 .build();
     }
     // 참여한 경우 반영
-    public DemandPostResponse toResponse(DemandPostEntity entity, List<DemandOrderProductEntity> orderProducts) {
+    public DemandPostResponse toResponse(DemandPostEntity entity, DemandOrderEntity orderEntity) {
         UserEntity user = entity.getUser();
 
-        Map<Long, Integer> orderedCountMap = orderProducts.stream()
+        Map<Long, Integer> orderedCountMap = orderEntity.getDemandOrderProducts().stream()
                 .collect(Collectors.groupingBy(
                         op -> op.getPostProductEntity().getId(),
                         Collectors.summingInt(DemandOrderProductEntity::getQuantity)
@@ -88,6 +89,7 @@ public class DemandPostConverter {
                 .state(entity.isState())
                 .views(entity.getViews())
                 .category(entity.getCategory().getName())
+                .userOrderId(orderEntity.getId())
                 .startTime(entity.getStartTime())
                 .endTime(entity.getEndTime())
                 .createdAt(entity.getCreatedAt())

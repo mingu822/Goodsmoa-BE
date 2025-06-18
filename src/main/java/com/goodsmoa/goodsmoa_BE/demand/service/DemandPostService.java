@@ -68,7 +68,7 @@ public class DemandPostService {
 
         // 조회수 증가
         demandPostViewService.increaseViewCount(postEntity.getId());
-        return demandPostConverter.toResponse(postEntity, orderEntity.getDemandOrderProducts());
+        return demandPostConverter.toResponse(postEntity, orderEntity);
     }
 
     // 선택한 글의 id로 탐색하여 판매글로 전환할 데이터 보내기
