@@ -357,7 +357,8 @@ public class DemandPostService {
         while (matcher.find()) {
             String replacement;
             if (i < descriptionImagePaths.size()) {
-                replacement = "src='" + descriptionImagePaths.get(i++) + "'"; // i는 여기서 1 증가
+                replacement = "src='http://localhost:8080/" + descriptionImagePaths.get(i++) + "'";
+//                replacement = "src='" + descriptionImagePaths.get(i++) + "'"; // i는 여기서 1 증가
             } else {
                 replacement = "src='/default-image.jpg'";
             }
