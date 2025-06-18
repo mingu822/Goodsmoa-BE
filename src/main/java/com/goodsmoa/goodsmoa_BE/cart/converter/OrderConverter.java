@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class OrderConverter {
@@ -220,5 +221,40 @@ public class OrderConverter {
         }
 
         return builder.build();
+    }
+
+    // 주문내역
+    public ProductOrderResponse toProductOrderResponse(
+            OrderEntity order,
+            ProductPostEntity post,
+            ProductDeliveryEntity delivery,
+            List<OrderItemEntity> orderItems
+    ) {
+        return ProductOrderResponse.builder()
+                .status(order.getStatus().name())
+                .postId(post.getId())
+                .title(post.getTitle())
+                .thumbnailImage(post.getThumbnailImage())
+                .categoryName(post.getCategory().getName())
+                .recipientName(order.getRecipientName())
+                .phoneNumber(order.getPhoneNumber())
+                .orderName(order.getOrderName())
+                .productsPrice(order.getProductsPrice())
+                .deliveryPrice(delivery.getPrice())
+                .totalPrice(order.getTotalPrice())
+                .deliveryName(delivery.getName())
+                .mainAddress(order.getMainAddress())
+                .postMemo(order.getPostMemo())
+                .products(
+                        orderItems.stream()
+                                .map(item -> ProductOrderResponse.ProductDetail.builder()
+                                        .name(item.getProduct().getName())
+                                        .image(item.getProduct().getImage())
+                                        .quantity(item.getQuantity())
+                                        .price(item.getProduct().getPrice())
+                                        .build())
+                                .collect(Collectors.toList())
+                )
+                .build();
     }
 }

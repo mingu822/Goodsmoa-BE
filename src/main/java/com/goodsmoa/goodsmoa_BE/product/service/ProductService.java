@@ -34,7 +34,7 @@ import com.goodsmoa.goodsmoa_BE.product.dto.ProductRequest;
 import com.goodsmoa.goodsmoa_BE.product.dto.Image.ProductImageUpdateRequest;
 import com.goodsmoa.goodsmoa_BE.product.dto.post.PostDetailResponse;
 import com.goodsmoa.goodsmoa_BE.product.dto.post.PostRequest;
-import com.goodsmoa.goodsmoa_BE.product.dto.Post.PostsResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.post.PostsResponse;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 
 import jakarta.persistence.EntityNotFoundException;

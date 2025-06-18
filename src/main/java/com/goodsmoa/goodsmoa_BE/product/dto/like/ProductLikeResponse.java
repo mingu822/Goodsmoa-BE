@@ -9,6 +9,8 @@ public class ProductLikeResponse {
 
     private Long id;
 
+    private Long postId;
+
     private String title;
 
     private String thumbnailImage;

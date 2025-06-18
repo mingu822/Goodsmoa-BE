@@ -9,8 +9,12 @@ import com.goodsmoa.goodsmoa_BE.product.repository.ProductPostRepository;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -31,9 +35,9 @@ public class ProductLikeService {
         }
         ProductLikeEntity like = productLikeConverter.toEntity(entity, user);
 
-        productLikeRepository.save(like);
+        ProductLikeEntity saveEntity = productLikeRepository.save(like);
 
-        ProductLikeResponse response = productLikeConverter.toResponse(entity,user);
+        ProductLikeResponse response = productLikeConverter.toResponse(saveEntity);
 
         return ResponseEntity.ok(response);
     }
@@ -49,4 +53,20 @@ public class ProductLikeService {
         return ResponseEntity.ok().build();
     }
 
+    public ResponseEntity<Page<ProductLikeResponse>> getPagedLiked(UserEntity user, Pageable pageable) {
+        Page<ProductLikeEntity> likePage = productLikeRepository.findByUser(user, pageable);
+
+        Page<ProductLikeResponse> responses = likePage.map(productLikeConverter::toResponse);
+        return ResponseEntity.ok(responses);
+    }
+
+    public ProductLikeResponse getSingleLiked(UserEntity user, Long id) {
+        ProductPostEntity entity = productPostRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 거래글이 존재하지 않습니다."));
+
+        ProductLikeEntity like = productLikeRepository.findByProductPostEntityAndUser(entity, user)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 찜이 존재하지 않습니다."));
+
+        return productLikeConverter.toResponse(like);
+    }
 }

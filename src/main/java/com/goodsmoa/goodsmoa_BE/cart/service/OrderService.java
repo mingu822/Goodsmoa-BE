@@ -186,4 +186,26 @@ public class OrderService {
         // 4. 컨버터를 사용해 DTO로 변환하여 반환한다.
         return orderConverter.mapToDto(order, payment);
     }
+
+    // 상품글 주문 내역
+    public ResponseEntity<ProductOrderResponse> getDetail(Long id) {
+
+        OrderEntity order = orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문서입니다."));
+
+        ProductPostEntity post = order.getProductPost();
+
+        ProductDeliveryEntity delivery = order.getProductDelivery();
+
+        List<OrderItemEntity> orderItems = orderItemRepository.findByOrder(order);
+
+        log.info("post ::: "+post);
+
+        log.info("delivery ::: "+delivery);
+
+        ProductOrderResponse respone = orderConverter.toProductOrderResponse(order, post, delivery, orderItems);
+
+        return ResponseEntity.ok(respone);
+
+    }
 }

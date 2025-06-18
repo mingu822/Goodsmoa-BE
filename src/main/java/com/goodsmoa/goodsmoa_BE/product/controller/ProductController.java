@@ -20,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.goodsmoa.goodsmoa_BE.product.dto.post.PostDetailResponse;
 import com.goodsmoa.goodsmoa_BE.product.dto.post.PostRequest;
-import com.goodsmoa.goodsmoa_BE.product.dto.Post.PostsResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.post.PostsResponse;
 import com.goodsmoa.goodsmoa_BE.product.service.ProductService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 

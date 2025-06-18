@@ -3,6 +3,8 @@ package com.goodsmoa.goodsmoa_BE.product.repository;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductLikeEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductPostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -15,4 +17,6 @@ public interface ProductLikeRepository extends JpaRepository<ProductLikeEntity,L
     Optional<ProductLikeEntity> findByProductPostEntityAndUser(ProductPostEntity entity, UserEntity user);
 
     List<ProductLikeEntity> findByProductPostEntity(ProductPostEntity entity);
+
+    Page<ProductLikeEntity> findByUser(UserEntity user, Pageable pageable);
 }

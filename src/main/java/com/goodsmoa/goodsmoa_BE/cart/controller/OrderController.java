@@ -67,5 +67,12 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
+    // 상품 상세 조회
+    @GetMapping("/detail/{id}")
+    public ResponseEntity<ProductOrderResponse> getDetail(@PathVariable Long id){
+        return orderService.getDetail(id);
+    }
+
+
 
 }

@@ -16,17 +16,17 @@ public class ProductLikeConverter {
                 .build();
     }
 
-    public ProductLikeResponse toResponse(ProductPostEntity entity, UserEntity user) {
+    public ProductLikeResponse toResponse(ProductLikeEntity entity) {
         return ProductLikeResponse.builder()
                 .id(entity.getId())
-                .views(entity.getViews())
-                .title(entity.getTitle())
-                .hashtag(entity.getHashtag())
-                .thumbnailImage(entity.getThumbnailImage())
-                .userId(user.getId())
-                .userImage(user.getImage())
-                .userNickName(user.getNickname())
+                .postId(entity.getProductPostEntity().getId())
+                .views(entity.getProductPostEntity().getViews())
+                .title(entity.getProductPostEntity().getTitle())
+                .hashtag(entity.getProductPostEntity().getHashtag())
+                .thumbnailImage(entity.getProductPostEntity().getThumbnailImage())
+                .userId(entity.getUser().getId())
+                .userImage(entity.getUser().getImage())
+                .userNickName(entity.getUser().getNickname())
                 .build();
     }
-
 }

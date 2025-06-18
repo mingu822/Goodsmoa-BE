@@ -1,4 +1,4 @@
-package com.goodsmoa.goodsmoa_BE.product.dto.Post;
+package com.goodsmoa.goodsmoa_BE.product.dto.post;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
