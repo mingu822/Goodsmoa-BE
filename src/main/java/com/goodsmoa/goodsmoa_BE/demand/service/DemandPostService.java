@@ -46,6 +46,7 @@ public class DemandPostService {
     private final SearchService searchService;
     private final FileUploadService fileUploadService;
     private final DemandOrderRepository demandOrderRepository;
+    private final DemandOrderService demandOrderService;
 
     // 선택한 글의 id로 검색하여 가져오기
     public DemandPostResponse getDemandPostResponse(Long id) {
@@ -54,6 +55,20 @@ public class DemandPostService {
         demandPostViewService.increaseViewCount(postEntity.getId());
 
         return demandPostConverter.toResponse(postEntity);
+    }
+
+    // 선택한 글의 id로 검색하여 가져오기
+    public DemandPostResponse getDemandPostResponse(UserEntity user, Long id) {
+        DemandPostEntity postEntity = findByIdWithThrow(id);
+        DemandOrderEntity orderEntity = demandOrderRepository.findByDemandPostEntityAndUser(postEntity, user);
+        if(orderEntity==null){
+            return demandPostConverter.toResponse(postEntity);
+        }
+        demandOrderService.validateUserAuthorization(user.getId(), orderEntity.getUser().getId());
+
+        // 조회수 증가
+        demandPostViewService.increaseViewCount(postEntity.getId());
+        return demandPostConverter.toResponse(postEntity, orderEntity.getDemandOrderProducts());
     }
 
     // 선택한 글의 id로 탐색하여 판매글로 전환할 데이터 보내기

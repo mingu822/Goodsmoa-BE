@@ -12,6 +12,7 @@ import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostProductEntity;
 import com.goodsmoa.goodsmoa_BE.demand.repository.DemandOrderRepository;
 import com.goodsmoa.goodsmoa_BE.demand.repository.DemandPostProductRepository;
+import com.goodsmoa.goodsmoa_BE.demand.repository.DemandPostRepository;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -31,7 +32,7 @@ public class DemandOrderService {
 
     private final DemandOrderRepository demandOrderRepository;
     private final DemandOrderConverter demandOrderConverter;
-    private final DemandPostService demandPostService;
+    private final DemandPostRepository demandPostRepository;
     private final DemandPostProductRepository demandPostProductRepository;
     private final DemandOrderProductConverter demandOrderProductConverter;
     private final DemandOrderCountService demandOrderCountService;
@@ -62,7 +63,7 @@ public class DemandOrderService {
     @Transactional
     public DemandOrderResponse createDemandOrder(UserEntity user, Long id, DemandOrderCreateRequest request) {
         // 수요조사글 유무 확인
-        DemandPostEntity postEntity = demandPostService.findByIdWithThrow(id);
+        DemandPostEntity postEntity = demandPostRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("작성한 글이 존재하지 않습니다"));
         
         // 수요조사 주문 엔티티 생성
         DemandOrderEntity orderEntity = demandOrderConverter.toEntity(user, postEntity);
@@ -159,7 +160,7 @@ public class DemandOrderService {
     }
 
     // 권한 조회
-    private void validateUserAuthorization(String loggedInUserId, String postAuthorId) {
+    public void validateUserAuthorization(String loggedInUserId, String postAuthorId) {
         if (!loggedInUserId.equals(postAuthorId)) {
             throw new AccessDeniedException("권한이 없습니다");
         }

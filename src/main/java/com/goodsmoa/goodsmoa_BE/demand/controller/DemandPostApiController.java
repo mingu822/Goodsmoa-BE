@@ -75,7 +75,7 @@ public class DemandPostApiController {
             return ResponseEntity.ok(demandPostService.getDemandPostResponse(id));
         }
         else{
-            return ResponseEntity.ok(demandPostService.getDemandPostResponse(id));
+            return ResponseEntity.ok(demandPostService.getDemandPostResponse(user, id));
         }
     }
     

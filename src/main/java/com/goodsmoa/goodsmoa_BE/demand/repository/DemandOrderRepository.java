@@ -3,6 +3,7 @@ package com.goodsmoa.goodsmoa_BE.demand.repository;
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandOrderEntity;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -19,4 +20,6 @@ public interface DemandOrderRepository extends JpaRepository<DemandOrderEntity, 
     Page<DemandOrderEntity> findByUserId(String userId, Pageable pageable);
 
     List<DemandOrderEntity> findByDemandPostEntity(DemandPostEntity demandPostEntity);
+
+    DemandOrderEntity findByDemandPostEntityAndUser(DemandPostEntity postEntity, UserEntity user);
 }
