@@ -14,6 +14,8 @@ public class DemandProductResponse {
 
     private String imageUrl;  // 이미지
 
+    private int defaultValue; //초기값
+
     private int targetCount;  // 목표 수량
     
     private int orderCount; // 주문 수량

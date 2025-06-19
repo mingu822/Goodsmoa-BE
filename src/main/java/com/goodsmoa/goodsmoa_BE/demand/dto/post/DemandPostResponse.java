@@ -19,6 +19,7 @@ public class DemandPostResponse {
     private boolean state;
     private Long views;
     private String category;
+    private Long userOrderId;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime startTime;

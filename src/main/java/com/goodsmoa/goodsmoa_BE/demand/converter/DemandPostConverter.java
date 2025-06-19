@@ -1,10 +1,9 @@
 package com.goodsmoa.goodsmoa_BE.demand.converter;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
-import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostCreateRequest;
-import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostOmittedResponse;
-import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostResponse;
-import com.goodsmoa.goodsmoa_BE.demand.dto.post.DemandPostToSaleResponse;
+import com.goodsmoa.goodsmoa_BE.demand.dto.post.*;
+import com.goodsmoa.goodsmoa_BE.demand.entity.DemandOrderEntity;
+import com.goodsmoa.goodsmoa_BE.demand.entity.DemandOrderProductEntity;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.AllArgsConstructor;
@@ -12,6 +11,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @AllArgsConstructor
@@ -61,6 +63,43 @@ public class DemandPostConverter {
                 .products(entity.getProducts().stream().map(demandPostProductConverter::toResponse).toList())
                 .build();
     }
+    // 참여한 경우 반영
+    public DemandPostResponse toResponse(DemandPostEntity entity, DemandOrderEntity orderEntity) {
+        UserEntity user = entity.getUser();
+
+        Map<Long, Integer> orderedCountMap = orderEntity.getDemandOrderProducts().stream()
+                .collect(Collectors.groupingBy(
+                        op -> op.getPostProductEntity().getId(),
+                        Collectors.summingInt(DemandOrderProductEntity::getQuantity)
+                ));
+
+        List<DemandProductResponse> productResponses = entity.getProducts().stream()
+                .map(product -> {
+                    int orderedQuantity = orderedCountMap.getOrDefault(product.getId(), 0);
+                    return demandPostProductConverter.toResponse(product, orderedQuantity);
+                })
+                .toList();
+
+        return DemandPostResponse.builder()
+                .id(entity.getId())
+                .title(entity.getTitle())
+                .description(entity.getDescription())
+                .imageUrl(entity.getImageUrl())
+                .hashtag(entity.getHashtag())
+                .state(entity.isState())
+                .views(entity.getViews())
+                .category(entity.getCategory().getName())
+                .userOrderId(orderEntity.getId())
+                .startTime(entity.getStartTime())
+                .endTime(entity.getEndTime())
+                .createdAt(entity.getCreatedAt())
+                .userId(user.getId())
+                .userName(user.getNickname())
+                .userImage(user.getImage())
+                .userContent(user.getContent())
+                .products(productResponses)
+                .build();
+    }
 
     public DemandPostToSaleResponse toSaleResponse(DemandPostEntity entity) {
         return DemandPostToSaleResponse.builder()
@@ -84,6 +123,7 @@ public class DemandPostConverter {
                 .hashtag(entity.getHashtag())
                 .views(entity.getViews())
                 .category(entity.getCategory().getName())
+                .state(LocalDateTime.now().isBefore(entity.getEndTime()) ? "진행중" : "마감")
                 .build();
     }
 }

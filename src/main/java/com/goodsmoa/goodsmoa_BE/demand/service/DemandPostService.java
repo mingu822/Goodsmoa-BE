@@ -46,6 +46,7 @@ public class DemandPostService {
     private final SearchService searchService;
     private final FileUploadService fileUploadService;
     private final DemandOrderRepository demandOrderRepository;
+    private final DemandOrderService demandOrderService;
 
     // 선택한 글의 id로 검색하여 가져오기
     public DemandPostResponse getDemandPostResponse(Long id) {
@@ -54,6 +55,20 @@ public class DemandPostService {
         demandPostViewService.increaseViewCount(postEntity.getId());
 
         return demandPostConverter.toResponse(postEntity);
+    }
+
+    // 선택한 글의 id로 검색하여 가져오기
+    public DemandPostResponse getDemandPostResponse(UserEntity user, Long id) {
+        DemandPostEntity postEntity = findByIdWithThrow(id);
+        DemandOrderEntity orderEntity = demandOrderRepository.findByDemandPostEntityAndUser(postEntity, user);
+        if(orderEntity==null){
+            return demandPostConverter.toResponse(postEntity);
+        }
+        demandOrderService.validateUserAuthorization(user.getId(), orderEntity.getUser().getId());
+
+        // 조회수 증가
+        demandPostViewService.increaseViewCount(postEntity.getId());
+        return demandPostConverter.toResponse(postEntity, orderEntity);
     }
 
     // 선택한 글의 id로 탐색하여 판매글로 전환할 데이터 보내기
@@ -113,8 +128,10 @@ public class DemandPostService {
 
         // 5. 상품 이미지 업로드 및 상품 엔티티 생성
         List<String> productImagePaths = new ArrayList<>();
-        for(MultipartFile img:productImages){
-            productImagePaths.add(fileUploadService.uploadImageWithCustomName(img, "demandPost/product", UUID.randomUUID().toString()));
+        if (productImages != null && !productImages.isEmpty()) {
+            for(MultipartFile img : productImages){
+                productImagePaths.add(fileUploadService.uploadImageWithCustomName(img, "demandPost/product", UUID.randomUUID().toString()));
+            }
         }
         List<DemandPostProductEntity> products = new ArrayList<>();
         for (int i = 0; i < request.getProducts().size(); i++) {
@@ -183,7 +200,7 @@ public class DemandPostService {
 
             if (productId == null) { // 신규 상품 추가
                 DemandPostProductEntity postProductEntity = demandPostProductConverter.toEntity(postEntity, productRequest);
-                if (!newProductImages.isEmpty() && productImageIndex < newProductImages.size()) {
+                if (newProductImages != null && !newProductImages.isEmpty() && productImageIndex < newProductImages.size()) {
                     MultipartFile imageFile = newProductImages.get(productImageIndex++);
                     String imageUrl = fileUploadService.uploadImageWithCustomName(imageFile, "demandPost/product", UUID.randomUUID().toString());
                     postProductEntity.setImageUrl(imageUrl);
@@ -222,6 +239,11 @@ public class DemandPostService {
 
         productsToRemove.forEach(product -> {
             fileUploadService.deleteImage(product.getImageUrl());
+            try {
+                fileUploadService.deleteImage(product.getImageUrl());
+            } catch (Exception e) {
+                log.error("상품 이미지 삭제 실패: {}", product.getImageUrl(), e);
+            }
             entityManager.remove(product);
         });
         postEntity.getProducts().removeAll(productsToRemove);
@@ -233,8 +255,10 @@ public class DemandPostService {
         List<String> newDescriptionPaths = new ArrayList<>();
 
         // 새 이미지 업로드
-        for( MultipartFile img:newDescriptionImages){
-            newDescriptionPaths.add(fileUploadService.uploadImageWithCustomName(img, "demandPost/description", UUID.randomUUID().toString()));
+        if (newDescriptionImages != null && !newDescriptionImages.isEmpty()) {
+            for (MultipartFile img : newDescriptionImages) {
+                newDescriptionPaths.add(fileUploadService.uploadImageWithCustomName(img, "demandPost/description", UUID.randomUUID().toString()));
+            }
         }
         // 새 본문의 이미지를 저장된 이름으로 변환
         String processedDescription = processContentImages(request.getDescription() ,newDescriptionPaths);
@@ -245,7 +269,13 @@ public class DemandPostService {
         // 기존 본문에 있었지만 새 본문에는 없는 이미지만 삭제
         oldImageUrls.stream()
                 .filter(url -> !newImageUrls.contains(url))
-                .forEach(fileUploadService::deleteImage);
+                .forEach(url ->{
+                    try{
+                        fileUploadService.deleteImage(url);
+                    }catch (Exception e){
+                        log.error("본문 이미지 삭제 실패: {}", url, e);
+                    }
+                });
 
         // 상품 목록을 제외한 필드 업데이트
         postEntity.updateDemandEntity(
@@ -357,7 +387,8 @@ public class DemandPostService {
         while (matcher.find()) {
             String replacement;
             if (i < descriptionImagePaths.size()) {
-                replacement = "src='" + descriptionImagePaths.get(i++) + "'"; // i는 여기서 1 증가
+                replacement = "src='http://localhost:8080/" + descriptionImagePaths.get(i++) + "'";
+//                replacement = "src='" + descriptionImagePaths.get(i++) + "'"; // i는 여기서 1 증가
             } else {
                 replacement = "src='/default-image.jpg'";
             }

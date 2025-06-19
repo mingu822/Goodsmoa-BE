@@ -1,6 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.demand.entity;
 
 
+import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

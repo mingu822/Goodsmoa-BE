@@ -69,8 +69,14 @@ public class DemandPostApiController {
 
     // 수요조사 상세 조회
     @GetMapping("/{id}")
-    public ResponseEntity<DemandPostResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(demandPostService.getDemandPostResponse(id));
+    public ResponseEntity<DemandPostResponse> findById(@AuthenticationPrincipal UserEntity user,
+                                                       @PathVariable Long id) {
+        if(user==null) {
+            return ResponseEntity.ok(demandPostService.getDemandPostResponse(id));
+        }
+        else{
+            return ResponseEntity.ok(demandPostService.getDemandPostResponse(user, id));
+        }
     }
     
     // 수요조사 글 작성
