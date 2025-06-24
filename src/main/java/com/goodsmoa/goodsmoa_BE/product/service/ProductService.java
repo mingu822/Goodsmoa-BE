@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.goodsmoa.goodsmoa_BE.config.S3Uploader;
 import com.goodsmoa.goodsmoa_BE.product.dto.delivery.ProductDeliveryRequest;
 import com.goodsmoa.goodsmoa_BE.product.entity.*;
 import com.goodsmoa.goodsmoa_BE.product.repository.*;
@@ -58,6 +59,8 @@ public class ProductService {
     private final ProductImageUpdateConverter productImageUpdateConverter;
     private final ProductLikeRepository productLikeRepository;
     private final ProductReviewRepository productReviewRepository;
+    private final S3Uploader s3Uploader;
+
 
     // 상품글 생성
     @Transactional
@@ -66,7 +69,7 @@ public class ProductService {
             PostRequest request,
             MultipartFile thumbnailImage,
             List<MultipartFile> productImages,
-            List<MultipartFile> contentImages) {
+            List<MultipartFile> contentImages) throws IOException {
 
         // 게시글 저장을 위한 카테고리 찾기
         Category category = categoryRepository.getReferenceById(request.getCategoryId());
@@ -78,7 +81,8 @@ public class ProductService {
         Long postId = saveEntity.getId();
 
         // 썸네일 이미지 저장
-        String thumbnailPath = fileUploadService.uploadSingleImage(thumbnailImage, "productPost/thumbnail", postId);
+        String thumbnailPath = s3Uploader.upload(thumbnailImage);
+//        String thumbnailPath = fileUploadService.uploadSingleImage(thumbnailImage, "productPost/thumbnail", postId);
         saveEntity.setThumbnailImage(thumbnailPath);
         productPostRepository.save(saveEntity);
 

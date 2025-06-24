@@ -93,13 +93,28 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
 	// Elasticsearch 클라이언트
-//	implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:8.18.0'
+	//	implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:8.18.0'
 
 	//Elasticsearch spring-data-elasticSearch 5.5.x는 ElasticSearch 8.18.1와 호환
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
-// RabbitMq
+
+	// RabbitMq
 	implementation 'org.springframework.boot:spring-boot-starter-amqp'
 
+	// AWS SDK for Java 의 버전 관리
+	// 다른 aws sdk 의존성들과 버전을 일관되게 맞춰줍니다.
+	implementation platform('software.amazon.awssdk:bom:2.20.0')
+
+	// Amazon S3 서비스를 사용하기 위한 의존성 주입
+	// 파일 업로드, 다운로드, 버킷 관리 등의 기능을 제공
+	implementation 'software.amazon.awssdk:s3'
+
+	// AWS 자격 증명 처리를 위한 인증 관련 의존성 주입
+	// 액세스 키, 시크릿 키 등
+	implementation 'software.amazon.awssdk:auth'
+
+	// AWS 지역 설정 의존성 주입
+	implementation 'software.amazon.awssdk:regions'
 
 }
 

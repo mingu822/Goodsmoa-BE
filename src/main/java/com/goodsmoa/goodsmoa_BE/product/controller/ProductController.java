@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.product.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -40,7 +41,7 @@ public class ProductController {
             @RequestPart("postRequest") PostRequest request,
             @RequestPart("thumbnailImage") MultipartFile thumbnailImage,
             @RequestPart(value = "productImages", required = false) List<MultipartFile> productImages,
-            @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages) {
+            @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages) throws IOException {
         return productService.createPost(user, request, thumbnailImage, productImages, contentImages);
     }
 
