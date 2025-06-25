@@ -99,7 +99,7 @@ public class OrderEntity {
     private List<OrderItemEntity> orderItems = new ArrayList<>();
 
     public enum OrderStatus {
-        배송준비, 배송중, 배송완료
+        상품준비중, 배송준비, 배송중, 배송완료
     }
 
 }

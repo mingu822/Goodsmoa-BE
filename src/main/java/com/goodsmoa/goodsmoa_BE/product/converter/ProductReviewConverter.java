@@ -25,7 +25,6 @@ public class ProductReviewConverter {
                 .productPostEntity(postEntity)
                 .rating(request.getRating())
                 .user(user)
-                .title(request.getTitle())
                 .content(request.getContent())
                 .build();
     }

@@ -39,9 +39,6 @@ public class ProductReviewEntity {
     @JsonBackReference
     private ProductPostEntity productPostEntity;
 
-    @Column(name = "title", length = 50, nullable = false)
-    private String title;
-
     @Column(name = "rating", nullable = false)
     private Double rating;
 

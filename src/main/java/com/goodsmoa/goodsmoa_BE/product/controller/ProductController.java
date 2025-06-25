@@ -55,8 +55,7 @@ public class ProductController {
             @RequestPart(value = "newContentImages", required = false) List<MultipartFile> newContentImages,
             @RequestPart(value = "newProductImages", required = false) List<MultipartFile> newProductImages,
             @RequestPart("deleteProductImageIds") String deleteProductImageIdsJson,
-            @RequestPart("deleteDeliveryIds") String deleteDeliveryIds)
-    {
+            @RequestPart("deleteDeliveryIds") String deleteDeliveryIds) throws IOException {
         return productService.updateProductPost(user, id, request, newThumbnailImage,
                 newContentImages,
                 newProductImages,

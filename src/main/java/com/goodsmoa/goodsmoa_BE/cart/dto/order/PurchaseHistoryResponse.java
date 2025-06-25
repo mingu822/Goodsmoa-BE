@@ -11,6 +11,7 @@ import java.util.List;
 public class PurchaseHistoryResponse {
 
     private Long orderId;
+
     private String orderCode;
 
     // 주문자 정보
@@ -26,8 +27,11 @@ public class PurchaseHistoryResponse {
 
     // 결제 정보
     private String orderName;         // 예: "에코백 외 2개"
+
     private Integer totalQuantity;
+
     private Integer totalPrice;       // PaymentEntity.amount
+
     private LocalDateTime paymentDate;
 
     // 상품 목록
@@ -40,6 +44,7 @@ public class PurchaseHistoryResponse {
     @Getter
     @Builder
     public static class ProductDto {
+        private Long postId;
         private String name;
         private String imageUrl;
         private Integer price;

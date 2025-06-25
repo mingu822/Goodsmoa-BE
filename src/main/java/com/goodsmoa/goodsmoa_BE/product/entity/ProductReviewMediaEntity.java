@@ -19,8 +19,6 @@ public class ProductReviewMediaEntity {
 
     private String filePath; // 예: "productPost/review/3_1.png"
 
-    private String fileType; // 예: "image" 또는 "video"
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id", nullable = false)
     @JsonBackReference

@@ -90,8 +90,13 @@ public class ProductService {
         List<ProductEntity> products = new ArrayList<>();
         if (request.getProducts() != null && !request.getProducts().isEmpty()) {
             List<String> productImagePaths = new ArrayList<>();
+
+            // 여러 이미지 업로드
             if (productImages != null && !productImages.isEmpty()) {
-                productImagePaths = fileUploadService.uploadMultiImages(productImages, "productPost/product", postId);
+                for (MultipartFile productImage : productImages) {
+                    String path = s3Uploader.upload(productImage); // ★ 이 부분만 사용
+                    productImagePaths.add(path);
+                }
             }
 
             int index = 0;
@@ -103,6 +108,7 @@ public class ProductService {
                 products.add(productEntity);
                 index++;
             }
+
             productRepository.saveAll(products);
             saveEntity.setState(true);
             productPostRepository.save(saveEntity);
@@ -110,11 +116,16 @@ public class ProductService {
 
         // 상세 이미지 저장 및 본문에 삽입
         if (contentImages != null && !contentImages.isEmpty()) {
-            List<String> contentImagePaths = fileUploadService.uploadMultiImages(contentImages, "productPost/content",
-                    postId);
+
+            List<String> contentImagePaths = new ArrayList<>();
+            for (MultipartFile contentImage : contentImages) {
+                String path = s3Uploader.upload(contentImage); // ✅ upload()만 사용
+                contentImagePaths.add(path);
+            }
 
             String originalContent = request.getContent();
 
+            // HTML의 <img src="..."> 경로를 정규식으로 찾음
             Pattern pattern = Pattern.compile("src=[\"'](.*?)[\"']");
             Matcher matcher = pattern.matcher(originalContent);
 
@@ -122,7 +133,7 @@ public class ProductService {
             StringBuffer result = new StringBuffer();
 
             while (matcher.find() && i < contentImagePaths.size()) {
-                String newPath = "src='" + contentImagePaths.get(i++) + "'";
+                String newPath = "src='" + contentImagePaths.get(i++) + "'"; // 새 이미지 경로로 교체
                 matcher.appendReplacement(result, newPath);
             }
             matcher.appendTail(result);
@@ -130,6 +141,7 @@ public class ProductService {
             saveEntity.setContent(result.toString());
             productPostRepository.save(saveEntity);
         }
+
 
         // 배달 옵션 저장
         List<ProductDeliveryEntity> delivers = new ArrayList<>();
@@ -155,7 +167,7 @@ public class ProductService {
             List<MultipartFile> newContentImages,
             List<MultipartFile> newProductImages,
             String deleteProductImageIdsJson,
-            String deleteDeliveryIds) {
+            String deleteDeliveryIds) throws IOException {
 
         List<Long> deleteProductIds;
         try {
@@ -193,37 +205,44 @@ public class ProductService {
 
         // ✅ 썸네일 이미지 교체
         if (imageRequest.getNewThumbnailImage() != null) {
-            String oldThumbnailPath = post.getThumbnailImage();
-            if (oldThumbnailPath != null && !oldThumbnailPath.isEmpty()) {
-                // 기존 썸네일 이미지 삭제
-                log.info("oldThumbnailPath : {}", oldThumbnailPath);
-                fileUploadService.deleteImage(oldThumbnailPath);
-            }
-            String newThumbnailPath = fileUploadService.uploadSingleImage(
-                    imageRequest.getNewThumbnailImage(), "productPost/thumbnail", postId);
-            log.info("newThumbnailPath : {}",newThumbnailPath);
+//            String oldThumbnailPath = post.getThumbnailImage();
+//            if (oldThumbnailPath != null && !oldThumbnailPath.isEmpty()) {
+//                // 기존 썸네일 이미지 삭제
+//                log.info("oldThumbnailPath : {}", oldThumbnailPath);
+//                fileUploadService.deleteImage(oldThumbnailPath);
+//            }
+//            String newThumbnailPath = fileUploadService.uploadSingleImage(
+//                    imageRequest.getNewThumbnailImage(), "productPost/thumbnail", postId);
+//            log.info("newThumbnailPath : {}",newThumbnailPath);
+            String newThumbnailPath = s3Uploader.upload(imageRequest.getNewThumbnailImage());
             post.setThumbnailImage(newThumbnailPath);
         }
 
         // ✅ 상세설명 이미지 경로 교체 및 저장
         if (imageRequest.getNewContentImages() != null && !imageRequest.getNewContentImages().isEmpty()) {
 
-            String originalContent = post.getContent(); // 기존 저장된 content 기준
-            Pattern pattern = Pattern.compile("src=['\"](productPost/content/[^'\"]+)['\"]");
-            Matcher matcher = pattern.matcher(originalContent);
+//            String originalContent = post.getContent(); // 기존 저장된 content 기준
+//            Pattern pattern = Pattern.compile("src=['\"](productPost/content/[^'\"]+)['\"]");
+//            Matcher matcher = pattern.matcher(originalContent);
+//
+//            // 기존 이미지 경로를 찾아 삭제
+//            while (matcher.find()) {
+//                String imagePath = matcher.group(1); // 예: productPost/content/2_1.png
+//                fileUploadService.deleteImage(imagePath); // ✅ 삭제
+//            }
 
-            while (matcher.find()) {
-                String imagePath = matcher.group(1); // ex: productPost/content/2_1.png
-                fileUploadService.deleteImage(imagePath); // ✅ 삭제 수행
+            // 새 이미지들 업로드 (s3Uploader.upload만 사용)
+            List<String> newContentPaths = new ArrayList<>();
+            for (MultipartFile image : imageRequest.getNewContentImages()) {
+                String uploadedPath = s3Uploader.upload(image); // ✅ 여기만 사용
+                newContentPaths.add(uploadedPath);
             }
 
-            List<String> newContentPaths = fileUploadService.uploadMultiImages(
-                    imageRequest.getNewContentImages(), "productPost/content", postId);
-
             String newContent = request.getContent();
-            // <img src='...'> 패턴 정규식
-            pattern = Pattern.compile("src=[\"'](.*?)[\"']");
-            matcher = pattern.matcher(newContent);
+
+            // <img src='...'> 태그에 새 경로 적용
+            Pattern pattern = Pattern.compile("src=[\"'](.*?)[\"']");
+            Matcher matcher = pattern.matcher(newContent);
 
             int i = 0;
             StringBuilder result = new StringBuilder();
@@ -236,11 +255,13 @@ public class ProductService {
 
             post.setContent(result.toString());
             productPostRepository.save(post);
+
         } else {
-            // 이미지가 없더라도 텍스트만 업데이트
+            // 이미지 없이 텍스트만 수정
             post.setContent(request.getContent());
             productPostRepository.save(post);
         }
+
 
         // 상품 업데이트
         List<ProductEntity> newProducts = new ArrayList<>();
@@ -248,8 +269,6 @@ public class ProductService {
         int imageIndex = 0;
 
         for (ProductRequest productRequest : request.getProducts()) {
-            log.info("productRequest.getName() : "+productRequest.getName());
-            log.info("productRequest.isImageUpdated() : "+productRequest.isImageUpdated());
             if (productRequest.getId() != null && productRequest.getId() > 0) {
                 // 기존 상품
                 ProductEntity existingProduct = productRepository.findById(productRequest.getId())
@@ -260,12 +279,11 @@ public class ProductService {
                 if (productRequest.isImageUpdated()) {
                     MultipartFile image = newImages.get(imageIndex++);
 
-                    // 기존 이미지 삭제
-                    fileUploadService.deleteImage(existingProduct.getImage());
+                    // 기존 이미지 삭제 생략
+                    // fileUploadService.deleteImage(existingProduct.getImage());
 
-                    // ✅ 기존 상품 ID 기준 파일 저장
-                    String fileName = postId + "_" + productRequest.getId();
-                    String savedPath = fileUploadService.uploadImageWithCustomName(image, "productPost/product", fileName);
+                    // 단순 업로드 (경로는 S3Uploader 내부에서 UUID + 날짜 기반으로 처리)
+                    String savedPath = s3Uploader.upload(image);
 
                     existingProduct.setImage(savedPath);
                 }
@@ -280,16 +298,15 @@ public class ProductService {
                 if (productRequest.isImageUpdated()) {
                     MultipartFile image = newImages.get(imageIndex++);
 
-                    // ✅ 방금 생성된 상품의 ID로 저장
-                    String fileName = postId + "_" + newProduct.getId();
-                    String savedPath = fileUploadService.uploadImageWithCustomName(image, "productPost/product", fileName);
-
+                    // 단순 업로드
+                    String savedPath = s3Uploader.upload(image);
                     newProduct.setImage(savedPath);
                 }
 
                 newProducts.add(newProduct);
             }
         }
+
 
         // ✅ 신규 상품 중 이미지 경로가 있는 것만 다시 저장 (이미 ID 확보됨)
         productRepository.saveAll(newProducts);
@@ -400,7 +417,7 @@ public class ProductService {
         productReviewRepository.deleteAll(review);
 
         // 관련 이미지 파일 삭제
-        deleteAllImagesByPostId(id);
+        // deleteAllImagesByPostId(id);
 
         // 게시글 삭제
         productPostRepository.delete(entity);
@@ -408,27 +425,28 @@ public class ProductService {
         return ResponseEntity.ok("성공적으로 삭제 되었습니다.");
     }
 
-    private void deleteAllImagesByPostId(Long postId) {
-        List<String> folders = List.of("productPost/thumbnail", "productPost/content", "productPost/product");
-
-        for (String folder : folders) {
-            String baseUploadDir = "src/main/resources/static/";
-
-            Path dirPath = Paths.get(baseUploadDir + folder);
-
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath, postId + "_*")) {
-                for (Path file : stream) {
-                    try {
-                        Files.deleteIfExists(file);
-                    } catch (IOException e) {
-                        log.warn("이미지 삭제 실패: " + file.toString(), e);
-                    }
-                }
-            } catch (IOException e) {
-                log.warn("폴더 접근 실패: " + dirPath.toString(), e);
-            }
-        }
-    }
+    // 로컬에서 이미지가 저장될 때 상품글을 삭제할 때 모든 관련 이미지 삭제하는 메서드
+//    private void deleteAllImagesByPostId(Long postId) {
+//        List<String> folders = List.of("productPost/thumbnail", "productPost/content", "productPost/product");
+//
+//        for (String folder : folders) {
+//            String baseUploadDir = "src/main/resources/static/";
+//
+//            Path dirPath = Paths.get(baseUploadDir + folder);
+//
+//            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath, postId + "_*")) {
+//                for (Path file : stream) {
+//                    try {
+//                        Files.deleteIfExists(file);
+//                    } catch (IOException e) {
+//                        log.warn("이미지 삭제 실패: " + file.toString(), e);
+//                    }
+//                }
+//            } catch (IOException e) {
+//                log.warn("폴더 접근 실패: " + dirPath.toString(), e);
+//            }
+//        }
+//    }
 
     // 상품글 리스트 조회
     public ResponseEntity<Page<PostsResponse>> getProductPostList(Pageable pageable) {

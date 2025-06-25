@@ -26,7 +26,7 @@ public class OrderConverter {
                 .user(user)
                 .productPost(post)
                 .productDelivery(delivery)
-                .status(OrderEntity.OrderStatus.배송준비) // 주문 생성 시 기본값
+                .status(OrderEntity.OrderStatus.상품준비중) // 주문 생성 시 기본값
                 .recipientName(request.getRecipientName())
                 .phoneNumber(request.getPhoneNumber())
                 .zipCode(request.getZipCode())
@@ -171,6 +171,7 @@ public class OrderConverter {
         if (order.getProductPost() != null) {
             List<PurchaseHistoryResponse.ProductDto> productDtos = order.getOrderItems().stream()
                     .map(item -> PurchaseHistoryResponse.ProductDto.builder()
+                            .postId(item.getProduct().getProductPostEntity().getId())
                             .name(item.getProduct().getName())
                             .imageUrl(item.getProduct().getImage())
                             .price(item.getProduct().getPrice())

@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.product.service;
 
+import com.goodsmoa.goodsmoa_BE.config.S3Uploader;
 import com.goodsmoa.goodsmoa_BE.fileUpload.FileUploadService;
 import com.goodsmoa.goodsmoa_BE.product.converter.ProductReviewConverter;
 import com.goodsmoa.goodsmoa_BE.product.dto.post.PostDetailResponse;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -36,6 +38,8 @@ public class ProductReviewService {
 
     private final ProductReviewMediaRepository productReviewMediaRepository;
 
+    private final S3Uploader s3Uploader;
+
     // 리뷰 창 보여주기
     public ResponseEntity<ProductSummaryResponse> getView(Long productId) {
         ProductPostEntity product = productPostRepository.findById(productId)
@@ -46,36 +50,35 @@ public class ProductReviewService {
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<PostDetailResponse> createReview(ProductReviewRequest request, UserEntity user, List<MultipartFile> reviewImages) {
+    public ResponseEntity<PostDetailResponse> createReview(ProductReviewRequest request, UserEntity user, List<MultipartFile> reviewImages) throws IOException {
         // 1. 상품 및 리뷰 생성
         ProductPostEntity postEntity = productPostRepository.findById(request.getPostId())
                 .orElseThrow(() -> new EntityNotFoundException("상품글이 존재하지 않습니다."));
+
         ProductReviewEntity reviewEntity = productReviewConverter.toEntity(request, postEntity, user);
+
         productReviewRepository.save(reviewEntity);
 
-        // 2. 이미지/비디오 업로드
-        List<String> mediaPaths = fileUploadService.uploadMultiImages(reviewImages, "productPost/review", reviewEntity.getId());
+        // 2. 이미지 업로드
+        if (reviewImages != null && !reviewImages.isEmpty()) {
+            for (MultipartFile reviewImage : reviewImages) {
+                // 개별 이미지 업로드
+                String path = s3Uploader.upload(reviewImage);
 
-        for (String path : mediaPaths) {
-            String extension = path.substring(path.lastIndexOf(".") + 1);
-            String type = switch (extension) {
-                case "jpg", "jpeg", "png", "gif" -> "image";
-                case "mp4", "mov", "avi" -> "video";
-                default -> "unknown";
-            };
+                // 업로드된 경로를 DB에 저장
+                ProductReviewMediaEntity media = ProductReviewMediaEntity.builder()
+                        .filePath(path)
+                        .review(reviewEntity)
+                        .build();
 
-            ProductReviewMediaEntity media = ProductReviewMediaEntity
-                    .builder()
-                    .filePath(path)
-                    .review(reviewEntity)
-                    .fileType(type)
-                    .build();
-            productReviewMediaRepository.save(media);
+                productReviewMediaRepository.save(media);
+            }
         }
 
         PostDetailResponse response = productService.detailProductPost(request.getPostId()).getBody();
         return ResponseEntity.ok(response);
     }
+
     // 업데이트
     public ResponseEntity<PostDetailResponse> updateReview(ProductReviewRequest request, UserEntity user) {
 

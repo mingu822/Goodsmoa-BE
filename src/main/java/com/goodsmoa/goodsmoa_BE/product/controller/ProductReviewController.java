@@ -11,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -30,7 +31,7 @@ public class ProductReviewController {
     @PostMapping("/create")
     public ResponseEntity<PostDetailResponse> createReview(@RequestPart ProductReviewRequest request,
                                                            @AuthenticationPrincipal UserEntity user,
-                                                           @RequestPart("reviewImages") List<MultipartFile> reviewImages){
+                                                           @RequestPart("reviewImages") List<MultipartFile> reviewImages) throws IOException {
         return productReviewService.createReview(request, user, reviewImages);
     }
 
