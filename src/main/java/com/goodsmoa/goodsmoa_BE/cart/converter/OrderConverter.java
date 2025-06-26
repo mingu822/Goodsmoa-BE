@@ -7,18 +7,24 @@ import com.goodsmoa.goodsmoa_BE.cart.entity.PaymentEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductDeliveryEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductEntity;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductPostEntity;
+import com.goodsmoa.goodsmoa_BE.product.entity.ProductReviewEntity;
+import com.goodsmoa.goodsmoa_BE.product.repository.ProductReviewRepository;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import com.goodsmoa.goodsmoa_BE.cart.dto.order.PurchaseHistoryResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class OrderConverter {
 
+    private final ProductReviewRepository productReviewRepository;
 
     /** ✅ OrderRequest를 기반으로 OrderEntity를 생성 */
     public OrderEntity toOrderEntity(OrderRequest request, UserEntity user, ProductPostEntity post, ProductDeliveryEntity delivery) {
@@ -167,6 +173,9 @@ public class OrderConverter {
                 .totalPrice(payment.getAmount())
                 .paymentDate(payment.getPaidAt());
 
+        boolean hasReview = false;
+        Long reviewId = null;
+
         // 1. 일반 상품 판매일 경우
         if (order.getProductPost() != null) {
             List<PurchaseHistoryResponse.ProductDto> productDtos = order.getOrderItems().stream()
@@ -199,6 +208,13 @@ public class OrderConverter {
                     .totalQuantity(totalQuantity)
                     .products(productDtos);
 
+            Optional<ProductReviewEntity> optionalReview =
+                    productReviewRepository.findByProductPostEntityAndUser(order.getProductPost(), order.getUser());
+            if (optionalReview.isPresent()) {
+                hasReview = true;
+                reviewId = optionalReview.get().getId();
+            }
+
         }
         // 2. 중고 거래일 경우
         else if (order.getTradePost() != null) {
@@ -217,9 +233,14 @@ public class OrderConverter {
                     .totalQuantity(1)
                     .products(List.of(productDto));
 
+            hasReview = false; // 중고 거래 리뷰가 없다면 false 처리
+
         } else {
             throw new IllegalArgumentException("유효하지 않은 주문 타입입니다. Order ID: " + order.getId());
         }
+
+        builder.hasReview(hasReview)
+                .reviewId(reviewId);
 
         return builder.build();
     }

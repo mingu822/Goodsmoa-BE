@@ -1,11 +1,14 @@
 package com.goodsmoa.goodsmoa_BE.product.controller;
 
 import com.goodsmoa.goodsmoa_BE.product.dto.post.PostDetailResponse;
-import com.goodsmoa.goodsmoa_BE.product.dto.review.ProductReviewRequest;
-import com.goodsmoa.goodsmoa_BE.product.dto.review.ProductSummaryResponse;
+import com.goodsmoa.goodsmoa_BE.product.dto.review.*;
 import com.goodsmoa.goodsmoa_BE.product.service.ProductReviewService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -21,10 +24,18 @@ public class ProductReviewController {
 
     private final ProductReviewService productReviewService;
 
-    /** ✅ 리뷰 작성 페이지 진입 (상품 정보 제공) */
-    @GetMapping("/{productId}")
-    public ResponseEntity<ProductSummaryResponse> getReviewWritePage(@PathVariable Long productId) {
-        return productReviewService.getView(productId);
+    // 단일 리뷰 조회
+    @GetMapping("/{reviewId}")
+    public ResponseEntity<ProductReviewDetailResponse> getReviewDetail(@PathVariable Long reviewId) {
+        return productReviewService.getView(reviewId);
+    }
+
+    // 상품글에 있는 리뷰들 조회
+    @GetMapping("/post/{postId}")
+    public ResponseEntity<Page<ProductSummaryResponse>> getReviewsByPost(
+            @PathVariable Long postId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return productReviewService.getReviewList(postId, pageable);
     }
 
     // 리뷰 쓰기
@@ -37,8 +48,10 @@ public class ProductReviewController {
 
     // 리뷰 수정
     @PutMapping("/update")
-    public ResponseEntity<PostDetailResponse> updateReview(@AuthenticationPrincipal UserEntity user, @RequestBody ProductReviewRequest request){
-        return productReviewService.updateReview(request, user);
+    public ResponseEntity<PostDetailResponse> updateReview(@RequestPart("review") ProductReviewUpdateRequest request,
+                                                           @AuthenticationPrincipal UserEntity user,
+                                                           @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) throws IOException {
+        return productReviewService.updateReview(request, user, newImages);
     }
 
     // 리뷰 삭제
@@ -46,5 +59,15 @@ public class ProductReviewController {
     public ResponseEntity<Void> deleteReview(@PathVariable Long id, @AuthenticationPrincipal UserEntity user){
         return productReviewService.deleteReview(id, user);
     }
+
+    // 내가 쓴 리뷰 리스트 조회
+    @GetMapping("/list")
+    public ResponseEntity<Page<ProductReviewResponse>> listOrder(
+            @AuthenticationPrincipal UserEntity user,
+            @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return productReviewService.getList(user, pageable);
+    }
+
 
 }

@@ -1,10 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.product.service;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -413,7 +409,7 @@ public class ProductService {
         List<ProductLikeEntity> likes = productLikeRepository.findByProductPostEntity(entity);
         productLikeRepository.deleteAll(likes);
 
-        List<ProductReviewEntity> review = productReviewRepository.findByProductPostEntity(entity);
+        List<ProductReviewEntity> review = productReviewRepository.findAllByProductPostEntity(entity);
         productReviewRepository.deleteAll(review);
 
         // 관련 이미지 파일 삭제

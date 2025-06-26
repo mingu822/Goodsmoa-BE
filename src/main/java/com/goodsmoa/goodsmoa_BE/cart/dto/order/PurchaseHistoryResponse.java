@@ -41,6 +41,12 @@ public class PurchaseHistoryResponse {
 
     private String mainAddress;
 
+    // 리뷰를 썼는지 확인
+    private Boolean hasReview;
+
+    // 조회, 수정, 삭제를 위한 id
+    private Long reviewId;
+
     @Getter
     @Builder
     public static class ProductDto {

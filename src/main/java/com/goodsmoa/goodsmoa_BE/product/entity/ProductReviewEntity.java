@@ -3,10 +3,7 @@ package com.goodsmoa.goodsmoa_BE.product.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,6 +11,7 @@ import java.util.List;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
