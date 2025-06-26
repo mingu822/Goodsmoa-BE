@@ -1,6 +1,5 @@
 package com.goodsmoa.goodsmoa_BE.trade.DTO.Post;
 
-import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostDescription;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
