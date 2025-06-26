@@ -4,7 +4,6 @@ import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionPostEntity;
 import com.goodsmoa.goodsmoa_BE.enums.Board;
 import com.goodsmoa.goodsmoa_BE.product.entity.ProductPostEntity;
 import com.goodsmoa.goodsmoa_BE.search.document.SearchDocument;
-import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostDescription;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import org.springframework.stereotype.Component;
 
