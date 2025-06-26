@@ -57,7 +57,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // ✅ 정확한 Origin 명시
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5177/"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5177"));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));

@@ -1,6 +1,8 @@
 package com.goodsmoa.goodsmoa_BE.trade.Service;
 
 
+import com.goodsmoa.goodsmoa_BE.cart.entity.OrderEntity;
+import com.goodsmoa.goodsmoa_BE.cart.repository.OrderRepository;
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 //import com.goodsmoa.goodsmoa_BE.elasticsearch.Service.TradePostSearchService;
@@ -59,6 +61,7 @@ public class TradePostService {
     private final FileUploadService fileUploadService;
     private final TradePostHiddenRepository tradePostHiddenRepository;
     private final S3Uploader s3Uploader;
+    private final OrderRepository orderRepository;
     // --- Helper Methods for S3 Upload ---
 
     // 단일 이미지 업로드 헬퍼 메서드
@@ -276,6 +279,11 @@ public class TradePostService {
         if (!tradePost.getUser().getId().equals(user.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("삭제 권한이 없습니다.");
         }
+        List<OrderEntity> relatedOrders = orderRepository.findByTradePost_Id(id);
+
+        for (OrderEntity order : relatedOrders) {
+            order.setTradePost(null); // 주문 기록에서 게시글 정보만 제거
+        }
 
         // --- 3. S3에서 모든 관련 이미지 삭제 (DB보다 먼저!) ---
 
@@ -285,12 +293,13 @@ public class TradePostService {
         contentImageUrls.forEach(s3Uploader::delete);
 
         // 3-2. 하단 상품 이미지들 삭제
+
         tradePost.getImage().forEach(imageEntity -> s3Uploader.delete(imageEntity.getImageUrl()));
 
         // 3-3. 썸네일 이미지 삭제
         s3Uploader.delete(tradePost.getThumbnailImage());
 
-
+        tradePost.getImage().clear();
         // --- 4. 데이터베이스에서 게시글 삭제 ---
         // Cascade 옵션에 의해 연관된 상품 이미지(TradeImageEntity)들도 함께 삭제됨
         tradePostRepository.delete(tradePost);
