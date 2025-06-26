@@ -47,6 +47,7 @@ public class SearchConverter {
                 .hashtag(doc.getHashtag())
                 .thumbnailUrl(doc.getThumbnailUrl())
                 .views(doc.getViews())
+                .likes(doc.getLikes())
                 .endTime(doc.getEndTime())
                 .nickname(user.getNickname())
                 .profileUrl(user.getImage())

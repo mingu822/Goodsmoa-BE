@@ -22,14 +22,18 @@ public class SearchApiController {
 
     // 키워드 검색
     @GetMapping
-    public ResponseEntity<Map<Board, List<SearchDocWithUserResponse>>> findByKeyword(@RequestParam Optional<String> query,
-                                                                                     @RequestParam Optional<Integer> category,
-                                                                                     @RequestParam(defaultValue = "new", name = "order_by") String orderBy,
-                                                                                     @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
-                                                                                     @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
-                                                                                     @RequestParam(name = "page_size") Optional<Integer> pageSize){
+    public ResponseEntity<Map<Board, List<SearchDocWithUserResponse>>> findByKeyword(
+            @RequestParam(defaultValue = "ALL", name = "search_type") String searchType,
+            @RequestParam Optional<String> query,
+            @RequestParam Optional<Integer> category,
+            @RequestParam(defaultValue = "new", name = "order_by") String orderBy,
+            @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
+            @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
+            @RequestParam(name = "page_size") Optional<Integer> pageSize)
+    {
         return ResponseEntity.ok(
                 searchService.integratedSearch(
+                        searchType,
                         query.orElse(null),
                         category.orElse(0),
                         orderBy,

@@ -2,6 +2,7 @@ package com.goodsmoa.goodsmoa_BE.demand.service;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
+import com.goodsmoa.goodsmoa_BE.config.S3Uploader;
 import com.goodsmoa.goodsmoa_BE.demand.converter.DemandPostConverter;
 import com.goodsmoa.goodsmoa_BE.demand.converter.DemandPostProductConverter;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.*;
@@ -10,7 +11,6 @@ import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostProductEntity;
 import com.goodsmoa.goodsmoa_BE.demand.repository.DemandOrderRepository;
 import com.goodsmoa.goodsmoa_BE.demand.repository.DemandPostRepository;
-import com.goodsmoa.goodsmoa_BE.fileUpload.FileUploadService;
 import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.EntityManager;
@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,17 +43,17 @@ public class DemandPostService {
     private final DemandPostConverter demandPostConverter;
     private final DemandPostRepository demandPostRepository;
     private final DemandPostProductConverter demandPostProductConverter;
-    private final DemandPostViewService demandPostViewService;
+    private final DemandRedisService demandRedisService;
     private final SearchService searchService;
-    private final FileUploadService fileUploadService;
     private final DemandOrderRepository demandOrderRepository;
     private final DemandOrderService demandOrderService;
+    private final S3Uploader s3Uploader;
 
     // 선택한 글의 id로 검색하여 가져오기
     public DemandPostResponse getDemandPostResponse(Long id) {
         DemandPostEntity postEntity = findByIdWithThrow(id);
         // 조회수 증가
-        demandPostViewService.increaseViewCount(postEntity.getId());
+        demandRedisService.increaseViewCount(postEntity.getId());
 
         return demandPostConverter.toResponse(postEntity);
     }
@@ -67,7 +68,7 @@ public class DemandPostService {
         demandOrderService.validateUserAuthorization(user.getId(), orderEntity.getUser().getId());
 
         // 조회수 증가
-        demandPostViewService.increaseViewCount(postEntity.getId());
+        demandRedisService.increaseViewCount(postEntity.getId());
         return demandPostConverter.toResponse(postEntity, orderEntity);
     }
 
@@ -110,8 +111,8 @@ public class DemandPostService {
             DemandPostCreateRequest request,
             MultipartFile thumbnailImage,
             List<MultipartFile> productImages,
-            List<MultipartFile> descriptionImages
-    ) {
+            List<MultipartFile> descriptionImages) throws IOException
+    {
         // 1. 카테고리 조회
         Category category = findCategoryByIdWithThrow(request.getCategoryId());
 
@@ -120,17 +121,20 @@ public class DemandPostService {
 
         // 3. 게시글 먼저 저장하여 ID 생성
         DemandPostEntity savedPost = demandPostRepository.save(postEntity);
-        Long id = savedPost.getId();
+//        Long id = savedPost.getId();
 
         // 4. 썸네일 이미지 업로드 및 경로 설정
-        String thumbnailPath = fileUploadService.uploadSingleImage(thumbnailImage, "demandPost/thumbnail", id);
+//        String thumbnailPath = fileUploadService.uploadSingleImage(thumbnailImage, "demandPost/thumbnail", id);
+        String thumbnailPath = s3Uploader.upload(thumbnailImage);
         savedPost.setImageUrl(thumbnailPath);
 
         // 5. 상품 이미지 업로드 및 상품 엔티티 생성
         List<String> productImagePaths = new ArrayList<>();
         if (productImages != null && !productImages.isEmpty()) {
             for(MultipartFile img : productImages){
-                productImagePaths.add(fileUploadService.uploadImageWithCustomName(img, "demandPost/product", UUID.randomUUID().toString()));
+//                String productImgPath = fileUploadService.uploadImageWithCustomName(img, "demandPost/product", UUID.randomUUID().toString());
+                String productImgPath = s3Uploader.upload(img);
+                productImagePaths.add(productImgPath);
             }
         }
         List<DemandPostProductEntity> products = new ArrayList<>();
@@ -147,7 +151,9 @@ public class DemandPostService {
         if (descriptionImages != null && !descriptionImages.isEmpty()) {
             List<String> descriptionImagePaths = new ArrayList<>();
             for(MultipartFile img:descriptionImages) {
-                descriptionImagePaths.add(fileUploadService.uploadImageWithCustomName(img, "demandPost/description", UUID.randomUUID().toString()));
+//                String descriptionImgPath = fileUploadService.uploadImageWithCustomName(img, "demandPost/description", UUID.randomUUID().toString())
+                String descriptionImgPath = s3Uploader.upload(img);
+                descriptionImagePaths.add(descriptionImgPath);
             }
             String processedDescription = processContentImages(request.getDescription(), descriptionImagePaths);
             savedPost.setDescription(processedDescription);
@@ -168,16 +174,18 @@ public class DemandPostService {
             DemandPostUpdateRequest request,
             MultipartFile newThumbnailImage,
             List<MultipartFile> newProductImages,
-            List<MultipartFile> newDescriptionImages
-    ) {
+            List<MultipartFile> newDescriptionImages) throws IOException
+    {
         // 기존글 조회 및 수정 권한 확인
         DemandPostEntity postEntity = findByIdWithThrow(id);
         validateUserAuthorization(user.getId(), postEntity);
 
         // 썸네일 이미지 교체
         if (newThumbnailImage != null && !newThumbnailImage.isEmpty()) {
-            fileUploadService.deleteImage(postEntity.getImageUrl());
-            String thumbnailPath = fileUploadService.uploadSingleImage(newThumbnailImage, "demandPost/thumbnail", id);
+            s3Uploader.delete(postEntity.getImageUrl());
+//            fileUploadService.deleteImage(postEntity.getImageUrl());
+//            String thumbnailPath = fileUploadService.uploadSingleImage(newThumbnailImage, "demandPost/thumbnail", id);
+            String thumbnailPath = s3Uploader.upload(newThumbnailImage);
             postEntity.setImageUrl(thumbnailPath);
         }
 
@@ -202,7 +210,8 @@ public class DemandPostService {
                 DemandPostProductEntity postProductEntity = demandPostProductConverter.toEntity(postEntity, productRequest);
                 if (newProductImages != null && !newProductImages.isEmpty() && productImageIndex < newProductImages.size()) {
                     MultipartFile imageFile = newProductImages.get(productImageIndex++);
-                    String imageUrl = fileUploadService.uploadImageWithCustomName(imageFile, "demandPost/product", UUID.randomUUID().toString());
+//                    String imageUrl = fileUploadService.uploadImageWithCustomName(imageFile, "demandPost/product", UUID.randomUUID().toString());
+                    String imageUrl = s3Uploader.upload(imageFile);
                     postProductEntity.setImageUrl(imageUrl);
                 }
                 entityManager.persist(postProductEntity);
@@ -213,10 +222,12 @@ public class DemandPostService {
                     throw new IllegalStateException("해당 ID를 가진 상품을 찾을 수 없습니다: " + productId);
                 }
                 if (productRequest.isImageUpdated()) {
-                    fileUploadService.deleteImage(existingProduct.getImageUrl());
+                    s3Uploader.delete(existingProduct.getImageUrl());
+//                    fileUploadService.deleteImage(existingProduct.getImageUrl());
                     if (!newProductImages.isEmpty() && productImageIndex < newProductImages.size()) {
                         MultipartFile imageFile = newProductImages.get(productImageIndex++);
-                        String newImageUrl = fileUploadService.uploadImageWithCustomName(imageFile, "demandPost/product", UUID.randomUUID().toString());
+//                        String newImageUrl = fileUploadService.uploadImageWithCustomName(imageFile, "demandPost/product", UUID.randomUUID().toString());
+                        String newImageUrl = s3Uploader.upload(imageFile);
                         existingProduct.setImageUrl(newImageUrl);
                     }
                 }
@@ -238,9 +249,9 @@ public class DemandPostService {
         }
 
         productsToRemove.forEach(product -> {
-            fileUploadService.deleteImage(product.getImageUrl());
             try {
-                fileUploadService.deleteImage(product.getImageUrl());
+                s3Uploader.delete(product.getImageUrl());
+//                fileUploadService.deleteImage(product.getImageUrl());
             } catch (Exception e) {
                 log.error("상품 이미지 삭제 실패: {}", product.getImageUrl(), e);
             }
@@ -257,11 +268,13 @@ public class DemandPostService {
         // 새 이미지 업로드
         if (newDescriptionImages != null && !newDescriptionImages.isEmpty()) {
             for (MultipartFile img : newDescriptionImages) {
-                newDescriptionPaths.add(fileUploadService.uploadImageWithCustomName(img, "demandPost/description", UUID.randomUUID().toString()));
+//                String newDescriptionImgPath = fileUploadService.uploadImageWithCustomName(img, "demandPost/description", UUID.randomUUID().toString())
+                String newDescriptionImgPath = s3Uploader.upload(img);
+                newDescriptionPaths.add(newDescriptionImgPath);
             }
         }
         // 새 본문의 이미지를 저장된 이름으로 변환
-        String processedDescription = processContentImages(request.getDescription() ,newDescriptionPaths);
+        String processedDescription = processContentImages(request.getDescription(), newDescriptionPaths);
 
         // 새 본문에서 사용된 이미지 URL 추출
         List<String> newImageUrls = extractImageUrls(processedDescription);
@@ -271,7 +284,8 @@ public class DemandPostService {
                 .filter(url -> !newImageUrls.contains(url))
                 .forEach(url ->{
                     try{
-                        fileUploadService.deleteImage(url);
+                        s3Uploader.delete(url);
+//                        fileUploadService.deleteImage(url);
                     }catch (Exception e){
                         log.error("본문 이미지 삭제 실패: {}", url, e);
                     }
@@ -309,7 +323,8 @@ public class DemandPostService {
     private void deleteAllImagesByPostId(DemandPostEntity postEntity) {
         try {
             // 썸네일 삭제 (단일 항목)
-            fileUploadService.deleteImage(postEntity.getImageUrl());
+            s3Uploader.delete(postEntity.getImageUrl());
+//            fileUploadService.deleteImage(postEntity.getImageUrl());
         } catch (Exception e) {
             log.error("썸네일 삭제 실패: {}", postEntity.getImageUrl(), e);
         }
@@ -318,7 +333,8 @@ public class DemandPostService {
         List<String> deleteImgUrls = extractImageUrls(postEntity.getDescription());
         for (String imgUrl : deleteImgUrls) {
             try {
-                fileUploadService.deleteImage(imgUrl);
+                s3Uploader.delete(imgUrl);
+//                fileUploadService.deleteImage(imgUrl);
             } catch (Exception e) {
                 log.error("본문 이미지 삭제 실패: {}", imgUrl, e);
             }
@@ -327,7 +343,8 @@ public class DemandPostService {
         // 상품 이미지 삭제
         for (DemandPostProductEntity entity : postEntity.getProducts()) {
             try {
-                fileUploadService.deleteImage(entity.getImageUrl());
+                s3Uploader.delete(entity.getImageUrl());
+//                fileUploadService.deleteImage(entity.getImageUrl());
             } catch (Exception e) {
                 log.error("상품 이미지 삭제 실패: {}", entity.getImageUrl(), e);
             }
@@ -387,8 +404,8 @@ public class DemandPostService {
         while (matcher.find()) {
             String replacement;
             if (i < descriptionImagePaths.size()) {
-                replacement = "src='http://localhost:8080/" + descriptionImagePaths.get(i++) + "'";
-//                replacement = "src='" + descriptionImagePaths.get(i++) + "'"; // i는 여기서 1 증가
+//                replacement = "src='http://localhost:8080/" + descriptionImagePaths.get(i++) + "'";
+                replacement = "src='" + descriptionImagePaths.get(i++) + "'"; // i는 여기서 1 증가
             } else {
                 replacement = "src='/default-image.jpg'";
             }
