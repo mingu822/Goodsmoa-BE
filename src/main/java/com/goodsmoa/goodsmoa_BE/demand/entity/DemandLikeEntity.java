@@ -3,6 +3,8 @@ package com.goodsmoa.goodsmoa_BE.demand.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Table(name = "demand_like", uniqueConstraints = @UniqueConstraint(columnNames = {"postId", "userId"}))
@@ -16,10 +18,13 @@ public class DemandLikeEntity {
 
     private String userId;
 
+    private LocalDateTime createdAt;
+
     public DemandLikeEntity() {}
 
     public DemandLikeEntity(String userId, Long postId) {
         this.userId = userId;
         this.postId = postId;
+        this.createdAt = LocalDateTime.now();
     }
 }

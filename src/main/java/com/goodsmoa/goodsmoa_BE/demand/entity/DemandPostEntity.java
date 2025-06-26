@@ -18,10 +18,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "demand_post")
 public class DemandPostEntity implements SearchEntity {
-    /**
-     * TODO: 게시물 숨기기(신고횟수에 따른 비활성화)추가
-     * FIXME: 자료형 확인, Valid 추가
-    */
+
     // 수요조사글 ID
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,6 +52,10 @@ public class DemandPostEntity implements SearchEntity {
     @Setter
     @Column(nullable = false)
     private Long views;
+
+    @Setter
+    @Column(nullable = false)
+    private Long likes;
 
     // category N:1 연결, 즉시 조회
     @ManyToOne(fetch = FetchType.EAGER)
@@ -94,9 +95,5 @@ public class DemandPostEntity implements SearchEntity {
         this.imageUrl = imageUrl;
         this.hashtag = hashtag;
         this.category = category;
-    }
-
-    private String calculateState(LocalDateTime endTime){
-        return LocalDateTime.now().isBefore(endTime) ? "진행중" : "마감";
     }
 }

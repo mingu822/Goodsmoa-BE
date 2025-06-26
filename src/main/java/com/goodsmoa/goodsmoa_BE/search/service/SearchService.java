@@ -5,6 +5,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.json.JsonData;
 import com.goodsmoa.goodsmoa_BE.enums.Board;
+import com.goodsmoa.goodsmoa_BE.enums.SearchType;
 import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
 import com.goodsmoa.goodsmoa_BE.search.converter.SearchConverter;
 import com.goodsmoa.goodsmoa_BE.search.document.SearchDocument;
@@ -78,6 +79,7 @@ public class SearchService {
 
     // 통합검색
     public Map<Board, List<SearchDocWithUserResponse>> integratedSearch(
+            String searchType,
             String keyword,
             Integer category,
             String orderBy,
@@ -92,6 +94,7 @@ public class SearchService {
         List<CompletableFuture<Void>> futures = Arrays.stream(Board.values())
                 .map(board -> CompletableFuture.runAsync(() -> {
                     Page<SearchDocWithUserResponse> page = detailedSearch(
+                            searchType,
                             keyword,
                             board,
                             category,
@@ -113,14 +116,17 @@ public class SearchService {
 
 
     // 검색(키워드 + 게시판)
-    public Page<SearchDocWithUserResponse> detailedSearch(String keyword,
-                                                  Board boardType,
-                                                  Integer category,
-                                                  String orderBy,
-                                                  boolean includeExpired,
-                                                  boolean includeScheduled,
-                                                  int page,
-                                                  int pageSize) {
+    public Page<SearchDocWithUserResponse> detailedSearch(
+            String searchType,
+            String keyword,
+            Board boardType,
+            Integer category,
+            String orderBy,
+            boolean includeExpired,
+            boolean includeScheduled,
+            int page,
+            int pageSize)
+    {
 
         // 제목/내용/해시태그/닉네임 키워드로 검색 + 카테고리/게시판 필터 + 정렬
         // 1. BoolQuery 빌더 생성
@@ -131,24 +137,45 @@ public class SearchService {
             List<String> tokens = Arrays.stream(keyword.trim().split("\\s+"))
                     .filter(token -> !token.isEmpty())
                     .toList();
-
             // 2-1. 토큰이 여러 개인 경우: 모든 토큰 일치 (AND)
             if (!tokens.isEmpty()) {
                 for (String token : tokens) {
+
+                    List<String> fields;
+                    switch (SearchType.valueOf(searchType)) {
+                        case TITLE -> fields = List.of("title");
+                        case DESCRIPTION -> fields = List.of("description");
+                        case HASHTAG -> fields = List.of("hashtag");
+                        default -> fields = List.of("title", "description", "hashtag");
+                    }
                     // 각 토큰마다 (nori OR ngram) 조건 추가
                     BoolQuery.Builder tokenBool = QueryBuilders.bool();
-                    tokenBool.should(Query.of(q -> q
-                            .multiMatch(m -> m
-                                    .fields("title", "description", "hashtag")
-                                    .query(token)
-                            )
-                    ));
-                    tokenBool.should(Query.of(q -> q
-                            .multiMatch(m -> m
-                                    .fields("title.ngram", "description.ngram", "hashtag.ngram")
-                                    .query(token)
-                            )
-                    ));
+                    for (String field : fields) {
+                        tokenBool.should(Query.of(q -> q.match(m -> m
+                                .field(field)
+                                .query(token)
+                        )));
+                    }
+
+                    // ngram analyzer 필드별 OR 조건 추가
+                    for (String field : fields) {
+                        tokenBool.should(Query.of(q -> q.match(m -> m
+                                        .field(field + ".ngram")
+                                        .query(token)
+                        )));
+                    }
+//                    tokenBool.should(Query.of(q -> q
+//                            .multiMatch(m -> m
+//                                    .fields("title", "description", "hashtag")
+//                                    .query(token)
+//                            )
+//                    ));
+//                    tokenBool.should(Query.of(q -> q
+//                            .multiMatch(m -> m
+//                                    .fields("title.ngram", "description.ngram", "hashtag.ngram")
+//                                    .query(token)
+//                            )
+//                    ));
                     boolQuery.must(tokenBool.build()._toQuery()); // 모든 토큰 필수
                 }
             }
@@ -198,6 +225,8 @@ public class SearchService {
         Sort sort = switch (orderBy) {
             case "old" -> Sort.by(Sort.Direction.ASC, "pulled_at");
             case "close" -> Sort.by(Sort.Direction.ASC, "end_time");
+            case "like" -> Sort.by(Sort.Direction.DESC, "likes");
+            case "view" -> Sort.by(Sort.Direction.DESC, "views");
             default -> Sort.by(Sort.Direction.DESC, "pulled_at");
         };
 

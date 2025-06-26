@@ -24,9 +24,6 @@ public class SearchDocument {
     @Field(type = FieldType.Text, name = "thumbnail_url", index = false)
     private String thumbnailUrl;
 
-    @Field(type = FieldType.Long, name = "views", index = false)
-    private Long views;
-
     //검색할 대상
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = "nori_analyzer"),
@@ -66,4 +63,8 @@ public class SearchDocument {
     private LocalDateTime endTime;
     @Field(type = FieldType.Date, name = "pulled_at", format = {}, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS||epoch_millis")
     private LocalDateTime pulledAt;
+    @Field(type = FieldType.Long, name = "views")
+    private Long views;
+    @Field(type = FieldType.Long, name = "likes")
+    private Long likes;
 }

@@ -1,8 +1,10 @@
 package com.goodsmoa.goodsmoa_BE.demand.controller;
 
+import com.goodsmoa.goodsmoa_BE.demand.service.DemandLikeService;
 import com.goodsmoa.goodsmoa_BE.enums.Board;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.*;
 import com.goodsmoa.goodsmoa_BE.demand.service.DemandPostService;
+import com.goodsmoa.goodsmoa_BE.enums.SearchType;
 import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
 import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
@@ -16,6 +18,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,32 +30,38 @@ public class DemandPostApiController {
 
     private final SearchService searchService;
     private final DemandPostService demandPostService;
+    private final DemandLikeService demandLikeService;
 
     // 키워드 검색
     @GetMapping
     public ResponseEntity<Page<SearchDocWithUserResponse>> findByKeyword
     (
+            @RequestParam(defaultValue = "ALL", name = "search_type") String searchType,
             @RequestParam Optional<String> query,
             @RequestParam Optional<Integer> category,
             @RequestParam(defaultValue = "new", name = "order_by") String orderBy,
             @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
             @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
             @RequestParam(defaultValue = "0", name = "page") int page,
-            @RequestParam(defaultValue = "0", name = "page_size") int pageSize
-    )
+            @RequestParam(defaultValue = "0", name = "page_size") int pageSize,
+            @AuthenticationPrincipal UserEntity user
+            )
     {
-        return ResponseEntity.ok(
-                searchService.detailedSearch(
-                        query.orElse(null),
-                        Board.DEMAND,
-                        category.orElse(0),
-                        orderBy,
-                        includeExpired,
-                        includeScheduled,
-                        page,
-                        pageSize
-                )
+        Page<SearchDocWithUserResponse> result = searchService.detailedSearch(
+                searchType,
+                query.orElse(null),
+                Board.DEMAND,
+                category.orElse(0),
+                orderBy,
+                includeExpired,
+                includeScheduled,
+                page,
+                pageSize
         );
+
+        if(user!=null) demandLikeService.addLikeStatus(result.getContent(), user);
+
+        return ResponseEntity.ok(result);
     }
 
     // 로그인한 유저가 작성한 글 목록
@@ -86,8 +95,8 @@ public class DemandPostApiController {
             @RequestPart("demandPostCreateRequest") DemandPostCreateRequest request,
             @RequestPart("thumbnailImage") MultipartFile thumbnailImage,
             @RequestPart(value = "productImages", required = false) List<MultipartFile> productImages,
-            @RequestPart(value = "descriptionImages", required = false) List<MultipartFile> descriptionImages
-    ) {
+            @RequestPart(value = "descriptionImages", required = false) List<MultipartFile> descriptionImages)  throws IOException
+    {
         if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
         return ResponseEntity.ok(demandPostService.createDemand(user, request, thumbnailImage, productImages, descriptionImages));
     }
@@ -100,8 +109,8 @@ public class DemandPostApiController {
             @RequestPart("demandPostUpdateRequest") DemandPostUpdateRequest request,
             @RequestPart(value = "newThumbnailImage", required = false) MultipartFile newThumbnailImage,
             @RequestPart(value = "newProductImages", required = false) List<MultipartFile> newProductImages,
-            @RequestPart(value = "newDescriptionImages", required = false) List<MultipartFile> newDescriptionImages
-    ){
+            @RequestPart(value = "newDescriptionImages", required = false) List<MultipartFile> newDescriptionImages) throws IOException
+    {
         return ResponseEntity.ok(demandPostService.updateDemand(
                 user, id, request,
                 newThumbnailImage,

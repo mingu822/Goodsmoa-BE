@@ -18,6 +18,7 @@ public class DemandPostResponse {
     private String hashtag;
     private boolean state;
     private Long views;
+    private Long likes;
     private String category;
     private Long userOrderId;
 
