@@ -17,7 +17,7 @@ public class TradeImageEntity {
     private Long id;
 
     @Column(columnDefinition = "TEXT")
-    private String imagePath;
+    private String imageUrl;
 
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -41,11 +41,10 @@ public class TradePostEntity {
 
     private String title;
 
-    @OneToMany(mappedBy = "tradePost", cascade = CascadeType.ALL, orphanRemoval = true)
     @Setter
-    private List<TradePostDescription> contentDescriptions = new ArrayList<>();
-
-
+    @Lob // 아주 긴 텍스트를 저장할 때 사용하면 좋습니다.
+    @Column(name = "content", columnDefinition = "LONGTEXT")
+    private String content;
 
     private Integer productPrice;
 
@@ -80,6 +79,7 @@ public class TradePostEntity {
     private LocalDateTime pulledAt;
 
     @OneToMany(mappedBy = "tradePostEntity", fetch = FetchType.LAZY , cascade = CascadeType.ALL , orphanRemoval = true)
+    @Setter
     private List<TradeImageEntity> image;
 
     @OneToMany(mappedBy = "tradePost", fetch = FetchType.LAZY)

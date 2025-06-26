@@ -68,4 +68,33 @@ public class S3Uploader {
         }
         return originalFilename.substring(originalFilename.lastIndexOf('.') + 1);
     }
+
+    // S3에서 이미지 삭제하는 메서드
+    public void delete(String fileUrl) {
+        if (fileUrl == null || fileUrl.isEmpty()) {
+            // 삭제할 파일 URL이 없으면 아무것도 하지 않음
+            return;
+        }
+        try {
+            String key = getKeyFromUrl(fileUrl);
+            s3Client.deleteObject(builder -> builder.bucket(bucket).key(key));
+        } catch (Exception e) {
+            // 로깅 추가 권장
+            // e.printStackTrace();
+            // 삭제 실패 시에도 다른 로직은 계속 진행되도록 여기서 예외를 던지지 않을 수 있음
+            // 또는 특정 비즈니스 요구사항에 따라 예외를 던져야 할 수도 있음
+        }
+    }
+
+    // 전체 URL에서 S3 객체 키를 추출하는 헬퍼 메서드
+    private String getKeyFromUrl(String fileUrl) {
+        // S3 URL 형식: https://<bucket-name>.s3.<region>.amazonaws.com/<key>
+        // URL에서 "amazonaws.com/" 다음 부분을 모두 key로 간주
+        String prefix = "amazonaws.com/";
+        int startIndex = fileUrl.indexOf(prefix);
+        if (startIndex == -1) {
+            throw new IllegalArgumentException("올바른 형식의 S3 URL이 아닙니다: " + fileUrl);
+        }
+        return fileUrl.substring(startIndex + prefix.length());
+    }
 }

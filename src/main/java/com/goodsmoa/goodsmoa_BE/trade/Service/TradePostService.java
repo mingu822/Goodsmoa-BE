@@ -4,17 +4,21 @@ package com.goodsmoa.goodsmoa_BE.trade.Service;
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 //import com.goodsmoa.goodsmoa_BE.elasticsearch.Service.TradePostSearchService;
+import com.goodsmoa.goodsmoa_BE.config.S3Uploader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.HashSet;
+import java.util.Set;
+
+import com.goodsmoa.goodsmoa_BE.enums.Board;
 import com.goodsmoa.goodsmoa_BE.fileUpload.FileUploadService;
 import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostConverter;
-import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostDescriptionConverter;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
-import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostDescription;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Repository.TradeImageRepository;
-import com.goodsmoa.goodsmoa_BE.trade.Repository.TradePostDescriptionRepository;
 import com.goodsmoa.goodsmoa_BE.trade.Repository.TradePostHiddenRepository;
 import com.goodsmoa.goodsmoa_BE.trade.Repository.TradePostRepository;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
@@ -24,18 +28,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostDescription.contentType.IMAGE;
-import static com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostDescription.contentType.TEXT;
+
 
 @Slf4j
 @Service
@@ -52,228 +58,202 @@ public class TradePostService {
     private final SearchService searchService;
     private final FileUploadService fileUploadService;
     private final TradePostHiddenRepository tradePostHiddenRepository;
-    private final TradePostDescriptionRepository tradePostDescriptionRepository;
-    private final TradePostDescriptionConverter tradePostDescriptionConverter;
+    private final S3Uploader s3Uploader;
+    // --- Helper Methods for S3 Upload ---
 
+    // 단일 이미지 업로드 헬퍼 메서드
+    private String uploadImage(MultipartFile file) {
+        try {
+            return s3Uploader.upload(file);
+        } catch (IOException e) {
+            // e.printStackTrace(); // 로깅 프레임워크 사용 권장 (예: log.error(...))
+            throw new RuntimeException("S3 이미지 업로드에 실패했습니다.", e);
+        }
+    }
 
-    //   중고거래 글 쓰기
+    private List<String> uploadImages(List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) return new ArrayList<>();
+        return files.stream()
+                .map(this::uploadImage)
+                .collect(Collectors.toList());
+    }
+
+    private Set<String> extractImageUrls(String htmlContent) {
+        if (htmlContent == null || htmlContent.isEmpty()) {
+            return new HashSet<>();
+        }
+        Set<String> imageUrls = new HashSet<>();
+        Pattern pattern = Pattern.compile("src=[\"'](https?://[^\"']+)[\"']");
+        Matcher matcher = pattern.matcher(htmlContent);
+        while (matcher.find()) {
+            imageUrls.add(matcher.group(1));
+        }
+        return imageUrls;
+    }
+
     @Transactional
     public ResponseEntity<TradePostResponse> createTradePost(UserEntity user, TradePostRequest request, TradeImageRequest imageRequest) {
-        // 1. 카테고리 및 게시글 엔티티 생성
+        if (user == null) {
+            throw new IllegalArgumentException("로그인된 사용자만 글을 작성할 수 있습니다.");
+        }
+        // 1. DTO로부터 기본 엔티티 생성
+        // request.getContent()는 아직 이미지 경로가 임시값(placeholder)으로 채워진 상태
         Category category = categoryRepository.getReferenceById(request.getCategoryId());
-        TradePostEntity tradePostEntity = tradePostConverter.toEntity(request, category, user, null);
-
+        TradePostEntity tradePostEntity = tradePostConverter.toEntity(request, category, user);
         tradePostEntity.setUser(user);
 
-        // 2. 게시글 DB에 저장 (ID가 생성됨)
-        tradePostRepository.save(tradePostEntity);
-
-        // 3. 저장된 게시글 ID로 파일 업로드
-        Long tradePostId = tradePostEntity.getId();
-
-        // 썸네일 이미지 업로드 (trade/thumbnail)
-
-        String thumbnailUrl = null;
-        if (imageRequest.getThumbnailImage() != null) {
-            thumbnailUrl = fileUploadService.uploadSingleImage(imageRequest.getThumbnailImage(), "/trade/thumbnail", tradePostId);
+        // 2. 썸네일 및 하단 상품 이미지 처리 (본문 내용과 무관한 이미지들)
+        // 2-1. 썸네일 이미지 업로드
+        if (imageRequest.getThumbnailImage() != null && !imageRequest.getThumbnailImage().isEmpty()) {
+            String thumbnailUrl = uploadImage(imageRequest.getThumbnailImage());
+            tradePostEntity.setThumbnailImage(thumbnailUrl);
         }
-//
-//        // 본문 이미지 업로드 (trade/content)
-//        List<String> contentUrls = fileUploadService.uploadMultiImages(imageRequest.getContentImages(), "/trade/content", tradePostId);
-//
-//        // 본문에 포함된 이미지 URL 삽입
-//        StringBuilder contentWithImages = new StringBuilder(request.getContent());
-//        for (String url : contentUrls) {
-//            contentWithImages.append("<br><img src='/").append(url).append("'/>");
-//        }
-//        String finalContent = contentWithImages.toString();
-//
-//        // 게시글 엔티티 업데이트
-//        tradePostEntity.setContent(request.getContent());
-        List<TradePostDescription> descriptionEntity = new ArrayList<>();
-        List<String> contentUrls = fileUploadService.uploadMultiImages(imageRequest.getContentImages(), "/trade/content", tradePostId);
-        List<DescriptionDTO> descriptions = request.getDescriptions();
-        int imageIndex = 0;
-        for (DescriptionDTO description : descriptions) {
-            if (description.getType() == IMAGE) {
-                if (imageIndex >= contentUrls.size()) {
-                    throw new IllegalArgumentException("IMAGE type description에는 이미지 URL이 필요합니다.");
-                }
-                description.setValue(contentUrls.get(imageIndex++));
+
+        // 2-2. 하단 상품 이미지 업로드
+        List<String> productUrls = uploadImages(imageRequest.getProductImages());
+        if (!productUrls.isEmpty()) {
+            List<TradeImageEntity> tradeImageEntities = new ArrayList<>();
+            for (String url : productUrls) {
+                tradeImageEntities.add(TradeImageEntity.builder()
+                        .imageUrl(url)
+                        .tradePostEntity(tradePostEntity)
+                        .build());
             }
-            description.sanitize();
-
-            TradePostDescription tradePostDescription = tradePostDescriptionConverter.toEntity(description);
-            tradePostDescription.setTradePost(tradePostEntity);
-            descriptionEntity.add(tradePostDescription);
+            // 이 시점에서는 아직 tradePostEntity에 연결만 하고, 저장은 마지막에 한번에 처리
+            tradePostEntity.setImage(tradeImageEntities);
         }
 
-//
-//            TradePostDescription tradePostDescription = tradePostDescriptionConverter.toEntity(description);
-//            tradePostDescription.setTradePost(tradePostEntity);
-//            descriptionEntity.add(tradePostDescription);
+        // ✨ 3. 본문(content) HTML 후처리 (핵심 로직) ✨
+        // 3-1. 본문 이미지(contentImages)가 있는 경우에만 처리
+        List<MultipartFile> contentImages = imageRequest.getContentImages();
+        if (contentImages != null && !contentImages.isEmpty()) {
+            // 3-2. 본문 이미지들을 모두 S3에 업로드하고 URL 리스트를 받음
+            List<String> contentImageUrls = uploadImages(contentImages);
 
-        tradePostDescriptionRepository.saveAll(descriptionEntity);
-        tradePostEntity.setThumbnailUrl(thumbnailUrl);
-        tradePostRepository.save(tradePostEntity);
+            // 3-3. 기존 content HTML에서 임시 이미지 경로를 실제 S3 URL로 교체
+            String originalContent = request.getContent();
 
-        // 상품 이미지 업로드 (trade/product)
-        List<TradeImageEntity> tradeImageEntities = new ArrayList<>();
-        List<String> productUrls = fileUploadService.uploadMultiImages(imageRequest.getProductImages(), "/trade/product", tradePostId);
-        for (String url : productUrls) {
-            tradeImageEntities.add(TradeImageEntity.builder()
-                    .imagePath(url)
-                    .tradePostEntity(tradePostEntity)
-                    .build());
+            // 정규표현식으로 src 속성을 찾음
+            Pattern pattern = Pattern.compile("src=[\"'](.*?)[\"']");
+            Matcher matcher = pattern.matcher(originalContent);
+
+            StringBuffer result = new StringBuffer();
+            int i = 0;
+            // HTML 안의 src 속성을 순서대로 찾아서, 업로드된 S3 URL로 교체
+            while (matcher.find() && i < contentImageUrls.size()) {
+                String newPath = "src=\"" + contentImageUrls.get(i++) + "\"";
+                matcher.appendReplacement(result, Matcher.quoteReplacement(newPath));
+            }
+            matcher.appendTail(result);
+
+            // 3-4. 최종적으로 완성된 HTML을 엔티티에 설정
+            tradePostEntity.setContent(result.toString());
         }
 
-        // 이미지 정보 저장
-        tradeImageRepository.saveAll(tradeImageEntities);
+        // 4. 모든 정보가 채워진 최종 엔티티를 DB에 저장
+        TradePostEntity savedEntity = tradePostRepository.save(tradePostEntity);
 
-        // 응답 준비
-        TradePostResponse response = tradePostConverter.toResponse(tradePostEntity, tradeImageEntities, descriptionEntity);
-        // 엘라스틱 서치 저장
+        // 5. 검색 엔진(Elasticsearch) 데이터 동기화
+        searchService.saveOrUpdateDocument(savedEntity);
 
-        tradePostEntity.setContentDescriptions(descriptionEntity);
-
-        searchService.saveOrUpdateDocument(tradePostEntity);
+        // 6. 최종 응답 생성
+        TradePostResponse response = tradePostConverter.toResponse(savedEntity);
         return ResponseEntity.ok(response);
     }
 
 
-    //    중고거래 글 업뎃
+
+    // TradePostService.java
+
     @Transactional
     public ResponseEntity<TradePostUpdateResponse> updateTradePost(UserEntity user, Long tradePostId,
                                                                    TradePostRequest request, TradeImageUpdateRequest imageRequest) {
+        // 1. 게시글 조회 및 권한 확인
         TradePostEntity tradePost = tradePostRepository.findById(tradePostId)
                 .orElseThrow(() -> new EntityNotFoundException("거래 글이 존재하지 않습니다."));
 
-//        if (!user.getId().equals(tradePost.getUser().getId())) {
-//            throw new UnsupportedOperationException("글 작성자만 수정할 수 있습니다.");
-//        }
-        if(!userRepository.existsById(user.getId())) {
-            return ResponseEntity.notFound().build();
+        if (!tradePost.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        // 1. 썸네일 이미지 교체
-        if (imageRequest != null && imageRequest.getNewThumbnailImage() != null) {
-
-            String newThumbnailUrl = fileUploadService.uploadSingleImage(imageRequest.getNewThumbnailImage(), "/trade/thumbnail",tradePostId);
+        // 2. 썸네일 이미지 교체 (요청이 있을 경우에만)
+        if (imageRequest.getNewThumbnailImage() != null && !imageRequest.getNewThumbnailImage().isEmpty()) {
+            s3Uploader.delete(tradePost.getThumbnailImage());
+            String newThumbnailUrl = uploadImage(imageRequest.getNewThumbnailImage());
             tradePost.updateThumbnailImage(newThumbnailUrl);
         }
 
-        // 2 내용 , 내용 이미지 교체
-        // 기존 Description 제거 후 새로 등록
-        // ✅ 기존 Description 삭제 후 즉시 반영
-        // 1. 기존 Description 삭제
-        tradePostDescriptionRepository.deleteByTradePost(tradePost);
-        tradePostDescriptionRepository.flush(); // 영속성 컨텍스트에서도 제거!
+        // 3. 본문(content) HTML 수정 처리 (요청에 content가 있을 경우에만)
+        if (request.getContent() != null) {
+            // 3-1. 기존 HTML에서 S3 이미지 URL들을 모두 추출해서 보관
+            Set<String> oldImageUrls = extractImageUrls(tradePost.getContent());
 
-// 2. 새 Description 생성 (중복된 객체를 절대 재사용하면 안 됨!)
-        List<String> uploadedContentImageUrls = Optional.ofNullable(imageRequest.getNewContentImages())
-                .filter(list -> !list.isEmpty())
-                .map(images -> fileUploadService.uploadMultiImages(images, "/trade/content", tradePostId))
-                .orElse(Collections.emptyList());
+            // 3-2. 새로 업로드할 본문 이미지들을 S3에 업로드
+            List<String> newlyUploadedUrls = uploadImages(imageRequest.getNewContentImages());
 
-        int imageIndex = 0;
-        List<TradePostDescription> newDescriptions = new ArrayList<>();
-
-        List<DescriptionDTO> sortedDescriptions = request.getDescriptions().stream()
-                .sorted(Comparator.comparingInt(DescriptionDTO::getSequence))
-                .toList();
-
-        for (DescriptionDTO dto : sortedDescriptions) {
-            dto.sanitize();
-            String value;
-            if (dto.getType() == TEXT) {
-                value = dto.getValue();
-            } else if (dto.getType() == IMAGE) {
-                if (imageIndex >= uploadedContentImageUrls.size()) {
-                    throw new IllegalArgumentException("IMAGE 타입 Description 개수보다 업로드된 이미지 수가 부족합니다. 업로드됨: " + uploadedContentImageUrls.size());
+            // 3-3. 새로 받은 HTML에서 임시 경로(placeholder)를 실제 S3 URL로 교체
+            String newContent = request.getContent();
+            Pattern pattern = Pattern.compile("src=[\"'](.*?)[\"']");
+            Matcher matcher = pattern.matcher(newContent);
+            StringBuffer finalContent = new StringBuffer();
+            int imageIndex = 0;
+            while (matcher.find()) {
+                String src = matcher.group(1);
+                // src가 http로 시작하지 않으면 (즉, 임시 경로이면) 새로 업로드된 URL로 교체
+                if (!src.startsWith("http") && imageIndex < newlyUploadedUrls.size()) {
+                    String newPath = "src=\"" + newlyUploadedUrls.get(imageIndex++) + "\"";
+                    matcher.appendReplacement(finalContent, Matcher.quoteReplacement(newPath));
                 }
-                value = uploadedContentImageUrls.get(imageIndex++);
-            } else {
-                throw new IllegalArgumentException("알 수 없는 Description 타입입니다: " + dto.getType());
             }
+            matcher.appendTail(finalContent);
 
-            // ✨ 무조건 새로 생성된 객체만 저장합니다.
-            newDescriptions.add(TradePostDescription.builder()
-                    .tradePost(tradePost)
-                    .contentType(dto.getType())
-                    .value(value)
-                    .sequence(dto.getSequence())
-                    .build());
-//            TradePostDescription description = tradePostDescriptionConverter.toEntity(dto);
-//            description.setTradePost(tradePost); // 연관관계 설정
-//            newDescriptions.add(description);
+            // 3-4. 최종적으로 완성된 HTML에서 S3 이미지 URL들을 모두 추출
+            Set<String> finalImageUrls = extractImageUrls(finalContent.toString());
 
+            // 3-5. 기존 이미지 목록과 최종 이미지 목록을 비교하여, 삭제된 이미지를 S3에서 제거
+            oldImageUrls.removeAll(finalImageUrls);
+            oldImageUrls.forEach(s3Uploader::delete);
+
+            // 3-6. 최종 완성된 HTML을 엔티티에 설정
+            tradePost.setContent(finalContent.toString());
         }
 
-
-// 3. 새로 만든 Description 저장
-        tradePostDescriptionRepository.saveAll(newDescriptions);
-
-
-        // 2. 본문 이미지 삭제
-//        if (imageRequest != null && imageRequest.getDeleteContentImageIds() != null) {
-//            List<String> contentImagePaths = imageRequest.getDeleteContentImageIds();
-//            for (String path : imageRequest.getDeleteContentImageIds()) {
-//                // imagePath가 해당하는 이미지 삭제
-//                tradeImageRepository.deleteByImagePath(path);
-//            }
-//        }
-//
-//        // 3. 본문 이미지 추가 및 HTML 변환
-//        StringBuilder contentWithImages = new StringBuilder(request.getContent());
-//        List<String> newContentUrl = new ArrayList<>();
-//        if (imageRequest != null && imageRequest.getNewContentImages() != null) {
-//            List<String> contentUrls = fileUploadService.uploadMultiImages(imageRequest.getNewContentImages(), "trade/content",tradePostId);
-//            for (String url : contentUrls) {
-//                contentWithImages.append("<br><img src='/").append(url).append("'/>");
-//            }
-//            newContentUrl = fileUploadService.uploadMultiImages(imageRequest.getNewContentImages(), "/trade/content", tradePostId);
-//
-//        }
-
-        // 4. 상품 이미지 삭제
-        if (imageRequest != null && imageRequest.getDeleteProductImageIds() != null) {
-            tradeImageRepository.deleteAllByIdInBatch(imageRequest.getDeleteProductImageIds());
+        // 4. 하단 상품 이미지 삭제 및 추가 (요청이 있을 경우에만)
+        if (imageRequest != null) {
+            // 4-1. 삭제할 상품 이미지 처리 (DB & S3)
+            if (imageRequest.getDeleteProductImageIds() != null && !imageRequest.getDeleteProductImageIds().isEmpty()) {
+                List<TradeImageEntity> imagesToDelete = tradeImageRepository.findAllById(imageRequest.getDeleteProductImageIds());
+                imagesToDelete.forEach(img -> s3Uploader.delete(img.getImageUrl()));
+                tradeImageRepository.deleteAllInBatch(imagesToDelete);
+            }
+            // 4-2. 새로 추가할 상품 이미지 처리 (S3 & DB)
+            List<String> newProductUrls = uploadImages(imageRequest.getNewProductImages());
+            if (!newProductUrls.isEmpty()) {
+                List<TradeImageEntity> newImages = newProductUrls.stream()
+                        .map(url -> TradeImageEntity.builder()
+                                .imageUrl(url)
+                                .tradePostEntity(tradePost)
+                                .build())
+                        .collect(Collectors.toList());
+                tradeImageRepository.saveAll(newImages);
+                tradePost.addImageList(newImages);
+            }
         }
 
-        // 5. 상품 이미지 추가
-        if (imageRequest != null && imageRequest.getNewProductImages() != null) {
-            List<String> productUrls = fileUploadService.uploadMultiImages(imageRequest.getNewProductImages(), "/trade/product",tradePostId);
-            List<TradeImageEntity> newImages = productUrls.stream()
-                    .map(url -> TradeImageEntity.builder()
-                            .imagePath(url)
-                            .tradePostEntity(tradePost)
-                            .build())
-                    .collect(Collectors.toList());
-
-//            List<TradeImageEntity> savedNewImages = tradeImageRepository.saveAll(newImages);
-            tradeImageRepository.saveAll(newImages);
-            tradePost.addImageList(newImages);
-
-//            List<TradeImgUpdateRequest> responseImages = savedNewImages.stream()
-//                    .map(img -> TradeImgUpdateRequest.builder()
-//                            .id(img.getId())
-//                            .imagePath(img.getImagePath())
-//                            .build())
-//                    .toList();
-        }
-
-        // 6. 게시글 정보 업데이트
+        // 5. 게시글 텍스트 정보 업데이트
         tradePost.updatePost(request);
         tradePost.updateTradeLocation(request);
         tradePost.updateTradeOptions(request);
 
-        TradePostUpdateResponse response = tradePostConverter.upResponse(tradePost);
-//        response.setContentImageUrls(newContentUrl);
-        tradePostRepository.save(tradePost);
+        // 6. 검색 엔진 및 최종 저장
         searchService.saveOrUpdateDocument(tradePost);
-        // 응답에 DTO를 사용하여 변환
+        tradePostRepository.save(tradePost);
+
+        // 7. 응답 생성
+        TradePostUpdateResponse response = tradePostConverter.upResponse(tradePost);
         return ResponseEntity.ok(response);
     }
+
 
     // 끌어올림 시간
     @Transactional
@@ -287,15 +267,41 @@ public class TradePostService {
 
     //    중고거래 글 삭제
     @Transactional
-    public ResponseEntity<String> deleteTradePost(@AuthenticationPrincipal UserEntity user, Long id) {
-        TradePostEntity tradePostEntity = tradePostRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("해당글이 존재하지 않습니다."));
-        if(!tradePostEntity.getUser().getId().equals(user.getId())) {
-            return ResponseEntity.status(403).build();
+    public ResponseEntity<String> deleteTradePost(UserEntity user, Long id) {
+        // 1. 삭제할 게시글을 DB에서 조회
+        TradePostEntity tradePost = tradePostRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
+
+        // 2. 권한 확인 (게시글 작성자와 삭제 요청자가 같은지)
+        if (!tradePost.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("삭제 권한이 없습니다.");
         }
-        tradePostRepository.deleteById(id);
-        searchService.deletePostDocument("TRADE_"+id);
-        return ResponseEntity.ok("삭제가 완료되었습니다.");
+
+        // --- 3. S3에서 모든 관련 이미지 삭제 (DB보다 먼저!) ---
+
+        // 3-1. 본문(content)에 포함된 이미지들 삭제
+        // 이전에 만든 extractImageUrls 헬퍼 메서드를 재활용
+        Set<String> contentImageUrls = extractImageUrls(tradePost.getContent());
+        contentImageUrls.forEach(s3Uploader::delete);
+
+        // 3-2. 하단 상품 이미지들 삭제
+        tradePost.getImage().forEach(imageEntity -> s3Uploader.delete(imageEntity.getImageUrl()));
+
+        // 3-3. 썸네일 이미지 삭제
+        s3Uploader.delete(tradePost.getThumbnailImage());
+
+
+        // --- 4. 데이터베이스에서 게시글 삭제 ---
+        // Cascade 옵션에 의해 연관된 상품 이미지(TradeImageEntity)들도 함께 삭제됨
+        tradePostRepository.delete(tradePost);
+
+        // 5. 검색 엔진(Elasticsearch) 데이터 삭제 (필요하다면)
+        searchService.deletePostDocument(Board.TRADE.name() + "_" + id);
+
+
+        return ResponseEntity.ok("게시글이 성공적으로 삭제되었습니다.");
     }
+
 
     //    중고거래 글 조회
     @Transactional
@@ -334,49 +340,6 @@ public class TradePostService {
         return ResponseEntity.ok(responsePage);
     }
 
-//    @Transactional(readOnly = true)
-//    public Page<TradePostLookResponse> getTradePostListByUser(UserEntity user, TradeSearchRequest request) {
-//        // 1. 숨김 처리한 게시글 ID 목록 조회
-//        List<Long> hiddenPostIds = tradePostHiddenRepository.findAllByUser(user).stream()
-//                .map(h -> h.getTradePost().getId())
-//                .toList();
-//
-//        // 2. 페이징 정보 생성 (최신순 정렬)
-//        PageRequest pageRequest = PageRequest.of(
-//                request.getPage(),
-//                request.getPageSize(),
-//                Sort.by(Sort.Direction.DESC, "createdAt")
-//        );
-//
-//        Page<TradePostEntity> pageResult;
-//
-//        // 3. 조건에 따라 분기 처리하여 데이터 조회
-//        boolean hasCategory = request.getCategoryId() != null && request.getCategoryId() != 0;
-//        boolean hasHiddenPosts = !hiddenPostIds.isEmpty();
-//
-//        if (hasCategory) {
-//            Category category = categoryRepository.findById(request.getCategoryId())
-//                    .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다."));
-//            if (hasHiddenPosts) {
-//                // 카테고리 필터 O, 숨김 글 O
-//                pageResult = tradePostRepository.findByUserAndCategoryAndIdNotIn(user, category, hiddenPostIds, pageRequest);
-//            } else {
-//                // 카테고리 필터 O, 숨김 글 X
-//                pageResult = tradePostRepository.findByUserAndCategory(user, category, pageRequest);
-//            }
-//        } else {
-//            if (hasHiddenPosts) {
-//                // 카테고리 필터 X, 숨김 글 O
-//                pageResult = tradePostRepository.findByUserAndIdNotIn(user, hiddenPostIds, pageRequest);
-//            } else {
-//                // 카테고리 필터 X, 숨김 글 X
-//                pageResult = tradePostRepository.findByUser(user, pageRequest);
-//            }
-//        }
-//
-//        // 4. 조회 결과를 DTO로 변환하여 반환
-//        return pageResult.map(tradePostConverter::lookResponse); // toLookResponse는 너의 컨버터 메소드 이름에 맞게 수정
-//    }
 
     @Transactional
     public TradeStatusUpdateResponse updateTradeStatus(Long tradePostId, String newStatusString) {

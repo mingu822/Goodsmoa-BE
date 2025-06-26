@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.trade.DTO.Post;
 
+import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageResponse;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImgUpdateRequest;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import lombok.*;
@@ -41,8 +42,7 @@ public class TradePostUpdateResponse {
 
     private LocalDateTime updatedAt;
 
-    @Setter
-    private List<DescriptionDTO> descriptions;
+    private String content;
 
-    private List<TradeImgUpdateRequest> tradeImage;
+    private List<TradeImageResponse> productImages;
 }

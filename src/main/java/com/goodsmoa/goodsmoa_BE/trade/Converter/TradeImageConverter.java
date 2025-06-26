@@ -7,7 +7,9 @@ import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -17,13 +19,13 @@ public class TradeImageConverter {
     public TradeImageResponse toResponse(TradeImageEntity entities) {
          return TradeImageResponse.builder()
                  .id(entities.getId())
-                 .imagePath(entities.getImagePath())
+                 .imagePath(entities.getImageUrl())
                  .build();
     }
 
     public TradeImageEntity toEntity(String imagePath, TradePostEntity tradePostEntity) {
         return TradeImageEntity.builder()
-                .imagePath(imagePath)
+                .imageUrl(imagePath)
                 .tradePostEntity(tradePostEntity)
                 .build();
 
@@ -31,7 +33,9 @@ public class TradeImageConverter {
 
     // 여러 이미지를 응답 형식으로 변환
     public List<TradeImageResponse> toResponseList(List<TradeImageEntity> entities) {
-        return entities.stream()
+        return Optional.ofNullable(entities)
+                .orElse(Collections.emptyList())
+                .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }

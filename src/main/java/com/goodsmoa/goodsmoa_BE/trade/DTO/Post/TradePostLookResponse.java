@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.trade.DTO.Post;
 
+import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,4 +35,6 @@ public class TradePostLookResponse {
     private String userNickName;
 
     private String userImage;
+
+    private TradePostEntity.TradeStatus tradeStatus;
 }

@@ -18,6 +18,6 @@ public class TradeImageUpdateRequest {
     private List<Long> deleteProductImageIds;
     private List<MultipartFile> newProductImages;
 
-    private List<String> deleteContentImageIds;
+//    private List<String> deleteContentImageIds;
     private List<MultipartFile> newContentImages;
 }
