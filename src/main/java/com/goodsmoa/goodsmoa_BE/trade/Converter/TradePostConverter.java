@@ -1,37 +1,46 @@
 package com.goodsmoa.goodsmoa_BE.trade.Converter;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
-import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImgUpdateRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
-import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
-import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostDescription;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradePostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor // final 필드에 대한 생성자 주입
 public class TradePostConverter {
 
     private final TradeImageConverter tradeImageConverter;
 
-    private final TradePostDescriptionConverter tradePostDescriptionConverter;
-
-    public TradePostConverter(TradeImageConverter tradeImageConverter, TradePostDescriptionConverter tradePostDescriptionConverter) {
-        this.tradeImageConverter = tradeImageConverter;
-        this.tradePostDescriptionConverter = tradePostDescriptionConverter;
+    // Request -> Entity 변환 (content 필드 반영)
+    public TradePostEntity toEntity(TradePostRequest request, Category category, UserEntity user) {
+        return TradePostEntity.builder()
+                .user(user)
+                .category(category)
+                .title(request.getTitle())
+                .content(request.getContent()) // ✅
+                .productPrice(request.getProductPrice())
+                .conditionStatus(request.getConditionStatus())
+                .tradeStatus(request.getTradeStatus())
+                .delivery(request.getDelivery())
+                .deliveryPrice(request.getDeliveryPrice())
+                .views(0L)
+                .createdAt(LocalDateTime.now())
+                .direct(request.getDirect())
+                .place(request.getPlace())
+                .hashtag(request.getHashtag())
+                .build();
     }
 
-    // entity → Response 변환
-    public TradePostResponse toResponse(TradePostEntity entity, List<TradeImageEntity> imageEntity, List<TradePostDescription> descriptionEntity) {
+    // Entity -> Response 변환 (모든 응답 DTO에 content 반영 및 이미지 처리 수정)
+    public TradePostResponse toResponse(TradePostEntity entity) {
         return TradePostResponse.builder()
                 .id(entity.getId())
-                .user(entity.getUser())
                 .title(entity.getTitle())
+                .content(entity.getContent()) // ✅
                 .productPrice(entity.getProductPrice())
                 .conditionStatus(entity.getConditionStatus())
                 .tradeStatus(entity.getTradeStatus())
@@ -43,77 +52,44 @@ public class TradePostConverter {
                 .hashtag(entity.getHashtag())
                 .deliveryPrice(entity.getDeliveryPrice())
                 .views(entity.getViews())
-                .categoryName(entity.getCategory().getName()) // 수정: getCategory().getId()
-                .tradeImage(imageEntity.stream().map(tradeImageConverter::toResponse).toList())
-                .descriptions(descriptionEntity.stream().map(tradePostDescriptionConverter::toDto).toList())
+                .categoryName(entity.getCategory().getName())
+                .user(entity.getUser())
+                .productImages(tradeImageConverter.toResponseList(entity.getImage())) // ✅ 수정
                 .build();
     }
 
-
-    public TradePostUpdateResponse upResponse(TradePostEntity entity){
-        List<DescriptionDTO> descriptionDTOs = entity.getContentDescriptions().stream()
-                .sorted(Comparator.comparingInt(TradePostDescription::getSequence))
-                .map(tradePostDescriptionConverter::toDto)
-                .toList();
-
+    public TradePostUpdateResponse upResponse(TradePostEntity entity) {
         return TradePostUpdateResponse.builder()
-                .userId(entity.getUser().getId())
-                .userNickName(entity.getUser().getNickname())
-                .categoryName(entity.getCategory().getName())
+                .id(entity.getId())
+                .content(entity.getContent()) // ✅
+                .productPrice(entity.getProductPrice())
                 .conditionStatus(entity.getConditionStatus())
                 .tradeStatus(entity.getTradeStatus())
                 .delivery(entity.getDelivery())
-                .updatedAt(LocalDateTime.now())
-                .deliveryPrice(entity.getDeliveryPrice())
                 .direct(entity.getDirect())
-                .hashtag(entity.getHashtag())
-                .tradeImage(entity.getImage().stream()
-                        .map(img -> TradeImgUpdateRequest.builder()
-                                .id(img.getId())
-                                .imagePath(img.getImagePath())
-                                .build())
-                        .collect(Collectors.toList()))
-                .descriptions(descriptionDTOs)
-                .productPrice(entity.getProductPrice())
-                .thumbnailImage(entity.getThumbnailImage())
-                .id(entity.getId())
                 .place(entity.getPlace())
+                .thumbnailImage(entity.getThumbnailImage())
+                .updatedAt(LocalDateTime.now())
+                .hashtag(entity.getHashtag())
+                .deliveryPrice(entity.getDeliveryPrice())
+                .categoryName(entity.getCategory().getName())
+                .userId(entity.getUser().getId())
+                .userNickName(entity.getUser().getNickname())
+                .productImages(tradeImageConverter.toResponseList(entity.getImage())) // ✅ 수정
                 .build();
     }
 
-    // Request → entity 변환
-    public TradePostEntity toEntity(TradePostRequest request, Category category, UserEntity user, String thumbnailUrl) {
-        return TradePostEntity.builder()
-                .user(user)  // 수정: User 객체를 직접 전달
-                .category(category)  // 수정: Category 객체를 직접 전달
-                .title(request.getTitle())
-                .productPrice(request.getProductPrice())
-                .conditionStatus(request.getConditionStatus())
-                .tradeStatus(request.getTradeStatus())
-                .delivery(request.getDelivery())
-                .thumbnailImage(thumbnailUrl)
-                .deliveryPrice(request.getDeliveryPrice())
-                .views(0L)
-                .createdAt(LocalDateTime.now())
-                .direct(request.getDirect())
-                .place(request.getPlace())
-                .hashtag(request.getHashtag())
-                .build();
-    }
-    // entity → DetailResponse 변환
     public TradePostDetailResponse detailResponse(TradePostEntity entity) {
-        List<TradeImageEntity> images = entity.getImage();
-        List<TradePostDescription> description = entity.getContentDescriptions();
         return TradePostDetailResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
-                .description(description)
+                .content(entity.getContent()) // ✅
                 .hashtag(entity.getHashtag())
                 .categoryName(entity.getCategory().getName())
                 .nickName(entity.getUser().getNickname())
                 .userId(entity.getUser().getId())
-                .image(entity.getUser().getImage())
-                .imageUrl(images)
+                .userProfileImage(entity.getUser().getImage())
+                .productImages(tradeImageConverter.toResponseList(entity.getImage())) // ✅ 수정
                 .thumbnailImage(entity.getThumbnailImage())
                 .delivery(entity.getDelivery())
                 .deliveryPrice(entity.getDeliveryPrice())
@@ -128,11 +104,12 @@ public class TradePostConverter {
         return TradePostPulledResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
-                .descriptions(entity.getContentDescriptions())
+                .content(entity.getContent()) // ✅
                 .pulledAt(entity.getPulledAt())
                 .build();
     }
 
+    // 이 메서드는 content와 관련 없으므로 변경사항 없음
     public TradePostLookResponse lookResponse(TradePostEntity entity) {
         return TradePostLookResponse.builder()
                 .id(entity.getId())
@@ -146,7 +123,7 @@ public class TradePostConverter {
                 .userId(entity.getUser().getId())
                 .userNickName(entity.getUser().getNickname())
                 .userImage(entity.getUser().getImage())
+                .tradeStatus(entity.getTradeStatus())
                 .build();
     }
 }
-

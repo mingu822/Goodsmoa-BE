@@ -19,8 +19,7 @@ public class TradePostPulledResponse {
 
     private String title;
 
-//    private String content;
-    private List<TradePostDescription> descriptions;
+    private String content;
 
     private LocalDateTime pulledAt;
 }

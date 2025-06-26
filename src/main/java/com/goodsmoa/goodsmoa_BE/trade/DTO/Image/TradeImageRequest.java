@@ -16,10 +16,9 @@ import java.util.List;
 @AllArgsConstructor
 public class TradeImageRequest {
 
-    private long postId;
+//    private long postId;
 
-//    @NotBlank(message = "이미지 경로를 설정해주세요")
-    private List<String> imagePath;
+//    private List<String> imagePath;
 
     private MultipartFile thumbnailImage;
 
