@@ -109,11 +109,15 @@ public class TradePostController {
     }
     @GetMapping
     public ResponseEntity<Page<SearchDocWithUserResponse>> findTradePosts(
+            @RequestParam(defaultValue = "ALL", name = "search_type") String searchType,
             @RequestParam Optional<String> query,
             @RequestParam Optional<Integer> category,
             @RequestParam(defaultValue = "new", name = "order_by") String orderBy,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size)
+            @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
+            @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
+            @RequestParam(defaultValue = "0", name = "page") int page,
+            @RequestParam(defaultValue = "0", name = "page_size") int pageSize
+            )
     {
         // 'close' 정렬 옵션은 중고거래에 의미가 없으므로 'new'로 처리
         if ("close".equals(orderBy)) {
@@ -122,14 +126,15 @@ public class TradePostController {
 
         return ResponseEntity.ok(
                 searchService.detailedSearch(
+                        searchType,
                         query.orElse(null),
-                        Board.TRADE, // ✨ Board 타입을 TRADE로 고정
+                        Board.DEMAND,
                         category.orElse(0),
                         orderBy,
-                        false, // ✨ includeExpired는 false로 고정
-                        false, // ✨ includeScheduled는 false로 고정
+                        includeExpired,
+                        includeScheduled,
                         page,
-                        size
+                        pageSize
                 )
         );
     }
