@@ -2,7 +2,11 @@ package com.goodsmoa.goodsmoa_BE.product.controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
+import com.goodsmoa.goodsmoa_BE.enums.Board;
+import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
+import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -10,13 +14,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.goodsmoa.goodsmoa_BE.product.dto.post.PostDetailResponse;
@@ -33,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductController {
 
     private final ProductService productService;
+    private final SearchService searchService;
 
     // 상품글 추가
     @PostMapping(value = "/post-create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -85,5 +84,32 @@ public class ProductController {
     public ResponseEntity<Page<PostsResponse>> getProductPostList(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return productService.getProductPostList(pageable);
+    }
+
+    // 키워드 검색
+    @GetMapping
+    public ResponseEntity<Page<SearchDocWithUserResponse>> findByKeyword
+    (
+            @RequestParam Optional<String> query,
+            @RequestParam Optional<Integer> category,
+            @RequestParam(defaultValue = "new", name = "order_by") String orderBy,
+            @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
+            @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
+            @RequestParam(defaultValue = "0", name = "page") int page,
+            @RequestParam(defaultValue = "0", name = "page_size") int pageSize
+    )
+    {
+        return ResponseEntity.ok(
+                searchService.detailedSearch(
+                        query.orElse(null),
+                        Board.PRODUCT,
+                        category.orElse(0),
+                        orderBy,
+                        includeExpired,
+                        includeScheduled,
+                        page,
+                        pageSize
+                )
+        );
     }
 }

@@ -13,6 +13,7 @@ import com.goodsmoa.goodsmoa_BE.config.S3Uploader;
 import com.goodsmoa.goodsmoa_BE.product.dto.delivery.ProductDeliveryRequest;
 import com.goodsmoa.goodsmoa_BE.product.entity.*;
 import com.goodsmoa.goodsmoa_BE.product.repository.*;
+import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -56,6 +57,7 @@ public class ProductService {
     private final ProductLikeRepository productLikeRepository;
     private final ProductReviewRepository productReviewRepository;
     private final S3Uploader s3Uploader;
+    private final SearchService searchService;
 
 
     // 상품글 생성
@@ -148,6 +150,8 @@ public class ProductService {
                     .toList();
             productDeliveryRepository.saveAll(delivers);
         }
+        // 검색 서비스 동기화
+        searchService.saveOrUpdateDocument(saveEntity);
 
         PostDetailResponse response = productPostConverter.detailToResponse(products, delivers, saveEntity);
         return ResponseEntity.ok(response);
@@ -366,6 +370,9 @@ public class ProductService {
         post.updateFromRequest(request, category);
         ProductPostEntity updatedPost = productPostRepository.save(post);
 
+        // 검색 서비스 동기화
+        searchService.saveOrUpdateDocument(post);
+
         // ✅ 응답 반환
         PostDetailResponse response = productPostConverter.detailToResponse(
                 productRepository.findByProductPostEntity(updatedPost),
@@ -415,34 +422,13 @@ public class ProductService {
         // 관련 이미지 파일 삭제
         // deleteAllImagesByPostId(id);
 
+        searchService.deletePostDocument("PRODUCT_"+id);
+
         // 게시글 삭제
         productPostRepository.delete(entity);
 
         return ResponseEntity.ok("성공적으로 삭제 되었습니다.");
     }
-
-    // 로컬에서 이미지가 저장될 때 상품글을 삭제할 때 모든 관련 이미지 삭제하는 메서드
-//    private void deleteAllImagesByPostId(Long postId) {
-//        List<String> folders = List.of("productPost/thumbnail", "productPost/content", "productPost/product");
-//
-//        for (String folder : folders) {
-//            String baseUploadDir = "src/main/resources/static/";
-//
-//            Path dirPath = Paths.get(baseUploadDir + folder);
-//
-//            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath, postId + "_*")) {
-//                for (Path file : stream) {
-//                    try {
-//                        Files.deleteIfExists(file);
-//                    } catch (IOException e) {
-//                        log.warn("이미지 삭제 실패: " + file.toString(), e);
-//                    }
-//                }
-//            } catch (IOException e) {
-//                log.warn("폴더 접근 실패: " + dirPath.toString(), e);
-//            }
-//        }
-//    }
 
     // 상품글 리스트 조회
     public ResponseEntity<Page<PostsResponse>> getProductPostList(Pageable pageable) {
