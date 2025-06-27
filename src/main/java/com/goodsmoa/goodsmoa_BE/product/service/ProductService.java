@@ -436,4 +436,15 @@ public class ProductService {
         Page<PostsResponse> responsePage = postPage.map(productPostConverter::toPostsResponse);
         return ResponseEntity.ok(responsePage);
     }
+
+    // 사용자가 작성한 상품글 리스트 조회
+    public ResponseEntity<Page<PostsResponse>> getProductPostListUser(UserEntity user, Pageable pageable) {
+        // 사용자 작성 글만 가져오기
+        Page<ProductPostEntity> postPage = productPostRepository.findAllByUser(user, pageable);
+
+        // Entity -> DTO 변환
+        Page<PostsResponse> responsePage = postPage.map(productPostConverter::toPostsResponse);
+
+        return ResponseEntity.ok(responsePage);
+    }
 }
