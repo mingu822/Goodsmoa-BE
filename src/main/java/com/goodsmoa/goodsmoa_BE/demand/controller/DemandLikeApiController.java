@@ -32,6 +32,16 @@ public class DemandLikeApiController {
         DemandSearchRequest searchRequest = new DemandSearchRequest(category.orElse(0), page, pageSize);
         return ResponseEntity.ok(demandLikeService.getDemandPostListByUser(user, searchRequest));
     }
+
+    // 좋아요
+    @PostMapping(value = "/{id}")
+    public ResponseEntity<String> toggleLike(
+            @AuthenticationPrincipal UserEntity user,
+            @PathVariable("id") Long postId)
+    {
+        if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
+        return ResponseEntity.ok(demandLikeService.toggleLike(user, postId));
+    }
     
     // 좋아요 
     @PostMapping(value = "/{id}/create")
