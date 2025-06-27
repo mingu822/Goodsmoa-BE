@@ -35,10 +35,9 @@ public class DemandLikeService {
 
     @Transactional
     public void likePost(UserEntity user, Long postId) {
-        if(isLike(user, postId)) return;
+        if(isLike(user, postId)) throw new EntityNotFoundException("이미 좋아요 했습니다.");
         demandLikeRepository.save(new DemandLikeEntity(user.getId(), postId));
         demandRedisService.increaseLikeCount(postId);
-
     }
 
     @Transactional

@@ -28,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -355,12 +357,30 @@ public class DemandPostService {
     public String pullDemand(UserEntity user, Long id) {
         DemandPostEntity postEntity = findByIdWithThrow(id);
         validateUserAuthorization(user.getId(), postEntity);
-        try {
-            searchService.updatePulledAt("DEMAND_"+postEntity.getId());
-            return "글을 끌어올렸습니다";
-        } catch (IllegalStateException e){
-            return e.getMessage();
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime lastPulledAt = postEntity.getPulledAt();
+
+        if (lastPulledAt != null && lastPulledAt.isAfter(now.minusDays(5))) {
+            return "최근 5일 이내에 이미 끌어올림을 했습니다. 다음 가능 일자: " +
+                    lastPulledAt.plusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         }
+        postEntity.setPulledAt(now);
+
+        try {
+            searchService.updatePulledAt("DEMAND_"+id, now);
+        } catch (Exception e) {
+            log.warn("ES 끌어올림 갱신 실패: {}", e.getMessage());
+        }
+//        try {
+//            LocalDateTime pulledAt = LocalDateTime.now();
+//            searchService.updatePulledAt("DEMAND_"+postEntity.getId(), pulledAt);
+//            postEntity.setPulledAt(pulledAt);
+//            return "글을 끌어올렸습니다";
+//        } catch (IllegalStateException e){
+//            return e.getMessage();
+//        }
+        return "글을 끌어올렸습니다";
     }
 
     // 수요조사 글 조회(Id)

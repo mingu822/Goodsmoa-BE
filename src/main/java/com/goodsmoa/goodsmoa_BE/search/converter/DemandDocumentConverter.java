@@ -28,7 +28,7 @@ public class DemandDocumentConverter implements DocumentConverter<DemandPostEnti
                 .categoryId(entity.getCategory().getId())
                 .startTime(entity.getStartTime())
                 .endTime(entity.getEndTime())
-                .pulledAt(LocalDateTime.now())
+                .pulledAt(entity.getPulledAt())
                 .build();
     }
 }

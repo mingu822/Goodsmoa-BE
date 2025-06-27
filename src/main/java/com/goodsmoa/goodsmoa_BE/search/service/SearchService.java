@@ -60,7 +60,7 @@ public class SearchService {
     }
 
     // 끌어올림
-    public void updatePulledAt(String id) {
+    public void updatePulledAt(String id, LocalDateTime pulledAt) {
         LocalDateTime lastPulledAt = findSearchDocByIdAndBoardWithThrow(id).getPulledAt();
         LocalDateTime fiveDaysAgo = LocalDateTime.now().minusDays(5);
 
@@ -69,8 +69,8 @@ public class SearchService {
                     + lastPulledAt.plusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         }
 
-        String pulledAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"));
-        Document updateDoc = Document.from(Collections.singletonMap("pulled_at", pulledAt));
+        String newPulledAt = pulledAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"));
+        Document updateDoc = Document.from(Collections.singletonMap("pulled_at", newPulledAt));
         UpdateQuery updateQuery = UpdateQuery.builder(id)
                 .withDocument(updateDoc)
                 .build();

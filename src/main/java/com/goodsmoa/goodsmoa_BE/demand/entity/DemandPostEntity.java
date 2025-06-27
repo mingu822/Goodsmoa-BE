@@ -73,6 +73,11 @@ public class DemandPostEntity implements SearchEntity {
     // 생성일시
     @Column(nullable = false)
     private LocalDateTime createdAt;
+    
+    // 끌어올림일시
+    @Setter
+    @Column(nullable = false)
+    private LocalDateTime pulledAt;
 
     // user N:1 연결, 지연조회
     @ManyToOne(fetch = FetchType.LAZY)
