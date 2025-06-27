@@ -61,13 +61,13 @@ public class SearchService {
 
     // 끌어올림
     public void updatePulledAt(String id, LocalDateTime pulledAt) {
-        LocalDateTime lastPulledAt = findSearchDocByIdAndBoardWithThrow(id).getPulledAt();
-        LocalDateTime fiveDaysAgo = LocalDateTime.now().minusDays(5);
-
-        if (lastPulledAt.isAfter(fiveDaysAgo)) {
-            throw new IllegalStateException("최근 5일 이내에 이미 끌어올림을 했습니다. 다음 가능 일자: "
-                    + lastPulledAt.plusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        }
+//        LocalDateTime lastPulledAt = findSearchDocByIdAndBoardWithThrow(id).getPulledAt();
+//        LocalDateTime fiveDaysAgo = LocalDateTime.now().minusDays(5);
+//
+//        if (lastPulledAt.isAfter(fiveDaysAgo)) {
+//            throw new IllegalStateException("최근 5일 이내에 이미 끌어올림을 했습니다. 다음 가능 일자: "
+//                    + lastPulledAt.plusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+//        }
 
         String newPulledAt = pulledAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"));
         Document updateDoc = Document.from(Collections.singletonMap("pulled_at", newPulledAt));
@@ -78,42 +78,41 @@ public class SearchService {
     }
 
     // 통합검색
-    public Map<Board, List<SearchDocWithUserResponse>> integratedSearch(
-            String searchType,
-            String keyword,
-            Integer category,
-            String orderBy,
-            boolean includeExpired,
-            boolean includeScheduled,
-            int pageSize
-    ) {
-        // 결과 저장용 Map (동기화된 Map 필요)
-        Map<Board, List<SearchDocWithUserResponse>> result = new ConcurrentHashMap<>();
-
-        // 비동기 작업 리스트
-        List<CompletableFuture<Void>> futures = Arrays.stream(Board.values())
-                .map(board -> CompletableFuture.runAsync(() -> {
-                    Page<SearchDocWithUserResponse> page = detailedSearch(
-                            searchType,
-                            keyword,
-                            board,
-                            category,
-                            orderBy,
-                            includeExpired,
-                            includeScheduled,
-                            0,
-                            pageSize
-                    );
-                    result.put(board, page.getContent());
-                }))
-                .toList();
-
-        // 모든 작업이 끝날 때까지 기다림
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-
-        return result;
-    }
-
+//    public Map<Board, List<SearchDocWithUserResponse>> integratedSearch(
+//            String searchType,
+//            String keyword,
+//            Integer category,
+//            String orderBy,
+//            boolean includeExpired,
+//            boolean includeScheduled,
+//            int pageSize
+//    ) {
+//        // 결과 저장용 Map (동기화된 Map 필요)
+//        Map<Board, List<SearchDocWithUserResponse>> result = new ConcurrentHashMap<>();
+//
+//        // 비동기 작업 리스트
+//        List<CompletableFuture<Void>> futures = Arrays.stream(Board.values())
+//                .map(board -> CompletableFuture.runAsync(() -> {
+//                    Page<SearchDocWithUserResponse> page = detailedSearch(
+//                            searchType,
+//                            keyword,
+//                            board,
+//                            category,
+//                            orderBy,
+//                            includeExpired,
+//                            includeScheduled,
+//                            0,
+//                            pageSize
+//                    );
+//                    result.put(board, page.getContent());
+//                }))
+//                .toList();
+//
+//        // 모든 작업이 끝날 때까지 기다림
+//        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+//
+//        return result;
+//    }
 
     // 검색(키워드 + 게시판)
     public Page<SearchDocWithUserResponse> detailedSearch(
@@ -164,18 +163,6 @@ public class SearchService {
                                         .query(token)
                         )));
                     }
-//                    tokenBool.should(Query.of(q -> q
-//                            .multiMatch(m -> m
-//                                    .fields("title", "description", "hashtag")
-//                                    .query(token)
-//                            )
-//                    ));
-//                    tokenBool.should(Query.of(q -> q
-//                            .multiMatch(m -> m
-//                                    .fields("title.ngram", "description.ngram", "hashtag.ngram")
-//                                    .query(token)
-//                            )
-//                    ));
                     boolQuery.must(tokenBool.build()._toQuery()); // 모든 토큰 필수
                 }
             }

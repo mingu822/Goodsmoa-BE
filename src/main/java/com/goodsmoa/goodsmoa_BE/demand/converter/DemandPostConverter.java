@@ -35,6 +35,7 @@ public class DemandPostConverter {
                 .startTime(request.getStartTime())
                 .endTime(request.getEndTime())
                 .createdAt(LocalDateTime.now())
+                .pulledAt(LocalDateTime.now())
                 .user(user)
                 .category(category)
                 .products(new ArrayList<>())

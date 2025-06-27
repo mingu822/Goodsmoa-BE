@@ -34,6 +34,29 @@ public class DemandLikeService {
     private final DemandRedisService demandRedisService;
 
     @Transactional
+    public String toggleLike(UserEntity user, Long postId) {
+        if (isLike(user, postId)) {
+            // 좋아요 취소 로직
+            DemandLikeEntity likeEntity = demandLikeRepository.findByUserIdAndPostId(user.getId(), postId)
+                    .orElseThrow(() -> new EntityNotFoundException("좋아요 기록이 존재하지 않습니다"));
+
+            demandLikeRepository.delete(likeEntity);
+            demandRedisService.decreaseLikeCount(postId);
+            return "좋아요 취소 완료";
+        } else {
+            // 좋아요 추가 로직
+            if (demandLikeRepository.existsByUserIdAndPostId(user.getId(), postId)) {
+                throw new IllegalStateException("좋아요 상태 일관성 오류");
+            }
+
+            demandLikeRepository.save(new DemandLikeEntity(user.getId(), postId));
+            demandRedisService.increaseLikeCount(postId);
+            return "좋아요 완료";
+        }
+    }
+
+
+    @Transactional
     public void likePost(UserEntity user, Long postId) {
         if(isLike(user, postId)) throw new EntityNotFoundException("이미 좋아요 했습니다.");
         demandLikeRepository.save(new DemandLikeEntity(user.getId(), postId));
