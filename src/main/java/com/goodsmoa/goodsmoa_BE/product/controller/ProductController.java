@@ -90,6 +90,7 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<Page<SearchDocWithUserResponse>> findByKeyword
     (
+            @RequestParam(defaultValue = "ALL", name = "search_type") String searchType,
             @RequestParam Optional<String> query,
             @RequestParam Optional<Integer> category,
             @RequestParam(defaultValue = "new", name = "order_by") String orderBy,
@@ -101,6 +102,7 @@ public class ProductController {
     {
         return ResponseEntity.ok(
                 searchService.detailedSearch(
+                        searchType,
                         query.orElse(null),
                         Board.PRODUCT,
                         category.orElse(0),
