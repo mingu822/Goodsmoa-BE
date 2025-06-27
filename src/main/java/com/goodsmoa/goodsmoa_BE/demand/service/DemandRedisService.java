@@ -1,13 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.demand.service;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.BulkResponse;
-import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
-import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
-import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
-
 import com.goodsmoa.goodsmoa_BE.demand.entity.DemandPostEntity;
+import com.goodsmoa.goodsmoa_BE.demand.repository.DemandPostProductRepository;
 import com.goodsmoa.goodsmoa_BE.demand.repository.DemandPostRepository;
 import com.goodsmoa.goodsmoa_BE.search.converter.SearchConverter;
 import com.goodsmoa.goodsmoa_BE.search.document.SearchDocument;
@@ -25,7 +19,6 @@ import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
@@ -38,9 +31,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DemandRedisService {
     private static final String VIEW_COUNT_KEY = "demandPost:view:";
     private static final String LIKE_COUNT_KEY = "demandPost:like:";
+    private static final String DEMAND_ORDER_KEY = "demandPostProduct:orderCount";
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final DemandPostRepository demandPostRepository;
+    private final DemandPostProductRepository demandPostProductRepository;
     private final SearchConverter searchConverter;
     private final ElasticsearchOperations elasticsearchOperations;
 
@@ -50,26 +45,35 @@ public class DemandRedisService {
     public void increaseViewCount(Long demandId){
         String redisKey = VIEW_COUNT_KEY + demandId;
         redisTemplate.opsForValue().increment(redisKey);
+        Long after = getLongFromRedis(redisKey);
+        log.info("조회수 증가: 게시물 ID={}, 증감값={}", demandId, after);
     }
 
     // 좋아요 증가
     public void increaseLikeCount(Long demandId) {
         String redisKey = LIKE_COUNT_KEY + demandId;
-        // 디버깅 로그 추가
-        Long before = getLongFromRedis(redisKey);
         redisTemplate.opsForValue().increment(redisKey);
         Long after = getLongFromRedis(redisKey);
-        log.info("좋아요 증가: postId={}, before={}, after={}", demandId, before, after);
+        log.info("좋아요 증가: 게시물 ID={}, 증감값={}", demandId, after);
     }
 
     // 좋아요 감소
     public void decreaseLikeCount(Long demandId) {
         String redisKey = LIKE_COUNT_KEY + demandId;
-        // 디버깅 로그 추가
-        Long before = getLongFromRedis(redisKey);
         redisTemplate.opsForValue().decrement(redisKey);
         Long after = getLongFromRedis(redisKey);
-        log.info("좋아요 감소: postId={}, before={}, after={}", demandId, before, after);
+        log.info("좋아요 감소: 게시물 ID={}, 증감값={}", demandId, after);
+    }
+
+    //
+    public void increaseOrderCount(Long demandProductId, int quantity){
+        String redisKey = DEMAND_ORDER_KEY + demandProductId;
+        redisTemplate.opsForValue().increment(redisKey, quantity);
+    }
+
+    public void decreaseOrderCount(Long demandProductId, int quantity){
+        String redisKey = DEMAND_ORDER_KEY + demandProductId;
+        redisTemplate.opsForValue().decrement(redisKey, quantity);
     }
 
     @Scheduled(cron = "0 */1 * * * *")
@@ -78,16 +82,16 @@ public class DemandRedisService {
         try {
             syncViewCounts(); //조회수 동기화
             syncLikeCounts(); //좋아요수 동기화
-            reindexUpdatedPosts(); //수정된 게시물 ES 재색인
+            syncRateCounts(); //참여도 동기화
+            reindexUpdatedPosts(); //수정된 게시물(조회수,좋아요) ES 재색인
         } catch (Exception e) {
             log.error("수요조사 좋아요 스케줄 실패", e);
         }
     }
 
-//    public void syncViewCountToDatabase(){
     public void syncViewCounts(){
         log.info("수요조사 조회수 동기화 시작합니다");
-        Set<String> keys = scanKeys(VIEW_COUNT_KEY + "*");
+        Set<String> keys = scanKeys(redisTemplate, VIEW_COUNT_KEY + "*");
 
         if(keys.isEmpty()){
             return;
@@ -108,7 +112,7 @@ public class DemandRedisService {
 
     private void syncLikeCounts() {
         log.info("수요조사 좋아요수 동기화 시작합니다");
-        Set<String> likeKeys = scanKeys(LIKE_COUNT_KEY + "*");
+        Set<String> likeKeys = scanKeys(redisTemplate, LIKE_COUNT_KEY + "*");
         for (String key : likeKeys) {
             Long demandId = Long.parseLong(key.replace(LIKE_COUNT_KEY, ""));
             Long likes = getLongFromRedis(key);
@@ -123,25 +127,29 @@ public class DemandRedisService {
         }
     }
 
+    public void syncRateCounts() {
+        log.info("수요조사 달성율 동기화 시작합니다");
+        Set<String> keys = scanKeys(redisTemplate, DEMAND_ORDER_KEY + "*");
+
+        if(keys.isEmpty()) return;
+        for (String key : keys) {
+            Long demandProductId = Long.parseLong(key.replace(DEMAND_ORDER_KEY, ""));
+            Object redisValue = redisTemplate.opsForValue().get(key);
+            int orderCount = redisValue != null ? Integer.parseInt(redisValue.toString()) : 0;
+
+            demandPostProductRepository.findById(demandProductId).ifPresent(demandPostProduct -> {
+                int currentCount = demandPostProduct.getOrderCount();
+                int diff = currentCount+orderCount;
+                demandPostProduct.setOrderCount(diff);
+            });
+            redisTemplate.delete(key);
+        }
+    }
+
+
     private Long getLongFromRedis(String key) {
         Object value = redisTemplate.opsForValue().get(key);
         return value != null ? Long.parseLong(value.toString()) : 0L;
-    }
-
-    private Set<String> scanKeys(String pattern){
-        return redisTemplate.execute((RedisCallback<Set<String>>) connection ->{
-            Set<String> keys = new HashSet<>();
-            ScanOptions options = ScanOptions.scanOptions().match(pattern).count(1000).build();
-            try( var cursor = connection.scan(options)){
-                while(cursor.hasNext()){
-                    byte[] keyBytes = cursor.next();
-                    keys.add(new String(keyBytes , StandardCharsets.UTF_8));
-                }
-            }catch (Exception e){
-                log.error("Redis scan error: ",e);
-            }
-            return keys;
-        } );
     }
 
     private void reindexUpdatedPosts() {
@@ -180,6 +188,21 @@ public class DemandRedisService {
         } finally {
             updatedPostIds.clear();
         }
+    }
+
+    public static Set<String> scanKeys(RedisTemplate<String, ?> redisTemplate, String pattern) {
+        return redisTemplate.execute((RedisCallback<Set<String>>) connection -> {
+            Set<String> keys = new HashSet<>();
+            ScanOptions options = ScanOptions.scanOptions().match(pattern).count(1000).build();
+            try (var cursor = connection.scan(options)) {
+                while (cursor.hasNext()) {
+                    keys.add(new String(cursor.next(), StandardCharsets.UTF_8));
+                }
+            } catch (Exception e) {
+                log.error("Redis scan error for pattern {}: {}", pattern, e.getMessage());
+            }
+            return keys;
+        });
     }
 
 }

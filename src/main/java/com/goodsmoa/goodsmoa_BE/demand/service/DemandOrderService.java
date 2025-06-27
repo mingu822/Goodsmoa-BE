@@ -35,7 +35,7 @@ public class DemandOrderService {
     private final DemandPostRepository demandPostRepository;
     private final DemandPostProductRepository demandPostProductRepository;
     private final DemandOrderProductConverter demandOrderProductConverter;
-    private final DemandOrderCountService demandOrderCountService;
+    private final DemandRedisService demandRedisService;
     private final CategoryRepository categoryRepository;
 
     // 로그인 중인 유저가 주문한 모든 수요조사
@@ -74,7 +74,7 @@ public class DemandOrderService {
                     // 원본글 상품 조회
                     DemandPostProductEntity postProduct = findPostProductByIdWithThrow(product.getPostProductId());
                     // Redis 카운트 증가 (상품별)
-                    demandOrderCountService.increaseOrderCount(postProduct.getId(), product.getQuantity());
+                    demandRedisService.increaseOrderCount(postProduct.getId(), product.getQuantity());
                     // 주문 상품 엔티티 생성
                     return demandOrderProductConverter.toEntity(product, postProduct, orderEntity);
                 })
@@ -115,16 +115,16 @@ public class DemandOrderService {
                 DemandPostProductEntity postProductEntity = findPostProductByIdWithThrow(productId);
                 DemandOrderProductEntity newProduct = demandOrderProductConverter.toEntity(productRequest, postProductEntity, orderEntity);
                 orderEntity.getDemandOrderProducts().add(newProduct);
-                demandOrderCountService.increaseOrderCount(productId, requestedQuantity);
+                demandRedisService.increaseOrderCount(productId, requestedQuantity);
             } else { // 기존 주문상품 수정
                 int oldQuantity = existingProduct.getQuantity();
                 int diff = requestedQuantity - oldQuantity;
                 existingProduct.updateQuantity(productRequest.getQuantity());
 
                 if (diff > 0) {
-                    demandOrderCountService.increaseOrderCount(productId, diff);
+                    demandRedisService.increaseOrderCount(productId, diff);
                 } else if (diff < 0) {
-                    demandOrderCountService.decreaseOrderCount(productId, -diff);
+                    demandRedisService.decreaseOrderCount(productId, -diff);
                 }
             }
         }
@@ -135,7 +135,7 @@ public class DemandOrderService {
             // 요청 받은 상품 ID 리스트에 기존 상품이 없으면 삭제 대상
             if (!incomingProductIds.contains(product.getPostProductEntity().getId())) {
                 productsToRemove.add(product);
-                demandOrderCountService.decreaseOrderCount(product.getPostProductEntity().getId(), product.getQuantity());
+                demandRedisService.decreaseOrderCount(product.getPostProductEntity().getId(), product.getQuantity());
             }
         }
         orderEntity.getDemandOrderProducts().removeAll(productsToRemove);
@@ -150,7 +150,7 @@ public class DemandOrderService {
         validateUserAuthorization(user.getId(), entity.getUser().getId());
         List<DemandOrderProductEntity> list = entity.getDemandOrderProducts();
         for(DemandOrderProductEntity product : list) {
-            demandOrderCountService.decreaseOrderCount(
+            demandRedisService.decreaseOrderCount(
                     product.getPostProductEntity().getId(),
                     product.getQuantity()
             );
