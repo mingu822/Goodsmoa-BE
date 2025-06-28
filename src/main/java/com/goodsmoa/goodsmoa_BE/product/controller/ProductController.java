@@ -86,6 +86,14 @@ public class ProductController {
         return productService.getProductPostList(pageable);
     }
 
+    // 사용자가 올린 상품글 리스트 조회
+    @GetMapping("/post-user")
+    public ResponseEntity<Page<PostsResponse>> getProductPostList(
+            @AuthenticationPrincipal UserEntity user,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return productService.getProductPostListUser(user,pageable);
+    }
+
     // 키워드 검색
     @GetMapping
     public ResponseEntity<Page<SearchDocWithUserResponse>> findByKeyword
