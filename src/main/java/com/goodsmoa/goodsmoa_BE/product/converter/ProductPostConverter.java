@@ -39,6 +39,7 @@ public class ProductPostConverter {
                 .endTime(request.getEndTime())
                 .state(false)
                 .views(0L)
+                .likes(0L)
                 .password(request.getPassword())
                 .hashtag(request.getHashtag())
                 .user(user)

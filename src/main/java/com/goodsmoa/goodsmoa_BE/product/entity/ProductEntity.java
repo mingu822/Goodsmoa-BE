@@ -41,6 +41,7 @@ public class ProductEntity {
     @JoinColumn(name = "post_id", nullable = false)
     private ProductPostEntity productPostEntity;
 
+
     // enum
     public enum AvailabilityStatus{
         판매중, 품절, 숨기기

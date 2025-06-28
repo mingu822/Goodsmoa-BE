@@ -44,6 +44,9 @@ public class ProductPostEntity {
     @Column(name = "end_time")
     private LocalDate endTime;
 
+    @Column(name = "like_count")
+    private Long likes = 0L; //기본값 0
+
     @Setter
     @Column(name = "state", nullable = false)
     private Boolean state = false;  // 기본값 false (임시저장)
@@ -64,6 +67,10 @@ public class ProductPostEntity {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
+
+    public void setLikes(Long likes) {
+        this.likes = likes;
+    }
 
     public void updateFromRequest(PostRequest request, Category category
                                   //, boolean status

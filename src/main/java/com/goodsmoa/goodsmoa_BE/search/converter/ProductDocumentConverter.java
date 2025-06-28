@@ -17,6 +17,7 @@ public class ProductDocumentConverter implements DocumentConverter<ProductPostEn
                 .thumbnailUrl(entity.getThumbnailImage())
                 .views(entity.getViews())
                 .title(entity.getTitle())
+                .likes(entity.getLikes() )
                 .description(entity.getContent())
                 .hashtag(entity.getHashtag())
                 .boardType(Board.PRODUCT)

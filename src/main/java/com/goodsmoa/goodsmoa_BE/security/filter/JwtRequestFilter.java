@@ -92,8 +92,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            log.info("🛠 SecurityContext에 저장된 Authentication: {}", SecurityContextHolder.getContext().getAuthentication());
-            log.info("🛠 SecurityContext에 저장된 Authorities: {}", SecurityContextHolder.getContext().getAuthentication().getAuthorities());
         }
 
         if (!result) {

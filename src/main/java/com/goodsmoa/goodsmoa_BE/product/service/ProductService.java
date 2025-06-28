@@ -58,7 +58,7 @@ public class ProductService {
     private final ProductReviewRepository productReviewRepository;
     private final S3Uploader s3Uploader;
     private final SearchService searchService;
-
+    private final ProductRedisService productRedisService;
 
     // 상품글 생성
     @Transactional
@@ -387,7 +387,9 @@ public class ProductService {
         ProductPostEntity entity = productPostRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("해당 상품글이 존재하지 않습니다."));
 
-        productPostViewService.increaseViewCount(id);
+        log.info("상품글 상세조회 서비스임");
+        /*productPostViewService.increaseViewCount(id);*/
+        productRedisService.increaseViewCount(id);
 
         List<ProductEntity> products = productRepository.findByProductPostEntity(entity);
         List<ProductDeliveryEntity> delivers = productDeliveryRepository.findByProductPostEntity(entity);

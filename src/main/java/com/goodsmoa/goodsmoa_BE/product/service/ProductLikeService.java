@@ -23,24 +23,28 @@ public class ProductLikeService {
     private final ProductPostRepository productPostRepository;
     private final ProductLikeRepository productLikeRepository;
     private final ProductLikeConverter productLikeConverter;
+    private final ProductRedisService productRedisService;
+
 
     @Transactional
-    public ResponseEntity<ProductLikeResponse> likeProduct(
-            UserEntity user,Long id
-    ){
-        ProductPostEntity entity = productPostRepository.findById(id).orElseThrow(()-> new IllegalArgumentException("해당 글이 존재하지 않습니다."));
+    public ResponseEntity<ProductLikeResponse> likeProduct(UserEntity user, Long id) {
+        ProductPostEntity entity = productPostRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 글이 존재하지 않습니다."));
 
-        if(productLikeRepository.existsByProductPostEntityAndUser(entity,user)){
+        if (productLikeRepository.existsByProductPostEntityAndUser(entity, user)) {
             throw new IllegalArgumentException("이미 찜한 상품입니다.");
         }
-        ProductLikeEntity like = productLikeConverter.toEntity(entity, user);
 
+        ProductLikeEntity like = productLikeConverter.toEntity(entity, user);
         ProductLikeEntity saveEntity = productLikeRepository.save(like);
 
-        ProductLikeResponse response = productLikeConverter.toResponse(saveEntity);
+        //  Redis에 좋아요수 반영 추가
+        productRedisService.increaseLikeCount(id);
 
+        ProductLikeResponse response = productLikeConverter.toResponse(saveEntity);
         return ResponseEntity.ok(response);
     }
+
 
     @Transactional
     public ResponseEntity<Void> unlikeProduct(UserEntity user, Long id) {
@@ -50,6 +54,10 @@ public class ProductLikeService {
         ProductLikeEntity like = productLikeRepository.findByProductPostEntityAndUser(entity,user)
                 .orElseThrow(() -> new IllegalArgumentException("해당 찜이 존재하지 않습니다."));
         productLikeRepository.delete(like);
+
+        // Redis 좋아요수 감소 반영
+        productRedisService.decreaseLikeCount(id);
+
         return ResponseEntity.ok().build();
     }
 
