@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Builder
@@ -30,5 +31,9 @@ public class PostsResponse {
     private String userNickName;
 
     private String userImage;
+
+    private LocalDate startTime;
+
+    private LocalDate endTime;
 
 }

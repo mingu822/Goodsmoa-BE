@@ -102,6 +102,8 @@ public class ProductPostConverter {
                 .userId(entity.getUser().getId())
                 .userNickName(entity.getUser().getNickname())
                 .userImage(entity.getUser().getImage())
+                .startTime(entity.getStartTime())
+                .endTime(entity.getEndTime())
                 .build();
     }
 
