@@ -62,6 +62,7 @@ public class TradePostService {
     private final TradePostHiddenRepository tradePostHiddenRepository;
     private final S3Uploader s3Uploader;
     private final OrderRepository orderRepository;
+    private final TradeRedisService tradeRedisService;
     // --- Helper Methods for S3 Upload ---
 
     // 단일 이미지 업로드 헬퍼 메서드
@@ -104,6 +105,7 @@ public class TradePostService {
         Category category = categoryRepository.getReferenceById(request.getCategoryId());
         TradePostEntity tradePostEntity = tradePostConverter.toEntity(request, category, user);
         tradePostEntity.setUser(user);
+        tradePostEntity.setLikes(0L);
 
         // 2. 썸네일 및 하단 상품 이미지 처리 (본문 내용과 무관한 이미지들)
         // 2-1. 썸네일 이미지 업로드
@@ -155,6 +157,7 @@ public class TradePostService {
 
         // 4. 모든 정보가 채워진 최종 엔티티를 DB에 저장
         TradePostEntity savedEntity = tradePostRepository.save(tradePostEntity);
+
 
         // 5. 검색 엔진(Elasticsearch) 데이터 동기화
         searchService.saveOrUpdateDocument(savedEntity);
@@ -317,7 +320,11 @@ public class TradePostService {
     public ResponseEntity<TradePostDetailResponse> getTradePost(Long id) {
         TradePostEntity tradePostEntity = tradePostRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
 
-        tradePostViewService.increaseViewCount(id);
+        log.info("🔥🔥 getTradePost() 실제 호출됨 ID: {}", id);
+
+        //추가(조회수 비동기 저장)
+        tradeRedisService.increaseViewCount(id);
+
 
         return ResponseEntity.ok(tradePostConverter.detailResponse(tradePostEntity));
     }

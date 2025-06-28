@@ -86,6 +86,15 @@ public class TradePostEntity {
     private List<UserHiddenPost> hiddenByUsers;
 
 
+    @Column(name = "like_count")
+    private Long likes = 0L;
+
+
+    public void setLikes(Long likes) {
+        this.likes = likes;
+    }
+
+
 
     public boolean isHiddenByUser(UserEntity user){
         return hiddenByUsers.stream().anyMatch(hiddenPost ->hiddenPost.getUser().equals(user));

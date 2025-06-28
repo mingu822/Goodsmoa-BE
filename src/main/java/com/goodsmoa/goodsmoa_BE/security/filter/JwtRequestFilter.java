@@ -67,7 +67,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         // 2. accessToken이 없으면 그냥 다음 필터로
         if (jwt == null || jwt.isEmpty()) {
-            log.info("❌ 쿠키에 accessToken 없음. 다음 필터로 진행");
+
             filterChain.doFilter(request, response);
             return;
         }

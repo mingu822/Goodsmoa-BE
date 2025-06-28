@@ -24,6 +24,7 @@ public class TradeDocumentConverter implements DocumentConverter<TradePostEntity
                 .userId(entity.getUser() != null ? entity.getUser().getId() : null)
                 .thumbnailUrl(entity.getThumbnailImage())
                 .views(entity.getViews())
+                .likes(entity.getLikes())
                 .title(entity.getTitle())
                 .description(description)
                 .hashtag(entity.getHashtag())

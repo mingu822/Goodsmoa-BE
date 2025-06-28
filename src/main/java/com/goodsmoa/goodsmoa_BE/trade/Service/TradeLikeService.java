@@ -28,6 +28,8 @@ public class TradeLikeService {
     private final TradePostRepository tradePostRepository;
     private final TradeLikeConverter tradeLikeConverter;
     private final TradePostConverter tradePostConverter;
+    private final TradeRedisService tradeRedisService;
+
     @Transactional
     public ResponseEntity<TradeLikeResponse> likeTrade(UserEntity user, Long tradeId){
         TradePostEntity tradePostEntity = tradePostRepository.findById(tradeId).orElseThrow(()-> new IllegalArgumentException("해당 글이 존재하지 않습니다."));
@@ -39,6 +41,9 @@ public class TradeLikeService {
         TradeLikeEntity like =  tradeLikeConverter.toEntity(tradePostEntity, user);
 
         tradeLikeRepository.save(like);
+
+        //  Redis 좋아요 수 증가(es 재색인용)
+        tradeRedisService.increaseLikeCount(tradeId);
 
         TradeLikeResponse response = tradeLikeConverter.toResponse(like);
         return ResponseEntity.ok(response);
@@ -52,6 +57,7 @@ public class TradeLikeService {
                 .orElseThrow(() -> new IllegalArgumentException("찜한 기록이 없습니다."));
 
         tradeLikeRepository.delete(like);
+        tradeRedisService.decreaseLikeCount(tradeId);
         return ResponseEntity.noContent().build();
     }
 //    public ResponseEntity<List<TradeLikeResponse>> getLikedTrades(UserEntity user) {
