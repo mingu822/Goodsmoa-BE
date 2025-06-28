@@ -247,4 +247,46 @@ public class SearchService {
         return Optional.ofNullable(elasticsearchOperations.get(id, SearchDocument.class))
                 .orElseThrow(() -> new EntityNotFoundException("Document not found"));
     }
+
+
+
+
+    //인기 제품들 조회ㅇㅇ
+    // 인기 제품들 조회
+    public List<SearchDocument> getTopViewedDocuments(Board boardType, int size) {
+        BoolQuery.Builder boolQuery = QueryBuilders.bool();
+        boolQuery.filter(Query.of(q -> q.term(t -> t
+                .field("board.keyword")  // ← 이렇게 해보자. board 필드의 keyword 타입 강제 호출
+                .value(boardType.name())
+        )));
+
+        log.info("🔍인기 제품들 조회- [ES 쿼리조건] board: {}", boardType.name());
+
+        NativeQuery nativeQuery = NativeQuery.builder()
+                .withQuery(Query.of(q -> q.bool(boolQuery.build())))
+                .withSort(Sort.by(Sort.Direction.DESC, "views"))
+                .withPageable(PageRequest.of(0, size))
+                .build();
+
+        SearchHits<SearchDocument> hits = elasticsearchOperations.search(nativeQuery, SearchDocument.class);
+
+        List<SearchDocument> docs = hits.getSearchHits().stream()
+                .map(hit -> hit.getContent())
+                .toList();
+
+        log.info("📦인기 제품들 조회- [ES 조회결과] 총 {}건", docs.size());
+
+        if (docs.isEmpty()) {
+            log.warn("❗인기 제품들 조회- [ES 조회] 결과 없음. 색인이 없거나 board 필드 불일치일 수 있음.");
+        }
+
+        for (int i = 0; i < docs.size(); i++) {
+            SearchDocument doc = docs.get(i);
+            log.info("📄 [{}위] id={}, board={}, views={}, title={}",
+                    (i + 1), doc.getId(), doc.getBoardType(), doc.getViews(), doc.getTitle());
+        }
+
+        return docs;
+    }
+
 }
