@@ -35,6 +35,9 @@ public class DemandLikeService {
 
     @Transactional
     public String toggleLike(UserEntity user, Long postId) {
+        DemandPostEntity post = demandPostRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시물입니다"));
+
         if (isLike(user, postId)) {
             // 좋아요 취소 로직
             DemandLikeEntity likeEntity = demandLikeRepository.findByUserIdAndPostId(user.getId(), postId)
@@ -46,7 +49,7 @@ public class DemandLikeService {
         } else {
             // 좋아요 추가 로직
             if (demandLikeRepository.existsByUserIdAndPostId(user.getId(), postId)) {
-                throw new IllegalStateException("좋아요 상태 일관성 오류");
+                throw new IllegalStateException("이미 좋아요 한 게시물입니다");
             }
 
             demandLikeRepository.save(new DemandLikeEntity(user.getId(), postId));
@@ -119,15 +122,20 @@ public class DemandLikeService {
         }
     }
 
+    // 수요조사 상세보기 시 좋아요 여부 추가
+    public boolean addLikeStatus(UserEntity user, Long postId) {
+        return demandLikeRepository.existsByUserIdAndPostId(user.getId(), postId);
+    }
+
     // 검색결과에 좋아요 여부 추가
-    public void addLikeStatus(List<SearchDocWithUserResponse> responses, UserEntity user) {
-        // 1. 응답에서 숫자 ID 추출 (예: "DEMAND-16" → 16)
+    public void addLikeStatus(UserEntity user, List<SearchDocWithUserResponse> responses) {
+        // 1. 응답에서 숫자 ID 추출 (예: "DEMAND_16" → 16)
         List<Long> numericPostIds = new ArrayList<>();
         Map<Long, SearchDocWithUserResponse> idToResponseMap = new HashMap<>();
 
         for (SearchDocWithUserResponse res : responses) {
             try {
-                // ID 형식: "BOARD-ID"
+                // ID 형식: "BOARD_ID"
                 String[] parts = res.getId().split("_");
                 if (parts.length >= 2) {
                     Long numericId = Long.parseLong(parts[1]);

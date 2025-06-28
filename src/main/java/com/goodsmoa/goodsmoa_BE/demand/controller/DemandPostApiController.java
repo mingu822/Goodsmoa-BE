@@ -59,7 +59,7 @@ public class DemandPostApiController {
                 pageSize
         );
 
-        if(user!=null) demandLikeService.addLikeStatus(result.getContent(), user);
+        if(user!=null) demandLikeService.addLikeStatus(user, result.getContent());
 
         return ResponseEntity.ok(result);
     }
