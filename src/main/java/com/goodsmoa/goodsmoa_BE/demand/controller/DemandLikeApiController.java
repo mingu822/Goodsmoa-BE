@@ -52,9 +52,6 @@ public class DemandLikeApiController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage())); //존재하지 않는 게시물입니다
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", e.getMessage())); //이미 좋아요한 게시물입니다
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "서버 오류: " + e.getMessage())); //서버 오류...

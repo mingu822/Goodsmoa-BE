@@ -48,10 +48,6 @@ public class DemandLikeService {
             return "좋아요 취소 완료";
         } else {
             // 좋아요 추가 로직
-            if (demandLikeRepository.existsByUserIdAndPostId(user.getId(), postId)) {
-                throw new IllegalStateException("이미 좋아요 한 게시물입니다");
-            }
-
             demandLikeRepository.save(new DemandLikeEntity(user.getId(), postId));
             demandRedisService.increaseLikeCount(postId);
             return "좋아요 완료";
