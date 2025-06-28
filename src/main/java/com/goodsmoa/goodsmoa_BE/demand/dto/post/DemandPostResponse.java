@@ -21,6 +21,7 @@ public class DemandPostResponse {
     private Long likes;
     private String category;
     private Long userOrderId;
+    private Boolean likeStatus;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime startTime;

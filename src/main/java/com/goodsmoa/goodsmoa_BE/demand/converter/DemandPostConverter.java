@@ -43,6 +43,7 @@ public class DemandPostConverter {
     }
 
     // DemandEntity -> DemandPostResponse
+    // 로그인 하지 않은 유저
     public DemandPostResponse toResponse(DemandPostEntity entity) {
         UserEntity user = entity.getUser();
 
@@ -66,8 +67,8 @@ public class DemandPostConverter {
                 .products(entity.getProducts().stream().map(demandPostProductConverter::toResponse).toList())
                 .build();
     }
-    // 참여한 경우 반영
-    public DemandPostResponse toResponse(DemandPostEntity entity, DemandOrderEntity orderEntity) {
+    // 로그인 한 유저 참여한 경우 반영+좋아요 여부
+    public DemandPostResponse toResponse(DemandPostEntity entity, DemandOrderEntity orderEntity, Boolean likeStatus) {
         UserEntity user = entity.getUser();
 
         Map<Long, Integer> orderedCountMap = orderEntity.getDemandOrderProducts().stream()
@@ -93,6 +94,7 @@ public class DemandPostConverter {
                 .views(entity.getViews())
                 .category(entity.getCategory().getName())
                 .userOrderId(orderEntity.getId())
+                .likeStatus(likeStatus)
                 .startTime(entity.getStartTime())
                 .endTime(entity.getEndTime())
                 .createdAt(entity.getCreatedAt())

@@ -49,6 +49,7 @@ public class DemandPostService {
     private final SearchService searchService;
     private final DemandOrderRepository demandOrderRepository;
     private final DemandOrderService demandOrderService;
+    private final DemandLikeService demandLikeService;
     private final S3Uploader s3Uploader;
 
     // 선택한 글의 id로 검색하여 가져오기
@@ -69,9 +70,11 @@ public class DemandPostService {
         }
         demandOrderService.validateUserAuthorization(user.getId(), orderEntity.getUser().getId());
 
+        Boolean likeStatus = demandLikeService.addLikeStatus(user, id);
+
         // 조회수 증가
         demandRedisService.increaseViewCount(postEntity.getId());
-        return demandPostConverter.toResponse(postEntity, orderEntity);
+        return demandPostConverter.toResponse(postEntity, orderEntity, likeStatus);
     }
 
     // 선택한 글의 id로 탐색하여 판매글로 전환할 데이터 보내기

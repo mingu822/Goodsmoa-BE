@@ -17,7 +17,6 @@ public interface DemandLikeRepository extends JpaRepository<DemandLikeEntity, Lo
     Optional<DemandLikeEntity> findByUserIdAndPostId(String userId, Long postId);
     boolean existsByUserIdAndPostId(String userId, Long postId);
     Page<DemandLikeEntity> findByUserId(String userId, Pageable pageable);
-    Set<Long> findPostIdsByUserId(String userId);
     Long countByPostId(Long postId);
 
     @Query("SELECT l.postId FROM DemandLikeEntity l " +

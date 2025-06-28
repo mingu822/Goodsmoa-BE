@@ -3,6 +3,7 @@ package com.goodsmoa.goodsmoa_BE.demand.controller;
 import com.goodsmoa.goodsmoa_BE.demand.dto.post.*;
 import com.goodsmoa.goodsmoa_BE.demand.service.DemandLikeService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -35,12 +37,28 @@ public class DemandLikeApiController {
 
     // 좋아요
     @PostMapping(value = "/{id}")
-    public ResponseEntity<String> toggleLike(
+    public ResponseEntity<?> toggleLike(
             @AuthenticationPrincipal UserEntity user,
             @PathVariable("id") Long postId)
     {
-        if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
-        return ResponseEntity.ok(demandLikeService.toggleLike(user, postId));
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "로그인이 필요합니다")); //로그인이 필요합니다
+        }
+        try {
+            //TODO : 로그인 페이지로 이동
+            String result = demandLikeService.toggleLike(user, postId);
+            return ResponseEntity.ok(Map.of("message", result)); //좋아요 완료
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage())); //존재하지 않는 게시물입니다
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", e.getMessage())); //이미 좋아요한 게시물입니다
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "서버 오류: " + e.getMessage())); //서버 오류...
+        }
     }
     
     // 좋아요 
