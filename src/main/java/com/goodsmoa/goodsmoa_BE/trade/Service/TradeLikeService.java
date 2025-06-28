@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.*;
+
 @Service
 @RequiredArgsConstructor
 public class TradeLikeService {
@@ -87,6 +89,20 @@ public class TradeLikeService {
 
         // 3. TradeLikeEntity를 TradeLikeResponse DTO로 변환하여 반환합니다.
         return tradeLikeConverter.toResponse(tradeLikeEntity);
+    }
+    public Map<Long, Boolean> getMyLikesStatusForPosts(String userId, List<Long> postIds) {
+        // 1. Repository를 통해, 사용자가 '좋아요' 누른 게시글의 ID 목록만 효율적으로 가져옵니다.
+        List<Long> likedPostIdsFromDb = tradeLikeRepository.findLikedPostIdsByUserIdAndPostIdsIn(userId, postIds);
+        Set<Long> likedPostIdSet = new HashSet<>(likedPostIdsFromDb);
+
+        // 2. 프론트가 요청한 모든 게시글 ID를 순회하며, '좋아요' 여부를 Map에 담습니다.
+        Map<Long, Boolean> result = new HashMap<>();
+        for (Long postId : postIds) {
+            // '좋아요' 누른 ID 목록(Set)에 포함되어 있으면 true, 아니면 false를 할당
+            result.put(postId, likedPostIdSet.contains(postId));
+        }
+
+        return result;
     }
 
 

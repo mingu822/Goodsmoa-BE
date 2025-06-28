@@ -6,6 +6,8 @@ import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 
 import java.util.Collection;
@@ -19,5 +21,8 @@ public interface TradeLikeRepository extends JpaRepository<TradeLikeEntity, Long
 //    List<TradeLikeEntity> findAllByUser(UserEntity user);
 
     Page<TradeLikeEntity> findAllByUser(UserEntity user, Pageable pageable);
+
+    @Query("SELECT tl.trade.id FROM TradeLikeEntity tl WHERE tl.user.id = :userId AND tl.trade.id IN :postIds")
+    List<Long> findLikedPostIdsByUserIdAndPostIdsIn(@Param("userId") String userId, @Param("postIds") List<Long> postIds);
 
 }
