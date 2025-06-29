@@ -87,7 +87,7 @@ public class DemandPostApiController {
             return ResponseEntity.ok(demandPostService.getDemandPostResponse(user, id));
         }
     }
-    
+
     // 수요조사 글 작성
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> create(
@@ -103,7 +103,7 @@ public class DemandPostApiController {
 
     // 수요조사 글 수정
     @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<DemandPostResponse> update(
+    public ResponseEntity<?> update(
             @AuthenticationPrincipal UserEntity user,
             @PathVariable Long id,
             @RequestPart("demandPostUpdateRequest") DemandPostUpdateRequest request,
@@ -111,6 +111,7 @@ public class DemandPostApiController {
             @RequestPart(value = "newProductImages", required = false) List<MultipartFile> newProductImages,
             @RequestPart(value = "newDescriptionImages", required = false) List<MultipartFile> newDescriptionImages) throws IOException
     {
+        if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
         return ResponseEntity.ok(demandPostService.updateDemand(
                 user, id, request,
                 newThumbnailImage,
@@ -123,6 +124,7 @@ public class DemandPostApiController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> delete(@AuthenticationPrincipal UserEntity user,
                                          @PathVariable Long id){
+        if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
         return ResponseEntity.ok(demandPostService.deleteDemand(user, id));
     }
 
@@ -130,14 +132,21 @@ public class DemandPostApiController {
     @PostMapping("/pull/{id}")
     public ResponseEntity<String> pull(@AuthenticationPrincipal UserEntity user,
                                        @PathVariable Long id){
-        return ResponseEntity.ok(demandPostService.pullDemand(user, id));
+        if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
+        try {
+            demandPostService.pullDemand(user, id);
+            return ResponseEntity.ok("글을 끌어올렸습니다");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(e.getMessage());
+        }
     }
 
     @PostMapping("/convert/{id}")
-    public ResponseEntity<DemandPostToSaleResponse> convertToProduct(
+    public ResponseEntity<?> convertToProduct(
             @AuthenticationPrincipal UserEntity user,
             @PathVariable Long id
     ) {
+        if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
         return ResponseEntity.ok(demandPostService.convertToProduct(id, user));
     }
 

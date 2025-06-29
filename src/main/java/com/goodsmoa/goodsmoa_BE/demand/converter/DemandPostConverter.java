@@ -10,9 +10,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -71,11 +69,13 @@ public class DemandPostConverter {
     public DemandPostResponse toResponse(DemandPostEntity entity, DemandOrderEntity orderEntity, Boolean likeStatus) {
         UserEntity user = entity.getUser();
 
-        Map<Long, Integer> orderedCountMap = orderEntity.getDemandOrderProducts().stream()
+        Long userOrderId = orderEntity!=null ? orderEntity.getId() : null;
+        Map<Long, Integer> orderedCountMap = orderEntity != null ?
+                orderEntity.getDemandOrderProducts().stream()
                 .collect(Collectors.groupingBy(
                         op -> op.getPostProductEntity().getId(),
                         Collectors.summingInt(DemandOrderProductEntity::getQuantity)
-                ));
+                )) : Collections.emptyMap();
 
         List<DemandProductResponse> productResponses = entity.getProducts().stream()
                 .map(product -> {
@@ -92,9 +92,10 @@ public class DemandPostConverter {
                 .hashtag(entity.getHashtag())
                 .state(entity.isState())
                 .views(entity.getViews())
+                .likes(entity.getLikes())
                 .category(entity.getCategory().getName())
-                .userOrderId(orderEntity.getId())
-                .likeStatus(likeStatus)
+                .userOrderId(userOrderId)
+                .likeStatus(likeStatus != null && likeStatus)
                 .startTime(entity.getStartTime())
                 .endTime(entity.getEndTime())
                 .createdAt(entity.getCreatedAt())

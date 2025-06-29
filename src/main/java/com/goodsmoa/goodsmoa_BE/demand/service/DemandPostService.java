@@ -65,15 +65,10 @@ public class DemandPostService {
     public DemandPostResponse getDemandPostResponse(UserEntity user, Long id) {
         DemandPostEntity postEntity = findByIdWithThrow(id);
         DemandOrderEntity orderEntity = demandOrderRepository.findByDemandPostEntityAndUser(postEntity, user);
-        if(orderEntity==null){
-            return demandPostConverter.toResponse(postEntity);
-        }
-        demandOrderService.validateUserAuthorization(user.getId(), orderEntity.getUser().getId());
 
-        Boolean likeStatus = demandLikeService.addLikeStatus(user, id);
-
-        // 조회수 증가
+        if (orderEntity != null) demandOrderService.validateUserAuthorization(user.getId(), orderEntity.getUser().getId());
         demandRedisService.increaseViewCount(postEntity.getId());
+        Boolean likeStatus = demandLikeService.addLikeStatus(user, id);
         return demandPostConverter.toResponse(postEntity, orderEntity, likeStatus);
     }
 
@@ -365,8 +360,10 @@ public class DemandPostService {
         LocalDateTime lastPulledAt = postEntity.getPulledAt();
 
         if (lastPulledAt != null && lastPulledAt.isAfter(now.minusDays(5))) {
-            return "최근 5일 이내에 이미 끌어올림을 했습니다. 다음 가능 일자: " +
-                    lastPulledAt.plusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            throw new IllegalStateException(
+                    "최근 5일 이내에 이미 끌어올림을 했습니다. 다음 가능 일자: " +
+                            lastPulledAt.plusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            );
         }
         postEntity.setPulledAt(now);
 

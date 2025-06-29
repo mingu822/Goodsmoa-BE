@@ -256,7 +256,7 @@ public class SearchService {
     public List<SearchDocument> getTopViewedDocuments(Board boardType, int size) {
         BoolQuery.Builder boolQuery = QueryBuilders.bool();
         boolQuery.filter(Query.of(q -> q.term(t -> t
-                .field("board.keyword")  // ← 이렇게 해보자. board 필드의 keyword 타입 강제 호출
+                .field("board")
                 .value(boardType.name())
         )));
 
