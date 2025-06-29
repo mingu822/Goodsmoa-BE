@@ -57,9 +57,10 @@ public class BestsellerService {
     }
 
     private double calculateScore(Long views, LocalDateTime pulledAt) {
-        long minutes = Duration.between(pulledAt, LocalDateTime.now()).toMinutes();
-        return views / (minutes <= 0 ? 1.0 : (double) minutes); // 최소 1분 방어
+        long days = Duration.between(pulledAt, LocalDateTime.now()).toDays();
+        return views / (double) (days + 1); //  최소 1일 보정
     }
+
 
     private record DocWithScore(SearchDocument doc, UserEntity user, double score) {
         public SearchDocWithUserResponse toResponse() {
