@@ -2,6 +2,7 @@ package com.goodsmoa.goodsmoa_BE.trade.Service;
 
 
 
+import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeLikeConverter;
 import com.goodsmoa.goodsmoa_BE.trade.Converter.TradePostConverter;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Like.TradeLikeRequest;
@@ -13,6 +14,7 @@ import com.goodsmoa.goodsmoa_BE.trade.Repository.TradePostRepository;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TradeLikeService {
@@ -103,6 +106,38 @@ public class TradeLikeService {
         }
 
         return result;
+    }
+
+    public void addLikeStatus(UserEntity user, List<SearchDocWithUserResponse> responses) {
+        // 1. 응답에서 숫자 ID 추출 (예: "DEMAND_16" → 16)
+        List<Long> numericPostIds = new ArrayList<>();
+        Map<Long, SearchDocWithUserResponse> idToResponseMap = new HashMap<>();
+
+        for (SearchDocWithUserResponse res : responses) {
+            try {
+                // ID 형식: "BOARD_ID"
+                String[] parts = res.getId().split("_");
+                if (parts.length >= 2) {
+                    Long numericId = Long.parseLong(parts[1]);
+                    numericPostIds.add(numericId);
+                    idToResponseMap.put(numericId, res);
+                }
+            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                log.warn("Invalid ID format: {}", res.getId());
+            }
+        }
+
+        // 2. 숫자 ID로 좋아요 여부 일괄 조회
+        if (!numericPostIds.isEmpty()) {
+            Set<Long> likedNumericIds = tradeLikeRepository.findLikedIdsByUserAndPosts(
+                    user.getId(), numericPostIds
+            );
+
+            // 3. 응답 객체에 좋아요 여부 매핑
+            idToResponseMap.forEach((numericId, response) -> {
+                response.setLiked(likedNumericIds.contains(numericId));
+            });
+        }
     }
 
 
