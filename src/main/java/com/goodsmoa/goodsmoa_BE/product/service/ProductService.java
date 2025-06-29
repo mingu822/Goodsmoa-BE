@@ -435,7 +435,15 @@ public class ProductService {
     // 상품글 리스트 조회
     public ResponseEntity<Page<PostsResponse>> getProductPostList(Pageable pageable) {
         Page<ProductPostEntity> postPage = productPostRepository.findAll(pageable);
-        Page<PostsResponse> responsePage = postPage.map(productPostConverter::toPostsResponse);
+        Page<PostsResponse> responsePage = postPage.map(postEntity -> {
+
+            // ▼▼▼ [최종 수정] postEntity.getProducts() 대신, repository로 직접 조회! ▼▼▼
+            List<ProductEntity> products = productRepository.findByProductPostEntity(postEntity);
+
+            // 이제 두 인자를 모두 준비했으니 변환 메소드를 호출할 수 있어
+            return productPostConverter.toPostsResponse(postEntity, products);
+        });
+
         return ResponseEntity.ok(responsePage);
     }
 
@@ -448,7 +456,14 @@ public class ProductService {
         Page<ProductPostEntity> postPage = productPostRepository.findAllByUser(user, pageable);
 
         // Entity -> DTO 변환
-        Page<PostsResponse> responsePage = postPage.map(productPostConverter::toPostsResponse);
+        Page<PostsResponse> responsePage = postPage.map(postEntity -> {
+
+            // ▼▼▼ [최종 수정] postEntity.getProducts() 대신, repository로 직접 조회! ▼▼▼
+            List<ProductEntity> products = productRepository.findByProductPostEntity(postEntity);
+
+            // 이제 두 인자를 모두 준비했으니 변환 메소드를 호출할 수 있어
+            return productPostConverter.toPostsResponse(postEntity, products);
+        });
 
         return ResponseEntity.ok(responsePage);
     }

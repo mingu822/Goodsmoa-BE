@@ -85,13 +85,14 @@ public class ProductPostConverter {
                 .thumbnailImage(entity.getThumbnailImage())
                 .nickname(entity.getUser().getNickname())
                 .userImage(entity.getUser().getImage())
+                .isPublic(entity.getIsPublic())
                 .views(entity.getViews())
                 .products(products.stream().map(productConverter::toResponse).toList())
                 .delivers(delivers.stream().map(productDeliveryConverter::toResponse).toList())
                 .build();
     }
 
-    public PostsResponse toPostsResponse(ProductPostEntity entity) {
+    public PostsResponse toPostsResponse(ProductPostEntity entity,List<ProductEntity> products) {
         return PostsResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
@@ -102,6 +103,8 @@ public class ProductPostConverter {
                 .userId(entity.getUser().getId())
                 .userNickName(entity.getUser().getNickname())
                 .userImage(entity.getUser().getImage())
+                .categoryName(entity.getCategory().getName())
+                .products(products.stream().map(productConverter::toResponse).toList())
                 .startTime(entity.getStartTime())
                 .endTime(entity.getEndTime())
                 .build();

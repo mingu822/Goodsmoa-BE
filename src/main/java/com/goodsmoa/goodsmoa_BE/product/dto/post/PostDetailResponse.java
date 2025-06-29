@@ -36,6 +36,8 @@ public class PostDetailResponse {
 
     private String userId;
 
+    private Boolean isPublic;
+
     private Long views;
 
     private List<ProductResponse> products;

@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.product.dto.post;
 
+import com.goodsmoa.goodsmoa_BE.product.dto.ProductResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 @Getter
@@ -35,5 +37,9 @@ public class PostsResponse {
     private LocalDate startTime;
 
     private LocalDate endTime;
+
+    private String categoryName;
+
+    private List<ProductResponse> products;
 
 }
