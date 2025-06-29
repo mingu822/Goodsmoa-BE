@@ -130,7 +130,12 @@ public class DemandPostApiController {
     @PostMapping("/pull/{id}")
     public ResponseEntity<String> pull(@AuthenticationPrincipal UserEntity user,
                                        @PathVariable Long id){
-        return ResponseEntity.ok(demandPostService.pullDemand(user, id));
+        try {
+            demandPostService.pullDemand(user, id);
+            return ResponseEntity.ok("글을 끌어올렸습니다");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(e.getMessage());
+        }
     }
 
     @PostMapping("/convert/{id}")
