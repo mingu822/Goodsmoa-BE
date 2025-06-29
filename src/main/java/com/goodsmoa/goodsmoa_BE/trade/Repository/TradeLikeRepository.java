@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface TradeLikeRepository extends JpaRepository<TradeLikeEntity, Long> {
     Optional<TradeLikeEntity> findByTradeAndUser(TradePostEntity trade, UserEntity user);
@@ -25,4 +26,11 @@ public interface TradeLikeRepository extends JpaRepository<TradeLikeEntity, Long
     @Query("SELECT tl.trade.id FROM TradeLikeEntity tl WHERE tl.user.id = :userId AND tl.trade.id IN :postIds")
     List<Long> findLikedPostIdsByUserIdAndPostIdsIn(@Param("userId") String userId, @Param("postIds") List<Long> postIds);
 
+    @Query("SELECT l.postId FROM DemandLikeEntity l " +
+            "WHERE l.userId = :userId " +
+            "AND l.postId IN :postIds")
+    Set<Long> findLikedIdsByUserAndPosts(
+            @Param("userId") String userId,
+            @Param("postIds") List<Long> postIds
+    );
 }

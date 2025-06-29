@@ -10,6 +10,7 @@ import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -39,23 +40,27 @@ public class DemandOrderApiController {
 
     // 수요조사 주문 상세 조회
     @GetMapping("/{id}")
-    public ResponseEntity<DemandOrderResponse> findById(@PathVariable Long id) {
+    public ResponseEntity<?> findById(@AuthenticationPrincipal UserEntity user,
+                                                        @PathVariable Long id) {
+        if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
         return ResponseEntity.ok(demandOrderService.getDemandOrderResponse(id));
     }
-    
+
     // 수요조사 주문 생성
     @PostMapping("/create/{id}")
-    public ResponseEntity<DemandOrderResponse> create(@AuthenticationPrincipal UserEntity user,
+    public ResponseEntity<?> create(@AuthenticationPrincipal UserEntity user,
                                                      @PathVariable Long id,
                                                      @RequestBody DemandOrderCreateRequest request) {
+        if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
         return ResponseEntity.ok(demandOrderService.createDemandOrder(user, id, request));
     }
 
     // 수요조사 주문 수정
     @PutMapping("/update/{id}")
-    public ResponseEntity<DemandOrderResponse> update(@AuthenticationPrincipal UserEntity user,
+    public ResponseEntity<?> update(@AuthenticationPrincipal UserEntity user,
                                                    @PathVariable Long id,
                                                    @RequestBody DemandOrderUpdateRequest request){
+        if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
         return ResponseEntity.ok(demandOrderService.updateDemandOrder(user, id, request));
     }
 
@@ -63,6 +68,7 @@ public class DemandOrderApiController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> delete(@AuthenticationPrincipal UserEntity user,
                                          @PathVariable Long id){
+        if(user==null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다");
         return ResponseEntity.ok(demandOrderService.deleteDemandOrder(user, id));
     }
 }

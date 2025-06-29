@@ -18,8 +18,8 @@ public class TossConverter {
                 .orderName(entity.getOrderName())
                 .customerName(entity.getUser().getNickname())
                 .amount(entity.getTotalPrice())
-                .successUrl("http://localhost:8080/payment/success")        // 성공했을 때
-                .failUrl("http://localhost:8080/payment/fail")              // 실패했을 때
+                .successUrl("http://goodsmoa.kro.kr:8080/payment/success")        // 성공했을 때
+                .failUrl("http://goodsmoa.kro.kr:8080/payment/fail")              // 실패했을 때
                 .build();
     }
 

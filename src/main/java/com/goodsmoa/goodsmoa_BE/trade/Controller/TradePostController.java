@@ -10,6 +10,7 @@ import com.goodsmoa.goodsmoa_BE.trade.Converter.TradeImageUpdateConverter;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Image.TradeImageRequest;
 import com.goodsmoa.goodsmoa_BE.trade.DTO.Post.*;
 import com.goodsmoa.goodsmoa_BE.trade.Entity.TradeImageEntity;
+import com.goodsmoa.goodsmoa_BE.trade.Service.TradeLikeService;
 import com.goodsmoa.goodsmoa_BE.trade.Service.TradePostService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.validation.Valid;
@@ -36,6 +37,7 @@ import java.util.Optional;
 public class TradePostController {
 
     private final TradePostService tradePostService;
+    private final TradeLikeService tradeLikeService;
     private final SearchService searchService;
     // 중고거래 글 작성
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -116,27 +118,25 @@ public class TradePostController {
             @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
             @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
             @RequestParam(defaultValue = "0", name = "page") int page,
-            @RequestParam(defaultValue = "0", name = "page_size") int pageSize
+            @RequestParam(defaultValue = "0", name = "page_size") int pageSize,
+            @AuthenticationPrincipal UserEntity user
             )
     {
-        // 'close' 정렬 옵션은 중고거래에 의미가 없으므로 'new'로 처리
-        if ("close".equals(orderBy)) {
-            orderBy = "new";
-        }
-
-        return ResponseEntity.ok(
-                searchService.detailedSearch(
-                        searchType,
-                        query.orElse(null),
-                        Board.DEMAND,
-                        category.orElse(0),
-                        orderBy,
-                        includeExpired,
-                        includeScheduled,
-                        page,
-                        pageSize
-                )
+        Page<SearchDocWithUserResponse> result = searchService.detailedSearch(
+                searchType,
+                query.orElse(null),
+                Board.TRADE,
+                category.orElse(0),
+                orderBy,
+                includeExpired,
+                includeScheduled,
+                page,
+                pageSize
         );
+
+        if(user!=null) tradeLikeService.addLikeStatus(user, result.getContent());
+
+        return ResponseEntity.ok(result);
     }
     @PatchMapping("/status/{id}")
     public ResponseEntity<TradeStatusUpdateResponse> updateTradeStatus(
