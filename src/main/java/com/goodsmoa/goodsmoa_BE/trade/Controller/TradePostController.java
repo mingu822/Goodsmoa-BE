@@ -118,7 +118,7 @@ public class TradePostController {
             @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
             @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
             @RequestParam(defaultValue = "0", name = "page") int page,
-            @RequestParam(defaultValue = "0", name = "page_size") int pageSize,
+            @RequestParam(defaultValue = "10", name = "page_size") int pageSize,
             @AuthenticationPrincipal UserEntity user
             )
     {

@@ -126,7 +126,6 @@ public class TradeLikeService {
                 log.warn("Invalid ID format: {}", res.getId());
             }
         }
-
         // 2. 숫자 ID로 좋아요 여부 일괄 조회
         if (!numericPostIds.isEmpty()) {
             Set<Long> likedNumericIds = tradeLikeRepository.findLikedIdsByUserAndPosts(

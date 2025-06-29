@@ -26,11 +26,12 @@ public interface TradeLikeRepository extends JpaRepository<TradeLikeEntity, Long
     @Query("SELECT tl.trade.id FROM TradeLikeEntity tl WHERE tl.user.id = :userId AND tl.trade.id IN :postIds")
     List<Long> findLikedPostIdsByUserIdAndPostIdsIn(@Param("userId") String userId, @Param("postIds") List<Long> postIds);
 
-    @Query("SELECT l.postId FROM DemandLikeEntity l " +
-            "WHERE l.userId = :userId " +
-            "AND l.postId IN :postIds")
+    @Query("SELECT l.trade.id FROM TradeLikeEntity l " + // 게시글 ID 선택
+            "WHERE l.user.id = :userId " +               // UserEntity의 id 필드
+            "AND l.trade.id IN :postIds")                // TradePostEntity의 id 필드
     Set<Long> findLikedIdsByUserAndPosts(
             @Param("userId") String userId,
             @Param("postIds") List<Long> postIds
     );
+
 }
