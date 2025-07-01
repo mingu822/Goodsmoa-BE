@@ -1,5 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.commission.service;
 
+import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
+import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 import com.goodsmoa.goodsmoa_BE.commission.converter.CommissionDetailConverter;
 import com.goodsmoa.goodsmoa_BE.commission.converter.CommissionPostConverter;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailRequest;
@@ -9,15 +11,22 @@ import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionDetailEntity;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionPostEntity;
 import com.goodsmoa.goodsmoa_BE.commission.repository.CommissionDetailRepository;
 import com.goodsmoa.goodsmoa_BE.commission.repository.CommissionRepository;
+import com.goodsmoa.goodsmoa_BE.config.S3Uploader;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,37 +35,68 @@ public class CommissionService {
 
     private final CommissionDetailConverter commissionDetailConverter;
     private final CommissionRepository commissionRepository;
+
     private final CommissionDetailRepository commissionDetailRepository;
+
     private final CommissionPostConverter commissionPostConverter;
 
+    private final CategoryRepository categoryRepository;
 
-    /// 임시 커미션 글 생성
-    public ResponseEntity<SavePostResponse> saveCommissionPost(@AuthenticationPrincipal UserEntity user, SavePostRequest request) {
+    private final S3Uploader s3Uploader;
 
-        CommissionPostEntity entity = commissionPostConverter.saveToEntity(request,user);
+    // 커미션 글 생성
+    @Transactional
+    public ResponseEntity<PostResponse> createCommissionDetail(
+            UserEntity user,
+            PostRequest request,
+            MultipartFile thumbnailImage,
+            List<MultipartFile> contentImage) throws IOException {
 
-        CommissionPostEntity savedEntity = commissionRepository.save(entity);
+        Category category = categoryRepository.getReferenceById(request.getCategoryId());
 
-        SavePostResponse response = commissionPostConverter.saveToResponse(savedEntity);
+        CommissionPostEntity entity = commissionPostConverter.saveToEntity(request, user, category);
+        CommissionPostEntity saveEntity = commissionRepository.save(entity);
 
-        return ResponseEntity.ok(response);
-    }
+        String thumbnailPath = s3Uploader.upload(thumbnailImage);
+        saveEntity.setThumbnailImage(thumbnailPath);
+        commissionRepository.save(saveEntity);
 
-    /// 상세 신청 양식 만들기
-    public ResponseEntity<CommissionDetailResponse> createCommissionDetail(CommissionDetailRequest request) {
+        // 상세 설명 이미지 저장
+        if(contentImage != null && !contentImage.isEmpty()) {
+            List<String> contentImagePath = new ArrayList<>();
+            for(MultipartFile file : contentImage) {
+                String path = s3Uploader.upload(file);
+                contentImagePath.add(path);
+            }
+            String originalContent = request.getContent();
 
-        log.info("request.getCommissionId() : "+ String.valueOf(request.getCommissionId()));
-        Optional<CommissionPostEntity> ope = commissionRepository.findById(request.getCommissionId());
+            // HTML의 <img src="..."> 경로를 정규식으로 찾음
+            Pattern pattern = Pattern.compile("src=[\"'](.*?)[\"']");
+            Matcher matcher = pattern.matcher(originalContent);
 
-        if(ope.isEmpty()){
-            return ResponseEntity.badRequest().build();
+            int i = 0;
+            StringBuffer result = new StringBuffer();
+
+            while (matcher.find() && i < contentImagePath.size()) {
+                String newPath = "src='" + contentImagePath.get(i++) + "'"; // 새 이미지 경로로 교체
+                matcher.appendReplacement(result, newPath);
+            }
+            matcher.appendTail(result);
+
+            saveEntity.setContent(result.toString());
+            commissionRepository.save(saveEntity);
         }
 
-        CommissionPostEntity postEntity = ope.get();
+        // 추가 설명 저장
+        if(request.getDetails() != null && !request.getDetails().isEmpty()){
+            for(CommissionDetailRequest requestDetail : request.getDetails()){
+                CommissionDetailEntity detailEntity = commissionDetailConverter.detailToEntity(saveEntity, requestDetail);
+                commissionDetailRepository.save(detailEntity);
+            }
+        }
 
-        CommissionDetailEntity entity = commissionDetailConverter.detailToEntity(postEntity,request);
-        CommissionDetailEntity saveEntity = commissionDetailRepository.save(entity);
-        CommissionDetailResponse response = commissionDetailConverter.detailToResponse(saveEntity);
+        PostResponse response = commissionPostConverter.toResponse(saveEntity);
+
         return ResponseEntity.ok(response);
     }
 

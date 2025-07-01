@@ -6,9 +6,14 @@ import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
 import com.goodsmoa.goodsmoa_BE.commission.service.CommissionService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,16 +22,14 @@ public class CommissionController {
 
     private final CommissionService service;
 
-    // 임시로 글을 저장해야 신청양식을 추가시킬 수 있음
-    @PostMapping("/post-save")
-    public ResponseEntity<SavePostResponse> SaveCommissionPost(@AuthenticationPrincipal UserEntity user, @RequestBody SavePostRequest request){
-        return service.saveCommissionPost(user,request);
-    }
-
     // 커미션 신청 양식 추가하기
-    @PostMapping("/detail-create")
-    public ResponseEntity<CommissionDetailResponse> createCommissionDetail(@RequestBody CommissionDetailRequest request){
-        return service.createCommissionDetail(request);
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PostResponse> createCommissionDetail(
+            @AuthenticationPrincipal UserEntity user,
+            @RequestPart("postRequest")PostRequest request,
+            @RequestPart("thumbnailImage") MultipartFile thumbnailImage,
+            @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages) throws IOException{
+        return service.createCommissionDetail(user,request,thumbnailImage,contentImages);
     }
 
     // 커미션 신청글 완성 및 수정

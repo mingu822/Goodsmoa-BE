@@ -15,17 +15,13 @@ public class PostResponse {
 
     private String title;
 
-    private Boolean type;
-
-    private String content;
-
     private String thumbnailImage;
 
-    private Integer requestLimited;
+    private String userName;
 
-    private Integer minimumPrice;
+    private String userImage;
 
-    private Integer maximumPrice;
+    private Long views;
 
     private String hashtag;
 

@@ -76,8 +76,6 @@ public class ProductService {
         ProductPostEntity entity = productPostConverter.createToEntity(request, user, category);
         ProductPostEntity saveEntity = productPostRepository.save(entity);
 
-        Long postId = saveEntity.getId();
-
         // 썸네일 이미지 저장
         String thumbnailPath = s3Uploader.upload(thumbnailImage);
 //        String thumbnailPath = fileUploadService.uploadSingleImage(thumbnailImage, "productPost/thumbnail", postId);

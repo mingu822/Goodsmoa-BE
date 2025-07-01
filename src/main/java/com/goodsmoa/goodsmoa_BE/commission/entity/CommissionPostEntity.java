@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.commission.entity;
 
+import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.PostRequest;
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,6 +24,7 @@ public class CommissionPostEntity {
     @Column(nullable = false, length = 200)
     private String title;
 
+    @Setter
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String content;
 
@@ -38,17 +40,18 @@ public class CommissionPostEntity {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Setter
     @Column(name = "thumbnail_image", nullable = false, length = 200)
     private String thumbnailImage;
 
     @Column(nullable = false)
-    private Boolean type; // true: 그림, false: 기타
-
-    @Column(nullable = false)
     private Boolean status; // true: 신청 가능
 
-    @Column(name = "views", nullable = false)
-    private Long views;
+    @Column(name = "like_count")
+    private Long likes = 0L;
+
+    @Column(name = "views")
+    private Long views = 0L;
 
     @Column(length = 150)
     private String hashtag;
@@ -56,6 +59,11 @@ public class CommissionPostEntity {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")  // null 저장 방지
+    private Category category;
+
 
     @OneToMany(mappedBy = "commissionPostEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommissionDetailEntity> details;
@@ -73,7 +81,6 @@ public class CommissionPostEntity {
         if (request.getMinimumPrice() != null) this.minimumPrice = request.getMinimumPrice();
         if (request.getMaximumPrice() != null) this.maximumPrice = request.getMaximumPrice();
         if (request.getHashtag() != null) this.hashtag = request.getHashtag();
-        if (request.getType() != null) this.type = request.getType();
 
         // 상태 업데이트
         this.status = status;

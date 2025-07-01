@@ -1,11 +1,9 @@
 package com.goodsmoa.goodsmoa_BE.commission.converter;
 
+import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailRequest;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailResponse;
-import com.goodsmoa.goodsmoa_BE.commission.dto.post.PostDetailResponse;
-import com.goodsmoa.goodsmoa_BE.commission.dto.post.PostResponse;
-import com.goodsmoa.goodsmoa_BE.commission.dto.post.SavePostRequest;
-import com.goodsmoa.goodsmoa_BE.commission.dto.post.SavePostResponse;
+import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionDetailEntity;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionPostEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
@@ -25,15 +23,18 @@ public class CommissionPostConverter {
      * save DTO -> entity 변경
      * 커미션 상세를 만들기 위해 DB에 임시저장하기 위한 메서드
      */
-    public CommissionPostEntity saveToEntity(SavePostRequest request, UserEntity user) {
+    public CommissionPostEntity saveToEntity(PostRequest request, UserEntity user, Category category) {
         return CommissionPostEntity.builder()
                 .title(request.getTitle())
-                .type(request.getType())
                 .content(request.getContent())
                 .thumbnailImage(request.getThumbnailImage())
+                .requestLimited(request.getRequestLimited())
+                .minimumPrice(request.getMinimumPrice())
+                .maximumPrice(request.getMaximumPrice())
                 .createdAt(LocalDateTime.now())
-                .status(false)
-                .views(0L)
+                .hashtag(request.getHashtag())
+                .category(category)
+                .status(true)
                 .user(user)
                 .build();
     }
@@ -46,7 +47,6 @@ public class CommissionPostConverter {
         return SavePostResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
-                .type(entity.getType())
                 .content(entity.getContent())
                 .thumbnailImage(entity.getThumbnailImage())
                 .build();
@@ -56,11 +56,10 @@ public class CommissionPostConverter {
         return PostResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
-                .type(entity.getType())
-                .content(entity.getContent())
-                .requestLimited(entity.getRequestLimited())
-                .minimumPrice(entity.getMinimumPrice())
-                .maximumPrice(entity.getMaximumPrice())
+                .thumbnailImage(entity.getThumbnailImage())
+                .userName(entity.getUser().getNickname())
+                .userImage(entity.getUser().getImage())
+                .views(entity.getViews())
                 .hashtag(entity.getHashtag())
                 .build();
     }
@@ -69,7 +68,6 @@ public class CommissionPostConverter {
         return PostDetailResponse.builder()
                 .id(increaseEntity.getId())
                 .title(increaseEntity.getTitle())
-                .type(increaseEntity.getType())
                 .content(increaseEntity.getContent())
                 .thumbnailImage(increaseEntity.getThumbnailImage())
                 .requestLimited(increaseEntity.getRequestLimited())

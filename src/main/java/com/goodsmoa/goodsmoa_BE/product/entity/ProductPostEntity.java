@@ -32,6 +32,7 @@ public class ProductPostEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Setter
     @Column(name = "thumbnail_image", nullable = false)
     private String thumbnailImage;
 
@@ -84,10 +85,6 @@ public class ProductPostEntity {
 
         // 카테고리 업데이트
         if (category != null) this.category = category;
-    }
-
-    public void setThumbnailImage(String thumbnailPath) {
-        this.thumbnailImage = thumbnailPath;
     }
 
     public void getViews(Long views) {
