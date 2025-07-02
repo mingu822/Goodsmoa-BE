@@ -22,4 +22,6 @@ public interface DemandOrderRepository extends JpaRepository<DemandOrderEntity, 
     List<DemandOrderEntity> findByDemandPostEntity(DemandPostEntity demandPostEntity);
 
     DemandOrderEntity findByDemandPostEntityAndUser(DemandPostEntity postEntity, UserEntity user);
+
+    void deleteByDemandPostEntityAndUser(DemandPostEntity postEntity, UserEntity user);
 }

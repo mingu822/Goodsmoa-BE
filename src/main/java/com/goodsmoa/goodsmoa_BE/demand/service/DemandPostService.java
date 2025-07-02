@@ -313,6 +313,8 @@ public class DemandPostService {
         List<DemandOrderEntity> list = demandOrderRepository.findByDemandPostEntity(postEntity);
         demandOrderRepository.deleteAll(list);
 
+        // 참여자 있을때 삭제 하게 할지 못하게 할지 나중에 결정
+//        demandOrderRepository.deleteByDemandPostEntityAndUser(postEntity, user);
         demandPostRepository.delete(postEntity);
         searchService.deletePostDocument("DEMAND_"+id);
         deleteAllImagesByPostId(postEntity);

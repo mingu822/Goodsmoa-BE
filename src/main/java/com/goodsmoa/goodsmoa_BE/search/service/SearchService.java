@@ -169,7 +169,35 @@ public class SearchService {
         }
 
         // 3. 카테고리 필터링
-        if (category != null && category != 0) {
+        // 판매,수요조사,중고거래 전체검색 (category=0)
+        if (category == 0) { // 전체 검색
+            if (boardType != Board.COMMISSION) {
+                // 일반 게시판 전체검색 (1~8)
+                boolQuery.filter(Query.of(q -> q
+                        .range(r -> r
+                                .untyped(u -> u
+                                        .field("category")
+                                        .gte(JsonData.of(1))
+                                        .lte(JsonData.of(8))
+                                )
+                        )
+                ));
+
+            } else {
+                // 커미션 전체검색 (10~12)
+                boolQuery.filter(Query.of(q -> q
+                        .range(r -> r
+                                .untyped(u -> u
+                                        .field("category")
+                                        .gte(JsonData.of(9))
+                                        .lte(JsonData.of(11))
+                                )
+                        )
+                ));
+            }
+        }
+        else {
+            // 1게시판 개별 카테고리 (1~8) 또는 2게시판 개별 카테고리 (10~12)
             boolQuery.filter(Query.of(q -> q
                     .term(t -> t.field("category").value(category))
             ));
