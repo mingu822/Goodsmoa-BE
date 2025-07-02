@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.search.controller;
 
+import com.goodsmoa.goodsmoa_BE.demand.service.DemandLikeService;
 import com.goodsmoa.goodsmoa_BE.enums.Board;
 import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
 import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
@@ -22,6 +23,8 @@ import java.util.Optional;
 public class SearchApiController {
 
     private final SearchService searchService;
+    private final DemandLikeService demandLikeService;
+
 
     // 키워드 검색
 //    @GetMapping
@@ -54,7 +57,8 @@ public class SearchApiController {
                     @RequestParam(defaultValue = "ALL", name = "search_type") String searchType,
                     @RequestParam(defaultValue = "TRADE", name = "board_type") String boardType,
                     @RequestParam Optional<String> query,
-                    @RequestParam(defaultValue = "0", name = "page") int page
+                    @RequestParam(defaultValue = "0", name = "page") int page,
+                    @AuthenticationPrincipal UserEntity user
             )
     {
         try {
@@ -70,6 +74,8 @@ public class SearchApiController {
                     page,
                     25
             );
+            if(user!=null && board==Board.DEMAND) demandLikeService.addLikeStatus(user, result.getContent());
+
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             log.warn("존재하지 않는 게시판 타입입니다: {}", boardType);
