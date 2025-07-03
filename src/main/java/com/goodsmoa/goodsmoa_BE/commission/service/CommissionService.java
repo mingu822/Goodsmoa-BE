@@ -212,17 +212,23 @@ public class CommissionService {
 
     // 커미션 글 삭제
     public ResponseEntity<String> deleteCommissionPost(UserEntity user, Long id) {
-        Optional<CommissionPostEntity> oe = commissionRepository.findById(id);
-
-        if(oe.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-
-        CommissionPostEntity entity = oe.get();
+        CommissionPostEntity entity = commissionRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("게시물이 존재하지 않습니다."));
 
         if (!entity.getUser().getId().equals(user.getId())) {
             return ResponseEntity.status(403).build(); // 권한 체크
         }
+
+        // 관련된 디테일 불러오기
+        List<CommissionDetailEntity> detailEntities = commissionDetailRepository.findByCommissionPostEntity(entity);
+
+        // for 문으로 디테일 삭제
+        for(CommissionDetailEntity detailEntity : detailEntities){
+            commissionDetailRepository.deleteById(detailEntity.getId());
+        }
+
+        searchService.deletePostDocument("COMMISION_"+id);
+
+        // 커미션 글 삭제
         commissionRepository.delete(entity);
 
         return ResponseEntity.ok("삭제가 완료되었습니다.");

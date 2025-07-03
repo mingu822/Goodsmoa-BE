@@ -98,5 +98,4 @@ public class CommissionController {
     public ResponseEntity<String> deleteCommissionPost(@AuthenticationPrincipal UserEntity user, @PathVariable Long id){
         return service.deleteCommissionPost(user,id);
     }
-
 }

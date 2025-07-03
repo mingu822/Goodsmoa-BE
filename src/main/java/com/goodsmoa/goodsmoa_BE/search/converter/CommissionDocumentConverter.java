@@ -18,6 +18,7 @@ public class CommissionDocumentConverter implements DocumentConverter<Commission
                 .id(Board.COMMISSION.name()+"_"+entity.getId())
                 .userId(entity.getUser().getId())
                 .thumbnailUrl(entity.getThumbnailImage())
+                .categoryId(entity.getCategory().getId())
                 .views(entity.getViews())
                 .title(entity.getTitle())
                 .description(entity.getContent())
