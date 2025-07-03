@@ -18,7 +18,7 @@ public class PostDetailResponse {
 
     private String title;
 
-    private Boolean type;
+    private String categoryName;
 
     private String content;
 

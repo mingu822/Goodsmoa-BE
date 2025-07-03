@@ -47,6 +47,7 @@ public class CommissionPostEntity {
     @Column(nullable = false)
     private Boolean status; // true: 신청 가능
 
+    @Setter
     @Column(name = "like_count")
     private Long likes = 0L;
 
@@ -68,15 +69,11 @@ public class CommissionPostEntity {
     @OneToMany(mappedBy = "commissionPostEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommissionDetailEntity> details;
 
-    public void increaseViews() {
-        this.views += 1;
-    }
+    public void increaseViews(Long views) {this.views += views;}
 
     public void updateFromRequest(PostRequest request, boolean status) {
         if (request.getId() != null) this.id = request.getId();
         if (request.getTitle() != null) this.title = request.getTitle();
-        if (request.getContent() != null) this.content = request.getContent();
-        if (request.getThumbnailImage() != null) this.thumbnailImage = request.getThumbnailImage();
         if (request.getRequestLimited() != null) this.requestLimited = request.getRequestLimited();
         if (request.getMinimumPrice() != null) this.minimumPrice = request.getMinimumPrice();
         if (request.getMaximumPrice() != null) this.maximumPrice = request.getMaximumPrice();

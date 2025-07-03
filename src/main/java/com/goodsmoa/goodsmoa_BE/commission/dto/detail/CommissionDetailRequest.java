@@ -13,6 +13,8 @@ public class CommissionDetailRequest {
 
     private Long commissionId;
 
+    private Long id;
+
     private String title;
 
     private String reqContent;

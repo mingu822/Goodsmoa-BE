@@ -35,6 +35,8 @@ public class CommissionPostConverter {
                 .hashtag(request.getHashtag())
                 .category(category)
                 .status(true)
+                .views(0L)
+                .likes(0L)
                 .user(user)
                 .build();
     }
@@ -69,6 +71,7 @@ public class CommissionPostConverter {
                 .id(increaseEntity.getId())
                 .title(increaseEntity.getTitle())
                 .content(increaseEntity.getContent())
+                .categoryName(increaseEntity.getCategory().getName())
                 .thumbnailImage(increaseEntity.getThumbnailImage())
                 .requestLimited(increaseEntity.getRequestLimited())
                 .minimumPrice(increaseEntity.getMinimumPrice())

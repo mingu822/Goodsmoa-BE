@@ -19,9 +19,11 @@ public class CommissionDetailEntity {
     @JoinColumn(name = "commission_id", nullable = false)
     private CommissionPostEntity commissionPostEntity;
 
+    @Setter
     @Column(nullable = false, length = 200)
     private String title;
 
+    @Setter
     @Column(name = "req_content", nullable = false, length = 200)
     private String reqContent;
 

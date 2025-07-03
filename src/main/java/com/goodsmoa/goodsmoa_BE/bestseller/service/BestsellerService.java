@@ -28,6 +28,7 @@ public class BestsellerService {
             case "demand" -> Board.DEMAND;
             case "product" -> Board.PRODUCT;
             case "trade" -> Board.TRADE;
+            case "commission" -> Board.COMMISSION;
             default -> throw new IllegalArgumentException("Invalid type: " + type);
         };
 
