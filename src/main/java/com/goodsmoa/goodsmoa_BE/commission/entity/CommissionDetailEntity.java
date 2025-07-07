@@ -26,7 +26,4 @@ public class CommissionDetailEntity {
     @Setter
     @Column(name = "req_content", nullable = false, length = 200)
     private String reqContent;
-
-    @Column(name = "res_content", columnDefinition = "LONGTEXT")
-    private String resContent;
 }

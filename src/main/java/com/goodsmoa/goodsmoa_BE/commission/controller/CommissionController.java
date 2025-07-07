@@ -1,5 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.commission.controller;
 
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionRequest;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
 import com.goodsmoa.goodsmoa_BE.commission.service.CommissionService;
 import com.goodsmoa.goodsmoa_BE.enums.Board;
@@ -98,4 +99,25 @@ public class CommissionController {
     public ResponseEntity<String> deleteCommissionPost(@AuthenticationPrincipal UserEntity user, @PathVariable Long id){
         return service.deleteCommissionPost(user,id);
     }
+
+    // 커미션 신청
+    // todo 신청 후에 어디로 넘어갈지 결정하고 필요한 값 넘기기
+    @PostMapping("/subscription")
+    public ResponseEntity<String> subscriptionCommissionPost(
+            @AuthenticationPrincipal UserEntity user,
+            @RequestPart("subscriptionRequest") List<SubscriptionRequest> request,
+            @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages) throws IOException {
+        return service.subscriptionCommissionPost(user, request, contentImages);
+    }
+
+    // 커미션 신청 수정
+    // todo 신청 후에 어디로 넘어갈지 결정하고 필요한 값 넘기기
+    @PutMapping("/subscription")
+    public ResponseEntity<String> subscriptionUpdate (
+            @AuthenticationPrincipal UserEntity user,
+            @RequestPart("subscriptionRequest") List<SubscriptionRequest> request,
+            @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages) throws IOException {
+        return service.subscriptionCommissionPost(user, request, contentImages);
+    }
+
 }

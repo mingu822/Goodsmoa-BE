@@ -6,6 +6,7 @@ import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionDetailEntity;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionPostEntity;
+import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionSubscriptionEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,10 +20,7 @@ public class CommissionPostConverter {
 
     private final CommissionDetailConverter commissionDetailConverter;
 
-    /**
-     * save DTO -> entity 변경
-     * 커미션 상세를 만들기 위해 DB에 임시저장하기 위한 메서드
-     */
+    // 커미션 생성을 위한 변환
     public CommissionPostEntity saveToEntity(PostRequest request, UserEntity user, Category category) {
         return CommissionPostEntity.builder()
                 .title(request.getTitle())
@@ -38,19 +36,6 @@ public class CommissionPostConverter {
                 .views(0L)
                 .likes(0L)
                 .user(user)
-                .build();
-    }
-
-    /**
-     * save DTO -> entity 변경
-     * 저장한 임시정보를 불러오기 위해 사용
-     */
-    public SavePostResponse saveToResponse(CommissionPostEntity entity){
-        return SavePostResponse.builder()
-                .id(entity.getId())
-                .title(entity.getTitle())
-                .content(entity.getContent())
-                .thumbnailImage(entity.getThumbnailImage())
                 .build();
     }
 
@@ -79,6 +64,16 @@ public class CommissionPostConverter {
                 .hashtag(increaseEntity.getHashtag())
                 .views(increaseEntity.getViews())
                 .commissionDetail(detailEntities.stream().map(commissionDetailConverter::detailToResponse).toList())
+                .build();
+    }
+
+    // 신청을 위한 변환
+    public CommissionSubscriptionEntity saveToSubscriptionEntity(UserEntity user, CommissionPostEntity postEntity) {
+        return CommissionSubscriptionEntity.builder()
+                .commissionId(postEntity)
+                .userId(user)
+                .requestStatus(CommissionSubscriptionEntity.RequestStatus.확인중)
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 }

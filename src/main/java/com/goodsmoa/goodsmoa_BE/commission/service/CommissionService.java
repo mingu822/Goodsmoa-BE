@@ -5,13 +5,18 @@ import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 import com.goodsmoa.goodsmoa_BE.commission.converter.CommissionDetailConverter;
 import com.goodsmoa.goodsmoa_BE.commission.converter.CommissionPostConverter;
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionRequest;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailRequest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionDetailEntity;
+import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionDetailResponseEntity;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionPostEntity;
+import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionSubscriptionEntity;
 import com.goodsmoa.goodsmoa_BE.commission.repository.CommissionDetailRepository;
+import com.goodsmoa.goodsmoa_BE.commission.repository.CommissionDetailResponseRepository;
 import com.goodsmoa.goodsmoa_BE.commission.repository.CommissionRepository;
+import com.goodsmoa.goodsmoa_BE.commission.repository.CommissionSubscriptionRepository;
 import com.goodsmoa.goodsmoa_BE.config.S3Uploader;
 import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
@@ -22,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,11 +43,16 @@ import java.util.regex.Pattern;
 public class CommissionService {
 
     private final CommissionDetailConverter commissionDetailConverter;
+
     private final CommissionRepository commissionRepository;
 
     private final CommissionDetailRepository commissionDetailRepository;
 
     private final CommissionPostConverter commissionPostConverter;
+
+    private final CommissionSubscriptionRepository commissionSubscriptionRepository;
+
+    private final CommissionDetailResponseRepository commissionDetailResponseRepository;
 
     private final CategoryRepository categoryRepository;
 
@@ -255,6 +264,7 @@ public class CommissionService {
         return ResponseEntity.ok(response);
     }
 
+    // 판매자가 올린 커미션 글 리스트로 가져오기
     public ResponseEntity<Page<PostResponse>> findUserCommissionPosts(UserEntity user, Pageable pageable) {
         Page<CommissionPostEntity> postPage = commissionRepository.findAllByUser(user, pageable);
 
@@ -262,5 +272,50 @@ public class CommissionService {
         // 이제 두 인자를 모두 준비했으니 변환 메소드를 호출할 수 있어
         Page<PostResponse> responsePage = postPage.map(commissionPostConverter::toResponse);
         return ResponseEntity.ok(responsePage);
+    }
+
+    // 커미션 신청
+    public ResponseEntity<String> subscriptionCommissionPost(UserEntity user, List<SubscriptionRequest> request, List<MultipartFile> contentImages) throws IOException {
+
+        // 1. 커미션 신청 저장
+        Long commissionId = request.get(0).getCommissionId();
+
+        CommissionPostEntity postEntity = commissionRepository.findById(commissionId).orElse(null);
+
+        CommissionSubscriptionEntity subscriptionEntity = commissionPostConverter.saveToSubscriptionEntity(user,postEntity);
+
+        commissionSubscriptionRepository.save(subscriptionEntity);
+
+        // 2. 커미션 상세 신청 저장
+        List<String> contentImagePaths = new ArrayList<>();
+        if (contentImages != null && !contentImages.isEmpty()) {
+            for (MultipartFile file : contentImages) {
+                String path = s3Uploader.upload(file);
+                contentImagePaths.add(path);
+            }
+        }
+        int globalImageIndex = 0;
+        for (SubscriptionRequest req : request) {
+            CommissionDetailEntity detailEntity = commissionDetailRepository.findById(req.getDetailId()).orElse(null);
+
+            CommissionDetailResponseEntity detailResponseEntity = commissionDetailConverter.detailResponseToEntity(user, detailEntity);
+
+            String originalContent = req.getResContent();
+            Pattern pattern = Pattern.compile("src=[\"'](.*?)[\"']");
+            Matcher matcher = pattern.matcher(originalContent);
+
+            StringBuffer result = new StringBuffer();
+
+            while (matcher.find() && globalImageIndex < contentImagePaths.size()) {
+                String newPath = "src='" + contentImagePaths.get(globalImageIndex++) + "'";
+                matcher.appendReplacement(result, newPath);
+            }
+            matcher.appendTail(result);
+
+            detailResponseEntity.setResContent(result.toString());
+            commissionDetailResponseRepository.save(detailResponseEntity);
+        }
+
+        return ResponseEntity.ok("저장 완료");
     }
 }

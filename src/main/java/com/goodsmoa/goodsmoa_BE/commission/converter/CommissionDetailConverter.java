@@ -4,7 +4,9 @@ import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailRequest;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.PostDetailResponse;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionDetailEntity;
+import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionDetailResponseEntity;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionPostEntity;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -25,15 +27,19 @@ public class CommissionDetailConverter {
                 .reqContent(request.getReqContent())
                 .build();
     }
-    /**
-     *  entity -> DTO 변환
-     *  추가하고 난 뒤 커미션 글에서 보여주기 위한 메서드
-     */
+
     public CommissionDetailResponse detailToResponse(CommissionDetailEntity saveEntity) {
         return CommissionDetailResponse.builder()
                 .id(saveEntity.getId())
                 .title(saveEntity.getTitle())
                 .reqContent(saveEntity.getReqContent())
+                .build();
+    }
+
+    public CommissionDetailResponseEntity detailResponseToEntity(UserEntity user, CommissionDetailEntity entity) {
+        return CommissionDetailResponseEntity.builder()
+                .user(user)
+                .commissionDetailEntity(entity)
                 .build();
     }
 }

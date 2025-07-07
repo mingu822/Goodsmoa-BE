@@ -4,13 +4,15 @@ import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "commission_response")
+@Table(name = "commission_subscription")
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CommissionResponseEntity {
+public class CommissionSubscriptionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,6 +29,9 @@ public class CommissionResponseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "request_status")
     private RequestStatus requestStatus;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
     public enum RequestStatus{
         확인중, 진행중, 완료, 거절
