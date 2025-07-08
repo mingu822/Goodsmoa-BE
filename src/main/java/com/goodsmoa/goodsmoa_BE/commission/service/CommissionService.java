@@ -31,9 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -153,31 +151,47 @@ public class CommissionService {
             entity.setThumbnailImage(thumbnailPath);
         }
 
-        // 새로운 상세 내용 이미지가 있을 경우
-        if(newContentImage != null && !newContentImage.isEmpty()) {
-            List<String> newContentPaths = new ArrayList<>();
-            for(MultipartFile image : newContentImage) {
-                String uploadPath = s3Uploader.upload(image);
-                newContentPaths.add(uploadPath);
+        // 1. 요청에 content가 있을 경우에만 수정
+        if (request.getContent() != null) {
+            // 1-1. 기존 HTML에서 S3 이미지 URL 추출
+            Set<String> oldImageUrls = extractImageUrls(entity.getContent());
+
+            // 1-2. 새로 업로드할 이미지가 있을 경우 S3에 업로드
+            List<String> newlyUploadedUrls = new ArrayList<>();
+            if (newContentImage != null && !newContentImage.isEmpty()) {
+                for (MultipartFile image : newContentImage) {
+                    String uploadPath = s3Uploader.upload(image);
+                    newlyUploadedUrls.add(uploadPath);
+                }
             }
 
+            // 1-3. 요청받은 HTML에서 src placeholder를 S3 URL로 교체
             String newContent = request.getContent();
-
             Pattern pattern = Pattern.compile("src=[\"'](.*?)[\"']");
             Matcher matcher = pattern.matcher(newContent);
+            StringBuffer finalContent = new StringBuffer();
+            int imageIndex = 0;
 
-            int i = 0;
-            StringBuilder result = new StringBuilder();
-
-            while (matcher.find() && i < newContentPaths.size()) {
-                String newPath = "src='" + newContentPaths.get(i++) + "'";
-                matcher.appendReplacement(result, newPath);
+            while (matcher.find()) {
+                String src = matcher.group(1);
+                // 새로 업로드된 이미지가 있고, 현재 src가 http로 시작하지 않으면 새 URL로 교체
+                if (!src.startsWith("http") && imageIndex < newlyUploadedUrls.size()) {
+                    String newPath = "src=\"" + newlyUploadedUrls.get(imageIndex++) + "\"";
+                    matcher.appendReplacement(finalContent, Matcher.quoteReplacement(newPath));
+                }
             }
-            matcher.appendTail(result);
+            matcher.appendTail(finalContent);
 
-            entity.setContent(result.toString());
+            // 1-4. 최종 HTML의 이미지 URL 추출 후 삭제해야 할 이미지 제거
+            Set<String> finalImageUrls = extractImageUrls(finalContent.toString());
+            oldImageUrls.removeAll(finalImageUrls);
+            oldImageUrls.forEach(s3Uploader::delete);
+
+            // 1-5. 완성된 HTML 저장
+            entity.setContent(finalContent.toString());
             commissionRepository.save(entity);
-        }else{
+
+        } else{
             entity.setContent(request.getContent());
             commissionRepository.save(entity);
         }
@@ -317,5 +331,18 @@ public class CommissionService {
         }
 
         return ResponseEntity.ok("저장 완료");
+    }
+
+    private Set<String> extractImageUrls(String htmlContent) {
+        if (htmlContent == null || htmlContent.isEmpty()) {
+            return new HashSet<>();
+        }
+        Set<String> imageUrls = new HashSet<>();
+        Pattern pattern = Pattern.compile("src=[\"'](https?://[^\"']+)[\"']");
+        Matcher matcher = pattern.matcher(htmlContent);
+        while (matcher.find()) {
+            imageUrls.add(matcher.group(1));
+        }
+        return imageUrls;
     }
 }

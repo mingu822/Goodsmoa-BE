@@ -25,7 +25,7 @@ public class ProductLikeService {
     private final ProductLikeConverter productLikeConverter;
     private final ProductRedisService productRedisService;
 
-
+    // 찜 추가
     @Transactional
     public ResponseEntity<ProductLikeResponse> likeProduct(UserEntity user, Long id) {
         ProductPostEntity entity = productPostRepository.findById(id)
@@ -45,7 +45,7 @@ public class ProductLikeService {
         return ResponseEntity.ok(response);
     }
 
-
+    // 찜 취소
     @Transactional
     public ResponseEntity<Void> unlikeProduct(UserEntity user, Long id) {
         ProductPostEntity entity = productPostRepository.findById(id)
@@ -61,6 +61,7 @@ public class ProductLikeService {
         return ResponseEntity.ok().build();
     }
 
+    // 찜 리스트로 가져오기
     public ResponseEntity<Page<ProductLikeResponse>> getPagedLiked(UserEntity user, Pageable pageable) {
         Page<ProductLikeEntity> likePage = productLikeRepository.findByUser(user, pageable);
 
@@ -68,6 +69,7 @@ public class ProductLikeService {
         return ResponseEntity.ok(responses);
     }
 
+    // 한 개의 찜 정보 가져오기
     public ProductLikeResponse getSingleLiked(UserEntity user, Long id) {
         ProductPostEntity entity = productPostRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 거래글이 존재하지 않습니다."));

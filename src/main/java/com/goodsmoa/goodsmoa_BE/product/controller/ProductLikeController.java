@@ -2,7 +2,6 @@ package com.goodsmoa.goodsmoa_BE.product.controller;
 
 import com.goodsmoa.goodsmoa_BE.product.dto.like.ProductLikeResponse;
 import com.goodsmoa.goodsmoa_BE.product.service.ProductLikeService;
-import com.goodsmoa.goodsmoa_BE.trade.DTO.Like.TradeLikeResponse;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -47,6 +46,7 @@ public class ProductLikeController {
         return productLikeService.getPagedLiked(user, pageable);
     }
 
+    // 글 하나에 내가 좋아요 한건지 체크
     @GetMapping("/my-likes/{id}")
     public ResponseEntity<ProductLikeResponse> getSingleLikedTrade(
             @AuthenticationPrincipal UserEntity user,
