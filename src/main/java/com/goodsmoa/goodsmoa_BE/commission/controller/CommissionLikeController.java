@@ -21,13 +21,15 @@ public class CommissionLikeController {
 
     // 찜 추가
     @PostMapping("/{id}")
-    public ResponseEntity<Void> commissionLike(@AuthenticationPrincipal UserEntity user, Long id){
+    public ResponseEntity<Void> commissionLike(@AuthenticationPrincipal UserEntity user,
+                                               @PathVariable Long id){
         return commissionLikeService.like(user, id);
     }
 
     // 찜 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCommissionLike(@AuthenticationPrincipal UserEntity user, Long id){
+    public ResponseEntity<Void> deleteCommissionLike(@AuthenticationPrincipal UserEntity user,
+                                                     @PathVariable Long id){
         return commissionLikeService.unLike(user,id);
     }
 

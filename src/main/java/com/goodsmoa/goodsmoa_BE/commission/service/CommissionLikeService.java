@@ -6,17 +6,19 @@ import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionLikeEntity;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionPostEntity;
 import com.goodsmoa.goodsmoa_BE.commission.repository.CommissionLikeRepository;
 import com.goodsmoa.goodsmoa_BE.commission.repository.CommissionRepository;
-import com.goodsmoa.goodsmoa_BE.product.dto.like.ProductLikeResponse;
-import com.goodsmoa.goodsmoa_BE.product.entity.ProductLikeEntity;
-import com.goodsmoa.goodsmoa_BE.product.entity.ProductPostEntity;
+import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.*;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CommissionLikeService {
@@ -76,5 +78,37 @@ public class CommissionLikeService {
         CommissionLikeResponse res = commissionLikeConverter.toResponse(like);
 
         return ResponseEntity.ok(res);
+    }
+
+    public void addLikeStatus(UserEntity user, List<SearchDocWithUserResponse> content) {
+        // 1. 응답에서 숫자 ID 추출 (예: "DEMAND_16" → 16)
+        List<Long> numericPostIds = new ArrayList<>();
+        Map<Long, SearchDocWithUserResponse> idToResponseMap = new HashMap<>();
+
+        for (SearchDocWithUserResponse res : content) {
+            try {
+                // ID 형식: "BOARD_ID"
+                String[] parts = res.getId().split("_");
+                if (parts.length >= 2) {
+                    Long numericId = Long.parseLong(parts[1]);
+                    numericPostIds.add(numericId);
+                    idToResponseMap.put(numericId, res);
+                }
+            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                log.warn("Invalid ID format: {}", res.getId());
+            }
+        }
+
+        // 2. 숫자 ID로 좋아요 여부 일괄 조회
+        if (!numericPostIds.isEmpty()) {
+            Set<Long> likedNumericIds = commissionLikeRepository.findLikedIdsByUserIdAndCommissionId(
+                    user.getId(), numericPostIds
+            );
+
+            // 3. 응답 객체에 좋아요 여부 매핑
+            idToResponseMap.forEach((numericId, response) -> {
+                response.setLiked(likedNumericIds.contains(numericId));
+            });
+        }
     }
 }

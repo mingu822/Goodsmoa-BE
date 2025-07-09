@@ -2,6 +2,7 @@ package com.goodsmoa.goodsmoa_BE.commission.controller;
 
 import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionRequest;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
+import com.goodsmoa.goodsmoa_BE.commission.service.CommissionLikeService;
 import com.goodsmoa.goodsmoa_BE.commission.service.CommissionService;
 import com.goodsmoa.goodsmoa_BE.enums.Board;
 import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
@@ -29,6 +30,7 @@ public class CommissionController {
 
     private final CommissionService service;
     private final SearchService searchService;
+    private final CommissionLikeService commissionLikeService;
 
     // 커미션 생성
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -62,22 +64,25 @@ public class CommissionController {
             @RequestParam(required = false, defaultValue = "false", name = "include_expired")  boolean includeExpired,
             @RequestParam(required = false, defaultValue = "false", name = "include_scheduled")  boolean includeScheduled,
             @RequestParam(defaultValue = "0", name = "page") int page,
-            @RequestParam(defaultValue = "0", name = "page_size") int pageSize
+            @RequestParam(defaultValue = "0", name = "page_size") int pageSize,
+            @AuthenticationPrincipal UserEntity user
     )
     {
-        return ResponseEntity.ok(
-                searchService.detailedSearch(
-                        searchType,
-                        query.orElse(null),
-                        Board.COMMISSION,
-                        category.orElse(0),
-                        orderBy,
-                        includeExpired,
-                        includeScheduled,
-                        page,
-                        pageSize
-                )
+        Page<SearchDocWithUserResponse> result =searchService.detailedSearch(
+                searchType,
+                query.orElse(null),
+                Board.COMMISSION,
+                category.orElse(0),
+                orderBy,
+                includeExpired,
+                includeScheduled,
+                page,
+                pageSize
         );
+
+        if(user != null) commissionLikeService.addLikeStatus(user, result.getContent());
+
+        return ResponseEntity.ok(result);
     }
 
     // 커미션 상세 조회
@@ -119,5 +124,7 @@ public class CommissionController {
             @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages) throws IOException {
         return service.subscriptionCommissionPost(user, request, contentImages);
     }
+
+
 
 }

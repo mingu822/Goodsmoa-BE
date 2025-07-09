@@ -34,6 +34,8 @@ public class PostDetailResponse {
 
     private Long views;
 
+    private String userId;
+
     List<CommissionDetailResponse> commissionDetail;
 
 }

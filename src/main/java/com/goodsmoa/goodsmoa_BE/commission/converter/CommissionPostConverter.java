@@ -56,6 +56,7 @@ public class CommissionPostConverter {
                 .id(increaseEntity.getId())
                 .title(increaseEntity.getTitle())
                 .content(increaseEntity.getContent())
+                .userId(increaseEntity.getUser().getId())
                 .categoryName(increaseEntity.getCategory().getName())
                 .thumbnailImage(increaseEntity.getThumbnailImage())
                 .requestLimited(increaseEntity.getRequestLimited())
