@@ -1,6 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.commission.converter;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailRequest;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
@@ -75,6 +76,19 @@ public class CommissionPostConverter {
                 .userId(user)
                 .requestStatus(CommissionSubscriptionEntity.RequestStatus.확인중)
                 .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    // 신청완료 후 response 값
+    public SubscriptionResponse subscriptionResponse(CommissionPostEntity postEntity,List<CommissionDetailEntity> detailEntities,List<String> resContent) {
+        return SubscriptionResponse.builder()
+                .title(postEntity.getTitle())
+                .categoryName(postEntity.getCategory().getName())
+                .thumbnailImage(postEntity.getThumbnailImage())
+                .minimumPrice(postEntity.getMinimumPrice())
+                .maximumPrice(postEntity.getMaximumPrice())
+                .commissionDetail(detailEntities.stream().map(commissionDetailConverter::detailToResponse).toList())
+                .resContent(resContent)
                 .build();
     }
 }

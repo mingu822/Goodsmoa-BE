@@ -1,6 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.commission.controller;
 
 import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionRequest;
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
 import com.goodsmoa.goodsmoa_BE.commission.service.CommissionLikeService;
 import com.goodsmoa.goodsmoa_BE.commission.service.CommissionService;
@@ -9,6 +10,7 @@ import com.goodsmoa.goodsmoa_BE.search.dto.SearchDocWithUserResponse;
 import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,6 +25,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/commission")
@@ -108,7 +111,7 @@ public class CommissionController {
     // 커미션 신청
     // todo 신청 후에 어디로 넘어갈지 결정하고 필요한 값 넘기기
     @PostMapping("/subscription")
-    public ResponseEntity<String> subscriptionCommissionPost(
+    public ResponseEntity<SubscriptionResponse> subscriptionCommissionPost(
             @AuthenticationPrincipal UserEntity user,
             @RequestPart("subscriptionRequest") List<SubscriptionRequest> request,
             @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages) throws IOException {
@@ -118,7 +121,7 @@ public class CommissionController {
     // 커미션 신청 수정
     // todo 신청 후에 어디로 넘어갈지 결정하고 필요한 값 넘기기
     @PutMapping("/subscription")
-    public ResponseEntity<String> subscriptionUpdate (
+    public ResponseEntity<SubscriptionResponse> subscriptionUpdate (
             @AuthenticationPrincipal UserEntity user,
             @RequestPart("subscriptionRequest") List<SubscriptionRequest> request,
             @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages) throws IOException {

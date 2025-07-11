@@ -6,6 +6,7 @@ import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 import com.goodsmoa.goodsmoa_BE.commission.converter.CommissionDetailConverter;
 import com.goodsmoa.goodsmoa_BE.commission.converter.CommissionPostConverter;
 import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionRequest;
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailRequest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
@@ -289,12 +290,12 @@ public class CommissionService {
     }
 
     // 커미션 신청
-    public ResponseEntity<String> subscriptionCommissionPost(UserEntity user, List<SubscriptionRequest> request, List<MultipartFile> contentImages) throws IOException {
+    public ResponseEntity<SubscriptionResponse> subscriptionCommissionPost(UserEntity user, List<SubscriptionRequest> request, List<MultipartFile> contentImages) throws IOException {
 
         // 1. 커미션 신청 저장
         Long commissionId = request.get(0).getCommissionId();
 
-        CommissionPostEntity postEntity = commissionRepository.findById(commissionId).orElse(null);
+        CommissionPostEntity postEntity = commissionRepository.findById(commissionId).orElseThrow(() -> new EntityNotFoundException("게시물이 존재하지 않습니다."));
 
         CommissionSubscriptionEntity subscriptionEntity = commissionPostConverter.saveToSubscriptionEntity(user,postEntity);
 
@@ -302,6 +303,7 @@ public class CommissionService {
 
         // 2. 커미션 상세 신청 저장
         List<String> contentImagePaths = new ArrayList<>();
+        List<String> resContent = new ArrayList<>();
         if (contentImages != null && !contentImages.isEmpty()) {
             for (MultipartFile file : contentImages) {
                 String path = s3Uploader.upload(file);
@@ -327,10 +329,15 @@ public class CommissionService {
             matcher.appendTail(result);
 
             detailResponseEntity.setResContent(result.toString());
+            resContent.add(result.toString());
             commissionDetailResponseRepository.save(detailResponseEntity);
         }
 
-        return ResponseEntity.ok("저장 완료");
+        List<CommissionDetailEntity> detailEntities = commissionDetailRepository.findByCommissionPostEntity(postEntity);
+
+        SubscriptionResponse response = commissionPostConverter.subscriptionResponse(postEntity,detailEntities,resContent);
+
+        return ResponseEntity.ok(response);
     }
 
     private Set<String> extractImageUrls(String htmlContent) {
