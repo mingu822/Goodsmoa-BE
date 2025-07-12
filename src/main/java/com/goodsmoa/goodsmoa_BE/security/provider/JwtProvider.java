@@ -45,9 +45,9 @@ public class JwtProvider {
     }
 
 
-    //엑세스토큰 300분 설정 (개발용)
+    //엑세스토큰 30분 설정
     public String createAccessToken(UserEntity user) {
-        int exp = 1000 * 60 * 300;
+        int exp =  60 * 300;
 
         SecretKey shaKey = getShaKey();
 

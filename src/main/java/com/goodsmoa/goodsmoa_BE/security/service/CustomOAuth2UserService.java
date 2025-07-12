@@ -166,9 +166,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
 
 
-        //  쿠키로 전달
-
-        //  AccessToken → 30분짜리
+        // 쿠키로 전달
+        // 처음 로그인 시 쿠키의 지속 시간 설정
+        // AccessToken → 30분짜리
         response.addHeader("Set-Cookie",
                 "accessToken=" + accessToken + "; " +
                         "HttpOnly; " +

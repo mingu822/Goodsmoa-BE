@@ -2,6 +2,7 @@ package com.goodsmoa.goodsmoa_BE.config;
 
 import java.util.Arrays;
 
+import com.goodsmoa.goodsmoa_BE.user.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +42,9 @@ public class SecurityConfig {
 
     @Autowired
     private JwtProvider jwtProvider;
+
+    @Autowired
+    private UserService userService;
 
     // AuthenticationManager를 빈으로 등록
     @Bean
@@ -106,7 +110,7 @@ public class SecurityConfig {
 
         // JWT 필터 한 번만 등록 (중복 제거)
         http.addFilterBefore(
-                new JwtRequestFilter(authenticationManager(http), jwtProvider),
+                new JwtRequestFilter(authenticationManager(http), jwtProvider,userService),
                 UsernamePasswordAuthenticationFilter.class);
 
         // OAuth2 로그인 설정

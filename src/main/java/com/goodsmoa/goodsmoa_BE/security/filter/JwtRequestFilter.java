@@ -1,8 +1,11 @@
 package com.goodsmoa.goodsmoa_BE.security.filter;
 
 import com.goodsmoa.goodsmoa_BE.security.provider.JwtProvider;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import com.goodsmoa.goodsmoa_BE.user.Service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -10,29 +13,26 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
-import com.goodsmoa.goodsmoa_BE.security.constrants.SecurityConstants;
 
 import java.io.IOException;
+
 @Slf4j
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
+    private final UserService userService;
 
-    public JwtRequestFilter(AuthenticationManager authenticationManager, JwtProvider jwtProvider) {
+    public JwtRequestFilter(AuthenticationManager authenticationManager, JwtProvider jwtProvider, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtProvider = jwtProvider;
+        this.userService = userService;
     }
 
-
-
-
-
-    //  쿠키에서 accessToken 꺼내는 함수
-    private String getTokenFromCookie(HttpServletRequest request) {
+    private String getTokenFromCookie(HttpServletRequest request, String tokenName) {
         if (request.getCookies() != null) {
-            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
-                if ("accessToken".equals(cookie.getName())) {
+            for (Cookie cookie : request.getCookies()) {
+                if (tokenName.equals(cookie.getName())) {
                     return cookie.getValue();
                 }
             }
@@ -40,70 +40,50 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         return null;
     }
 
-
-
-
-
-
+    private void addAccessTokenToCookie(HttpServletResponse response, String accessToken) {
+        Cookie cookie = new Cookie("accessToken", accessToken);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(60 * 30); // 30분 유효
+        response.addCookie(cookie);
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-
-
-
-
-
-
-
-
-
-        // 1. JWT 추출
-        // 1. 쿠키에서 accessToken 꺼내기
-        String jwt = getTokenFromCookie(request);
+        String jwt = getTokenFromCookie(request, "accessToken");
         log.info("🍪 쿠키에서 꺼낸 accessToken: {}", jwt);
 
+        if (jwt != null && !jwt.isEmpty() && jwtProvider.validateToken(jwt)) {
+            Authentication authentication = jwtProvider.getAuthenticationToken(jwt);
+            if (authentication != null && authentication.isAuthenticated()) {
+                log.info("✅ 유효한 JWT, SecurityContext 설정 완료");
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } else {
+            // 🚩 accessToken이 없거나 만료된 경우 refreshToken 사용하여 자동 재발급
+            String refreshToken = getTokenFromCookie(request, "refreshToken");
+            if (refreshToken != null && jwtProvider.validateToken(refreshToken)) {
+                String userId = jwtProvider.extractUserIdFromRefreshToken(refreshToken);
+                UserEntity user = userService.getUserById(userId);
 
-        // 2. accessToken이 없으면 그냥 다음 필터로
-        if (jwt == null || jwt.isEmpty()) {
+                if (user != null) {
+                    String newAccessToken = jwtProvider.createAccessToken(user);
+                    addAccessTokenToCookie(response, newAccessToken);
+                    log.info("✅ accessToken 자동 재발급 및 쿠키 갱신 완료");
 
-            filterChain.doFilter(request, response);
-            return;
+                    Authentication newAuth = jwtProvider.getAuthenticationToken(newAccessToken);
+                    if (newAuth != null && newAuth.isAuthenticated()) {
+                        SecurityContextHolder.getContext().setAuthentication(newAuth);
+                    }
+                }
+            } else {
+                log.info("❌ refreshToken 없음 또는 만료, 인증 불가");
+                SecurityContextHolder.clearContext();
+            }
         }
 
-
-        // 2. 인증 시도 (jwt 해석해 인증 정보를 담은 객체 반환)
-        // JWT를 이용해 인증 정보를 얻음
-        Authentication authentication = jwtProvider.getAuthenticationToken(jwt);
-
-        if (authentication != null && authentication.isAuthenticated()) {
-            // JWT로 인증이 성공적으로 이루어졌다면, 인증 완료 로그 출력
-            log.info("JWT 를 통한 인증 완료");
-        }
-
-        // 3. JWT 검증
-        // JWT가 유효한지 확인 (만료되었거나 변조되었으면 false 반환)
-        boolean result = jwtProvider.validateToken(jwt);
-
-        if (result) {
-            // 유효한 JWT 토큰이면 인증 완료
-            log.info("유효한 JWT 토큰 입니다.");
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        }
-
-        if (!result) {
-            // 토큰이 유효하지 않거나 만료되었으면 인증 정보를 제거하고 로그아웃 처리
-            log.info("JWT 토큰 만료 또는 변조됨. 인증을 제거하고 로그아웃 처리.(securitycontextholer에서 제거)");
-            SecurityContextHolder.clearContext();
-        }
-
-        // 4. 다음 필터로 진행
-        // JWT가 검증되었거나 인증이 완료되었으면, 요청을 필터 체인의 다음 필터로 넘김
         filterChain.doFilter(request, response);
     }
 }
-
-
