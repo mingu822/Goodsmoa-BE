@@ -1,6 +1,8 @@
 package com.goodsmoa.goodsmoa_BE.commission.converter;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.ReceivedListResponse;
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionListResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailRequest;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailResponse;
@@ -89,6 +91,34 @@ public class CommissionPostConverter {
                 .maximumPrice(postEntity.getMaximumPrice())
                 .commissionDetail(detailEntities.stream().map(commissionDetailConverter::detailToResponse).toList())
                 .resContent(resContent)
+                .build();
+    }
+
+    public SubscriptionListResponse toSubscriptionListResponse(CommissionSubscriptionEntity entity) {
+        return SubscriptionListResponse.builder()
+                .id(entity.getId())
+                .commissionId(entity.getCommissionId().getId())
+                .title(entity.getCommissionId().getTitle())
+                .requestStatus(entity.getRequestStatus().name())
+                .categoryName(entity.getCommissionId().getCategory().getName())
+                .sellerName(entity.getCommissionId().getUser().getNickname())
+                .sellerId(entity.getCommissionId().getUser().getId())
+                .thumbnailImage(entity.getCommissionId().getThumbnailImage())
+                .createdAt(entity.getCreatedAt())
+                .build();
+    }
+
+    public ReceivedListResponse toReceivedListResponse(CommissionSubscriptionEntity entity) {
+        return ReceivedListResponse.builder()
+                .id(entity.getId())
+                .commissionId(entity.getCommissionId().getId())
+                .title(entity.getCommissionId().getTitle())
+                .requestStatus(entity.getRequestStatus().name())
+                .categoryName(entity.getCommissionId().getCategory().getName())
+                .applicantName(entity.getUserId().getNickname())
+                .applicantId(entity.getUserId().getId())
+                .thumbnailImage(entity.getCommissionId().getThumbnailImage())
+                .createdAt(entity.getCreatedAt())
                 .build();
     }
 }

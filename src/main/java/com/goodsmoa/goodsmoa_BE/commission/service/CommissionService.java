@@ -5,6 +5,8 @@ import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 import com.goodsmoa.goodsmoa_BE.commission.converter.CommissionDetailConverter;
 import com.goodsmoa.goodsmoa_BE.commission.converter.CommissionPostConverter;
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.ReceivedListResponse;
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionListResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionRequest;
 import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailRequest;
@@ -351,5 +353,25 @@ public class CommissionService {
             imageUrls.add(matcher.group(1));
         }
         return imageUrls;
+    }
+
+    // 내가 신청한 글 가져오기
+    public ResponseEntity<Page<SubscriptionListResponse>> findSubscriptionPosts(UserEntity user, Pageable pageable) {
+
+        Page<CommissionSubscriptionEntity> entities = commissionSubscriptionRepository.findByUserId(user, pageable);
+
+        Page<SubscriptionListResponse> responses = entities.map(commissionPostConverter::toSubscriptionListResponse);
+
+        return ResponseEntity.ok(responses);
+    }
+
+    // 나한테 요청한 글 가져오기
+    public ResponseEntity<Page<ReceivedListResponse>> findReceivedPosts(UserEntity user, Pageable pageable) {
+
+        Page<CommissionSubscriptionEntity> entities = commissionSubscriptionRepository.findByCommissionId_User(user, pageable);
+
+        Page<ReceivedListResponse> responses = entities.map(commissionPostConverter::toReceivedListResponse);
+
+        return ResponseEntity.ok(responses);
     }
 }

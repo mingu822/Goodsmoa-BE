@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SubscriptionResponse {
+public class SubscriptionResponse { // 신청 완료 후 보여주는 값
 
     private String title;
 

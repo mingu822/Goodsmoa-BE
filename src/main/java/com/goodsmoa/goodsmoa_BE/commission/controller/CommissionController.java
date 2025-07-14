@@ -1,5 +1,7 @@
 package com.goodsmoa.goodsmoa_BE.commission.controller;
 
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.ReceivedListResponse;
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionListResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionRequest;
 import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
@@ -102,6 +104,23 @@ public class CommissionController {
         return service.findUserCommissionPosts(user,pageable);
     }
 
+    // 내가 요청한 커미션 글 가져오기
+    @GetMapping("/subscription-list")
+    public ResponseEntity<Page<SubscriptionListResponse>> findSubscriptionCommissionPosts(
+            @AuthenticationPrincipal UserEntity user,
+            @PageableDefault(size = 16 , sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
+        return service.findSubscriptionPosts(user, pageable);
+    }
+
+    // 나한테 요청한 커미션 글 가져오기
+    @GetMapping("/received-list")
+    public ResponseEntity<Page<ReceivedListResponse>> findReceivedCommissionPosts(
+            @AuthenticationPrincipal UserEntity user,
+            @PageableDefault(size = 16 , sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
+        return service.findReceivedPosts(user, pageable);
+    }
+
+
     //커미션 글 삭제
     @DeleteMapping("/post-delete/{id}")
     public ResponseEntity<String> deleteCommissionPost(@AuthenticationPrincipal UserEntity user, @PathVariable Long id){
@@ -109,7 +128,6 @@ public class CommissionController {
     }
 
     // 커미션 신청
-    // todo 신청 후에 어디로 넘어갈지 결정하고 필요한 값 넘기기
     @PostMapping("/subscription")
     public ResponseEntity<SubscriptionResponse> subscriptionCommissionPost(
             @AuthenticationPrincipal UserEntity user,
@@ -119,7 +137,6 @@ public class CommissionController {
     }
 
     // 커미션 신청 수정
-    // todo 신청 후에 어디로 넘어갈지 결정하고 필요한 값 넘기기
     @PutMapping("/subscription")
     public ResponseEntity<SubscriptionResponse> subscriptionUpdate (
             @AuthenticationPrincipal UserEntity user,
