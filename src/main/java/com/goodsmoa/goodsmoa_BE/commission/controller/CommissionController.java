@@ -120,7 +120,6 @@ public class CommissionController {
         return service.findReceivedPosts(user, pageable);
     }
 
-
     //커미션 글 삭제
     @DeleteMapping("/post-delete/{id}")
     public ResponseEntity<String> deleteCommissionPost(@AuthenticationPrincipal UserEntity user, @PathVariable Long id){
@@ -145,6 +144,13 @@ public class CommissionController {
         return service.subscriptionCommissionPost(user, request, contentImages);
     }
 
-
+    // 신청 상세 확인
+    @GetMapping("/apply-detail/{id}")
+    public ResponseEntity<SubscriptionResponse> applyDetail(
+            @AuthenticationPrincipal UserEntity user,
+            @PathVariable Long id
+    ){
+        return service.applyDetail(user,id);
+    }
 
 }

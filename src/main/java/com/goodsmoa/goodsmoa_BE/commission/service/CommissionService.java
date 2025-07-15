@@ -23,6 +23,7 @@ import com.goodsmoa.goodsmoa_BE.commission.repository.CommissionSubscriptionRepo
 import com.goodsmoa.goodsmoa_BE.config.S3Uploader;
 import com.goodsmoa.goodsmoa_BE.search.service.SearchService;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import com.goodsmoa.goodsmoa_BE.user.Repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +63,8 @@ public class CommissionService {
     private final CommissionRedisService commissionRedisService;
 
     private final SearchService searchService;
+
+    private final UserRepository userRepository;
 
     // 커미션 글 생성
     @Transactional
@@ -373,5 +376,34 @@ public class CommissionService {
         Page<ReceivedListResponse> responses = entities.map(commissionPostConverter::toReceivedListResponse);
 
         return ResponseEntity.ok(responses);
+    }
+
+    // 신청 상세 확인
+    public ResponseEntity<SubscriptionResponse> applyDetail(UserEntity user, Long id) {
+
+        CommissionSubscriptionEntity entity = commissionSubscriptionRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("신청서가 존재하지 않습니다."));
+
+        UserEntity applicantUser = userRepository.findById(entity.getUserId().getId()).orElseThrow(() -> new EntityNotFoundException("신청자가 존재하지 않습니다."));
+
+        if(!user.getId().equals(entity.getCommissionId().getUser().getId())) {
+            throw new UnsupportedOperationException("작성자만 확인할 수 있습니다.");
+        }
+
+        // 3. 커미션 게시글 및 상세 항목 조회
+        CommissionPostEntity postEntity = entity.getCommissionId();
+        List<CommissionDetailEntity> detailEntities = commissionDetailRepository.findByCommissionPostEntity(postEntity);
+
+        // 4. 해당 신청자의 상세 응답(resContent) 모으기
+        List<CommissionDetailResponseEntity> responses =
+                commissionDetailResponseRepository.findByUserAndCommissionDetailEntityIn(applicantUser, detailEntities);
+
+        List<String> resContent = responses.stream()
+                .map(CommissionDetailResponseEntity::getResContent)
+                .toList();
+
+        // 5. 응답 생성
+        SubscriptionResponse response = commissionPostConverter.subscriptionResponse(postEntity, detailEntities, resContent);
+
+        return ResponseEntity.ok(response);
     }
 }
