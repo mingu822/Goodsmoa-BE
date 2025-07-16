@@ -5,10 +5,7 @@ import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.category.Repository.CategoryRepository;
 import com.goodsmoa.goodsmoa_BE.commission.converter.CommissionDetailConverter;
 import com.goodsmoa.goodsmoa_BE.commission.converter.CommissionPostConverter;
-import com.goodsmoa.goodsmoa_BE.commission.dto.apply.ReceivedListResponse;
-import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionListResponse;
-import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionRequest;
-import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionResponse;
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.*;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailRequest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
@@ -340,7 +337,7 @@ public class CommissionService {
 
         List<CommissionDetailEntity> detailEntities = commissionDetailRepository.findByCommissionPostEntity(postEntity);
 
-        SubscriptionResponse response = commissionPostConverter.subscriptionResponse(postEntity,detailEntities,resContent);
+        SubscriptionResponse response = commissionPostConverter.subscriptionResponse(postEntity,detailEntities,resContent,subscriptionEntity);
 
         return ResponseEntity.ok(response);
     }
@@ -385,10 +382,6 @@ public class CommissionService {
 
         UserEntity applicantUser = userRepository.findById(entity.getUserId().getId()).orElseThrow(() -> new EntityNotFoundException("신청자가 존재하지 않습니다."));
 
-        if(!user.getId().equals(entity.getCommissionId().getUser().getId())) {
-            throw new UnsupportedOperationException("작성자만 확인할 수 있습니다.");
-        }
-
         // 3. 커미션 게시글 및 상세 항목 조회
         CommissionPostEntity postEntity = entity.getCommissionId();
         List<CommissionDetailEntity> detailEntities = commissionDetailRepository.findByCommissionPostEntity(postEntity);
@@ -402,8 +395,44 @@ public class CommissionService {
                 .toList();
 
         // 5. 응답 생성
-        SubscriptionResponse response = commissionPostConverter.subscriptionResponse(postEntity, detailEntities, resContent);
+        SubscriptionResponse response = commissionPostConverter.subscriptionResponse(postEntity, detailEntities, resContent,entity);
 
         return ResponseEntity.ok(response);
+    }
+
+    // 커미션 신청 수락, 거절 로직
+    public ResponseEntity<String> confirm(UserEntity user, ConfirmRequest request) {
+
+        CommissionSubscriptionEntity entity = commissionSubscriptionRepository.findById(request.getId()).orElseThrow(() -> new EntityNotFoundException("신청서가 존재하지 않습니다."));
+
+        if(!user.getId().equals(entity.getCommissionId().getUser().getId())) {
+            throw new UnsupportedOperationException("작성자만 수락,거절할 수 있습니다.");
+        }
+
+        if(request.getConfirm()){
+            entity.setRequestStatus(CommissionSubscriptionEntity.RequestStatus.진행중);
+        }else{
+            entity.setRequestStatus(CommissionSubscriptionEntity.RequestStatus.거절);
+        }
+        commissionSubscriptionRepository.save(entity);
+
+        return ResponseEntity.ok("성공");
+    }
+
+    // 커미션 완료 버튼
+    public ResponseEntity<String> finish(UserEntity user, ConfirmRequest request) {
+
+        CommissionSubscriptionEntity entity = commissionSubscriptionRepository.findById(request.getId()).orElseThrow(() -> new EntityNotFoundException("신청서가 존재하지 않습니다."));
+
+        if(!user.getId().equals(entity.getCommissionId().getUser().getId())) {
+            throw new UnsupportedOperationException("작성자만 완료할 수 있습니다.");
+        }
+
+        if(request.getConfirm()){
+            entity.setRequestStatus(CommissionSubscriptionEntity.RequestStatus.완료);
+        }
+        commissionSubscriptionRepository.save(entity);
+
+        return ResponseEntity.ok("성공");
     }
 }

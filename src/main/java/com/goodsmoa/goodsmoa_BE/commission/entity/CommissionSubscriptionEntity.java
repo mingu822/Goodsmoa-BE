@@ -26,6 +26,7 @@ public class CommissionSubscriptionEntity {
     @JoinColumn(name = "commission_id", nullable = false)
     private CommissionPostEntity commissionId;
 
+    @Setter
     @Enumerated(EnumType.STRING)
     @Column(name = "request_status")
     private RequestStatus requestStatus;

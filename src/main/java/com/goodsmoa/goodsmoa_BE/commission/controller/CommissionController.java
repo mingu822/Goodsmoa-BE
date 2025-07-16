@@ -1,9 +1,6 @@
 package com.goodsmoa.goodsmoa_BE.commission.controller;
 
-import com.goodsmoa.goodsmoa_BE.commission.dto.apply.ReceivedListResponse;
-import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionListResponse;
-import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionRequest;
-import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionResponse;
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.*;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
 import com.goodsmoa.goodsmoa_BE.commission.service.CommissionLikeService;
 import com.goodsmoa.goodsmoa_BE.commission.service.CommissionService;
@@ -153,4 +150,15 @@ public class CommissionController {
         return service.applyDetail(user,id);
     }
 
+    // 커미션 신청 수락, 거절
+    @PostMapping("/confirm")
+    public ResponseEntity<String> confirm(@AuthenticationPrincipal UserEntity user, @RequestBody ConfirmRequest request){
+        return service.confirm(user,request);
+    }
+
+    // 커미션 완료
+    @PostMapping("/finish")
+    public ResponseEntity<String> finish(@AuthenticationPrincipal UserEntity user, @RequestBody ConfirmRequest request){
+        return service.finish(user,request);
+    }
 }

@@ -28,4 +28,9 @@ public class SubscriptionResponse { // 신청 완료 후 보여주는 값
 
     private List<String> resContent;
 
+    private String requestStatus;
+
+    private String clientId;
+
+    private String creatorId;
 }

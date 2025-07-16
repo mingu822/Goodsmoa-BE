@@ -82,7 +82,7 @@ public class CommissionPostConverter {
     }
 
     // 신청완료 후 response 값
-    public SubscriptionResponse subscriptionResponse(CommissionPostEntity postEntity,List<CommissionDetailEntity> detailEntities,List<String> resContent) {
+    public SubscriptionResponse subscriptionResponse(CommissionPostEntity postEntity,List<CommissionDetailEntity> detailEntities,List<String> resContent,CommissionSubscriptionEntity subscriptionEntity) {
         return SubscriptionResponse.builder()
                 .title(postEntity.getTitle())
                 .categoryName(postEntity.getCategory().getName())
@@ -91,6 +91,9 @@ public class CommissionPostConverter {
                 .maximumPrice(postEntity.getMaximumPrice())
                 .commissionDetail(detailEntities.stream().map(commissionDetailConverter::detailToResponse).toList())
                 .resContent(resContent)
+                .requestStatus(subscriptionEntity.getRequestStatus().toString())
+                .clientId(subscriptionEntity.getUserId().getId())
+                .creatorId(subscriptionEntity.getCommissionId().getUser().getId())
                 .build();
     }
 
