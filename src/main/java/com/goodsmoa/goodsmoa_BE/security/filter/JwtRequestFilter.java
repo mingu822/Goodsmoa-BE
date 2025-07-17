@@ -1,6 +1,8 @@
 package com.goodsmoa.goodsmoa_BE.security.filter;
 
 import com.goodsmoa.goodsmoa_BE.security.provider.JwtProvider;
+import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
+import com.goodsmoa.goodsmoa_BE.user.Service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,48 +20,69 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
+    private final UserService userService;
 
-    public JwtRequestFilter(AuthenticationManager authenticationManager, JwtProvider jwtProvider) {
+    public JwtRequestFilter(AuthenticationManager authenticationManager, JwtProvider jwtProvider, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtProvider = jwtProvider;
+        this.userService = userService;
     }
 
-    // ✅ Authorization 헤더에서 Bearer 토큰 추출하는 메서드
-    private String extractTokenFromHeader(HttpServletRequest request) {
+    // ✅ Authorization: Bearer {accessToken}
+    private String extractAccessToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
-            return header.substring(7); // "Bearer " 이후의 토큰만 추출
+            return header.substring(7);
         }
         return null;
+    }
+
+    // ✅ Refresh: {refreshToken}
+    private String extractRefreshToken(HttpServletRequest request) {
+        return request.getHeader("Refresh");
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String jwt = extractTokenFromHeader(request);
-        log.info("🪪 헤더에서 꺼낸 accessToken: {}", jwt);
+        String accessToken = extractAccessToken(request);
+        log.info("🪪 헤더에서 꺼낸 accessToken: {}", accessToken);
 
-        if (jwt != null && !jwt.isEmpty() && jwtProvider.validateToken(jwt)) {
-            Authentication authentication = jwtProvider.getAuthenticationToken(jwt);
+        if (accessToken != null && jwtProvider.validateToken(accessToken)) {
+            Authentication authentication = jwtProvider.getAuthenticationToken(accessToken);
             if (authentication != null && authentication.isAuthenticated()) {
-                log.info("✅ 유효한 JWT, SecurityContext 설정 완료");
+                log.info("✅ accessToken 유효. SecurityContext 설정 완료");
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } else {
-                log.info("❌ JWT는 있지만 인증 실패");
             }
         } else {
-            log.info("❌ 유효하지 않은 JWT. SecurityContext 초기화");
-            SecurityContextHolder.clearContext();
+            // 🔄 accessToken이 없거나 만료됨 → refreshToken 사용
+            String refreshToken = extractRefreshToken(request);
+            log.info("🔁 accessToken 만료. refreshToken 시도: {}", refreshToken);
+
+            if (refreshToken != null && jwtProvider.validateToken(refreshToken)) {
+                String userId = jwtProvider.extractUserIdFromRefreshToken(refreshToken);
+                UserEntity user = userService.getUserById(userId);
+
+                if (user != null) {
+                    String newAccessToken = jwtProvider.createAccessToken(user);
+                    log.info("✅ accessToken 자동 재발급 완료");
+
+                    // 🔄 새 accessToken과 기존 refreshToken 헤더로 응답에 실어보냄
+                    response.setHeader("Authorization", "Bearer " + newAccessToken);
+                    response.setHeader("Refresh", refreshToken); // 그대로 유지 (재발급 아님)
+
+                    Authentication newAuth = jwtProvider.getAuthenticationToken(newAccessToken);
+                    if (newAuth != null && newAuth.isAuthenticated()) {
+                        SecurityContextHolder.getContext().setAuthentication(newAuth);
+                    }
+                }
+            } else {
+                log.info("❌ refreshToken 없음 또는 만료. SecurityContext 초기화");
+                SecurityContextHolder.clearContext();
+            }
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    // ❌ 필터 제외 경로가 있다면 여기에 추가 (선택)
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String uri = request.getRequestURI();
-        return uri.equals("/auth/refresh") || uri.equals("/auth/login");
     }
 }
