@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -301,11 +302,11 @@ public class CommissionService {
 
         CommissionSubscriptionEntity subscriptionEntity = commissionPostConverter.saveToSubscriptionEntity(user,postEntity);
 
-        commissionSubscriptionRepository.save(subscriptionEntity);
+        CommissionSubscriptionEntity save = commissionSubscriptionRepository.save(subscriptionEntity);
 
         // 2. 커미션 상세 신청 저장
         List<String> contentImagePaths = new ArrayList<>();
-        List<String> resContent = new ArrayList<>();
+        List<CommissionDetailResponseEntity> responseEntities = new ArrayList<>();
         if (contentImages != null && !contentImages.isEmpty()) {
             for (MultipartFile file : contentImages) {
                 String path = s3Uploader.upload(file);
@@ -316,7 +317,7 @@ public class CommissionService {
         for (SubscriptionRequest req : request) {
             CommissionDetailEntity detailEntity = commissionDetailRepository.findById(req.getDetailId()).orElse(null);
 
-            CommissionDetailResponseEntity detailResponseEntity = commissionDetailConverter.detailResponseToEntity(user, detailEntity);
+            CommissionDetailResponseEntity detailResponseEntity = commissionDetailConverter.detailResponseToEntity(user, detailEntity,save);
 
             String originalContent = req.getResContent();
             Pattern pattern = Pattern.compile("src=[\"'](.*?)[\"']");
@@ -331,13 +332,88 @@ public class CommissionService {
             matcher.appendTail(result);
 
             detailResponseEntity.setResContent(result.toString());
-            resContent.add(result.toString());
-            commissionDetailResponseRepository.save(detailResponseEntity);
+            CommissionDetailResponseEntity saveEntity = commissionDetailResponseRepository.save(detailResponseEntity);
+            responseEntities.add(saveEntity);
         }
 
         List<CommissionDetailEntity> detailEntities = commissionDetailRepository.findByCommissionPostEntity(postEntity);
 
-        SubscriptionResponse response = commissionPostConverter.subscriptionResponse(postEntity,detailEntities,resContent,subscriptionEntity);
+        SubscriptionResponse response = commissionPostConverter.subscriptionResponse(postEntity,detailEntities,responseEntities,subscriptionEntity);
+
+        return ResponseEntity.ok(response);
+    }
+
+    // 커미션 신청 업데이트
+    @Transactional
+    public ResponseEntity<SubscriptionResponse> subscriptionCommissionPostUpdate(
+            UserEntity user,
+            List<SubscriptionUpdateRequest> requests,
+            Long subscriptionId,
+            List<MultipartFile> newContentImages) throws IOException {
+
+        // 1. subscription 조회 및 유저 확인
+        CommissionSubscriptionEntity subscription = commissionSubscriptionRepository.findById(subscriptionId)
+                .orElseThrow(() -> new EntityNotFoundException("신청 내역이 존재하지 않습니다."));
+
+        if (!subscription.getUserId().getId().equals(user.getId())) {
+            throw new AccessDeniedException("해당 커미션 신청은 수정할 수 없습니다.");
+        }
+
+        CommissionPostEntity postEntity = subscription.getCommissionId();
+        List<CommissionDetailEntity> detailList = commissionDetailRepository.findByCommissionPostEntity(postEntity);
+
+        // 2. 이미지 업로드
+        List<String> uploadedUrls = new ArrayList<>();
+        if (newContentImages != null && !newContentImages.isEmpty()) {
+            for (MultipartFile file : newContentImages) {
+                String path = s3Uploader.upload(file);
+                uploadedUrls.add(path);
+            }
+        }
+
+        int uploadIndex = 0;
+        List<CommissionDetailResponseEntity> responseEntities = new ArrayList<>();
+        // 3. 요청을 순회하며 응답 수정
+        for (SubscriptionUpdateRequest req : requests) {
+            CommissionDetailResponseEntity responseEntity = commissionDetailResponseRepository.findById(req.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("응답 ID " + req.getId() + " 가 존재하지 않습니다."));
+
+            if (!responseEntity.getUser().getId().equals(user.getId())) {
+                throw new AccessDeniedException("응답 ID " + req.getId() + " 에 대한 권한이 없습니다.");
+            }
+
+            String content = req.getResContent();
+            Pattern pattern = Pattern.compile("src=['\"](.*?)['\"]");
+            Matcher matcher = pattern.matcher(content);
+
+            StringBuffer updatedContent = new StringBuffer();
+            while (matcher.find()) {
+                String src = matcher.group(1);
+
+                if (src.startsWith("https://goodsmoa-s3")) {
+                    matcher.appendReplacement(updatedContent, Matcher.quoteReplacement("src='" + src + "'"));
+                } else {
+                    if (uploadIndex >= uploadedUrls.size()) {
+                        throw new IllegalStateException("이미지 업로드 개수가 부족합니다.");
+                    }
+                    String newUrl = uploadedUrls.get(uploadIndex++);
+                    matcher.appendReplacement(updatedContent, Matcher.quoteReplacement("src='" + newUrl + "'"));
+                }
+            }
+            matcher.appendTail(updatedContent);
+
+            responseEntity.setResContent(updatedContent.toString());
+            CommissionDetailResponseEntity saveEntity = commissionDetailResponseRepository.save(responseEntity);
+            responseEntities.add(saveEntity);
+        }
+
+        // 4. 최종 응답 생성
+        SubscriptionResponse response = commissionPostConverter.subscriptionResponse(
+                postEntity,
+                detailList,
+                responseEntities,
+                subscription
+        );
 
         return ResponseEntity.ok(response);
     }
@@ -388,14 +464,10 @@ public class CommissionService {
 
         // 4. 해당 신청자의 상세 응답(resContent) 모으기
         List<CommissionDetailResponseEntity> responses =
-                commissionDetailResponseRepository.findByUserAndCommissionDetailEntityIn(applicantUser, detailEntities);
-
-        List<String> resContent = responses.stream()
-                .map(CommissionDetailResponseEntity::getResContent)
-                .toList();
+                commissionDetailResponseRepository.findBySubscriptionAndUser(entity, applicantUser);
 
         // 5. 응답 생성
-        SubscriptionResponse response = commissionPostConverter.subscriptionResponse(postEntity, detailEntities, resContent,entity);
+        SubscriptionResponse response = commissionPostConverter.subscriptionResponse(postEntity, detailEntities, responses,entity);
 
         return ResponseEntity.ok(response);
     }
@@ -435,4 +507,22 @@ public class CommissionService {
 
         return ResponseEntity.ok("성공");
     }
+
+    // 커미션 신청 취소
+    public ResponseEntity<String> deleteSubscription(UserEntity user, Long id) {
+
+        CommissionSubscriptionEntity subscription = commissionSubscriptionRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("신청서가 존재하지 않습니다."));
+
+        if(!user.getId().equals(subscription.getUserId().getId())) {
+            throw new UnsupportedOperationException("신청자만 취소할 수 있습니다.");
+        }
+
+        List<CommissionDetailResponseEntity> responses = commissionDetailResponseRepository.findBySubscription(subscription);
+        commissionDetailResponseRepository.deleteAll(responses);
+
+        commissionSubscriptionRepository.delete(subscription);
+
+        return ResponseEntity.ok("성공적으로 취소했습니다.");
+    }
+
 }

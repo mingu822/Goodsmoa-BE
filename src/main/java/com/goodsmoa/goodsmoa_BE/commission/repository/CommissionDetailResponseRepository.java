@@ -10,4 +10,8 @@ import java.util.List;
 
 public interface CommissionDetailResponseRepository extends JpaRepository<CommissionDetailResponseEntity, Long> {
     List<CommissionDetailResponseEntity> findByUserAndCommissionDetailEntityIn(UserEntity user, List<CommissionDetailEntity> details);
+
+    List<CommissionDetailResponseEntity> findBySubscription(CommissionSubscriptionEntity subscription);
+
+    List<CommissionDetailResponseEntity> findBySubscriptionAndUser(CommissionSubscriptionEntity subscription,UserEntity user);
 }
