@@ -1,11 +1,8 @@
 package com.goodsmoa.goodsmoa_BE.security.filter;
 
 import com.goodsmoa.goodsmoa_BE.security.provider.JwtProvider;
-import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
-import com.goodsmoa.goodsmoa_BE.user.Service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -21,69 +18,48 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
-    private final UserService userService;
 
-    public JwtRequestFilter(AuthenticationManager authenticationManager, JwtProvider jwtProvider, UserService userService) {
+    public JwtRequestFilter(AuthenticationManager authenticationManager, JwtProvider jwtProvider) {
         this.authenticationManager = authenticationManager;
         this.jwtProvider = jwtProvider;
-        this.userService = userService;
     }
 
-    private String getTokenFromCookie(HttpServletRequest request, String tokenName) {
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if (tokenName.equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
+    // ✅ Authorization 헤더에서 Bearer 토큰 추출하는 메서드
+    private String extractTokenFromHeader(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7); // "Bearer " 이후의 토큰만 추출
         }
         return null;
-    }
-
-    private void addAccessTokenToCookie(HttpServletResponse response, String accessToken) {
-        Cookie cookie = new Cookie("accessToken", accessToken);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(60 * 30); // 30분 유효
-        response.addCookie(cookie);
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String jwt = getTokenFromCookie(request, "accessToken");
-        log.info("🍪 쿠키에서 꺼낸 accessToken: {}", jwt);
+        String jwt = extractTokenFromHeader(request);
+        log.info("🪪 헤더에서 꺼낸 accessToken: {}", jwt);
 
         if (jwt != null && !jwt.isEmpty() && jwtProvider.validateToken(jwt)) {
             Authentication authentication = jwtProvider.getAuthenticationToken(jwt);
             if (authentication != null && authentication.isAuthenticated()) {
                 log.info("✅ 유효한 JWT, SecurityContext 설정 완료");
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                log.info("❌ JWT는 있지만 인증 실패");
             }
         } else {
-            // 🚩 accessToken이 없거나 만료된 경우 refreshToken 사용하여 자동 재발급
-            String refreshToken = getTokenFromCookie(request, "refreshToken");
-            if (refreshToken != null && jwtProvider.validateToken(refreshToken)) {
-                String userId = jwtProvider.extractUserIdFromRefreshToken(refreshToken);
-                UserEntity user = userService.getUserById(userId);
-
-                if (user != null) {
-                    String newAccessToken = jwtProvider.createAccessToken(user);
-                    addAccessTokenToCookie(response, newAccessToken);
-                    log.info("✅ accessToken 자동 재발급 및 쿠키 갱신 완료");
-
-                    Authentication newAuth = jwtProvider.getAuthenticationToken(newAccessToken);
-                    if (newAuth != null && newAuth.isAuthenticated()) {
-                        SecurityContextHolder.getContext().setAuthentication(newAuth);
-                    }
-                }
-            } else {
-                log.info("❌ refreshToken 없음 또는 만료, 인증 불가");
-                SecurityContextHolder.clearContext();
-            }
+            log.info("❌ 유효하지 않은 JWT. SecurityContext 초기화");
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    // ❌ 필터 제외 경로가 있다면 여기에 추가 (선택)
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String uri = request.getRequestURI();
+        return uri.equals("/auth/refresh") || uri.equals("/auth/login");
     }
 }

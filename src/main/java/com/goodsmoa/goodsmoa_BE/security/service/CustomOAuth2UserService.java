@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+
 import java.util.concurrent.TimeUnit;
 import java.util.Collections;
 import java.util.Map;
@@ -35,159 +36,105 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        String registrationId = userRequest.getClientRegistration().getRegistrationId(); // OAuth 제공자 (naver, kakao)
+        String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
         log.info("{} 로그인 시작", registrationId);
 
         OAuth2User oAuth2User = new DefaultOAuth2UserService().loadUser(userRequest);
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
-        String id = null;
-        String nickname = null;
-        String name = null;
-        String email = null;
-        String phoneNumber = null;
+        String id = null, nickname = null, name = null, email = null, phoneNumber = null;
 
-        //  네이버 로그인일 경우
         if ("naver".equals(registrationId)) {
-            Map<String, Object> response = (Map<String, Object>) attributes.get("response");
-            id = response.get("id").toString();
-            nickname = (String) response.get("nickname");
-            name = (String) response.get("name"); // 네이버에서 제공하는 이름
-            email = (String) response.get("email"); // 네이버 이메일
-            phoneNumber = (String) response.get("mobile"); // 네이버 전화번호
-        }
-        //  카카오 로그인일 경우 (이메일, 전화번호 없음)
-        else if ("kakao".equals(registrationId)) {
-            Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+            Map<String, Object> res = (Map<String, Object>) attributes.get("response");
+            id = res.get("id").toString();
+            nickname = (String) res.get("nickname");
+            name = (String) res.get("name");
+            email = (String) res.get("email");
+            phoneNumber = (String) res.get("mobile");
+        } else if ("kakao".equals(registrationId)) {
+            Map<String, Object> account = (Map<String, Object>) attributes.get("kakao_account");
+            Map<String, Object> profile = (Map<String, Object>) account.get("profile");
             id = attributes.get("id").toString();
             nickname = (String) profile.get("nickname");
-        }
-        // 구글 로그인
-        else if ("google".equals(registrationId)) {
-            id = attributes.get("sub").toString(); // 구글 고유 ID는 sub!
+        } else if ("google".equals(registrationId)) {
+            id = attributes.get("sub").toString();
             nickname = (String) attributes.get("name");
             email = (String) attributes.get("email");
-
         }
 
-//  DB에서 사용자 조회 (없으면 저장)
         Optional<UserEntity> optionalUser = userRepository.findById(id);
         UserEntity user;
 
         if (optionalUser.isPresent()) {
             user = optionalUser.get();
         } else {
-            // 새로운 유저 생성 (람다 표현식이 아닌 일반 코드로 처리)
-            UserEntity newUser = new UserEntity();
-            newUser.setId(id);
-            newUser.setNickname(nickname);
-            newUser.setRole("ROLE_USER"); // 일반 사용자
-
-            // 네이버 로그인일 경우에 추가 정보 저장
+            user = new UserEntity();
+            user.setId(id);
+            user.setNickname(nickname);
+            user.setRole("ROLE_USER");
             if ("naver".equals(registrationId)) {
-                newUser.setName(name);
-                newUser.setEmail(email);
-                newUser.setPhoneNumber(phoneNumber);
-
-                // 구글 로그인일 경우에 추가 정보 저장
+                user.setName(name);
+                user.setEmail(email);
+                user.setPhoneNumber(phoneNumber);
             } else if ("google".equals(registrationId)) {
-                newUser.setEmail(email);
+                user.setEmail(email);
             }
-
-
-            user = userRepository.save(newUser);
+            user = userRepository.save(user);
         }
 
-// 기존 유저일 경우, 네이버 로그인이라면 정보 업데이트
         if ("naver".equals(registrationId)) {
             user.setName(name);
             user.setEmail(email);
             user.setPhoneNumber(phoneNumber);
-            userRepository.save(user); // 업데이트된 정보 저장
+            userRepository.save(user);
         }
 
-
-        //  권한 설정
-        String role = user.getRole();  // "ADMIN" 또는 "USER"
+        String role = user.getRole();
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
 
-        //  Authentication 설정 (Spring Security)
         Authentication authentication = new UsernamePasswordAuthenticationToken(user, null, Collections.singletonList(authority));
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // JWT 액세스 토큰 발급
         String accessToken = jwtProvider.createAccessToken(user);
-
         String refreshToken;
-        String redisKey = "RT:" + user.getId(); // Redis 키
 
+        String redisKey = "RT:" + user.getId();
         String existingEncryptedRT = redisTemplate.opsForValue().get(redisKey);
-
 
         if (existingEncryptedRT != null) {
             try {
                 String decrypted = jwtProvider.decrypt(existingEncryptedRT);
-
-
                 if (jwtProvider.validateToken(decrypted)) {
-                    log.info("✅ 레디스에서 기존 리프레시 토큰 유효함. 그대로 사용");
                     refreshToken = decrypted;
                 } else {
-                    log.warn("⚠️ 기존 리프레시 토큰 만료됨. 새로 발급");
-                    refreshToken = jwtProvider.createRefreshToken(user);
-                    String encrypted = jwtProvider.encrypt(refreshToken);
-                    redisTemplate.opsForValue().set(redisKey, encrypted, 30, TimeUnit.DAYS);
+                    refreshToken = issueNewRefreshToken(user, redisKey);
                 }
             } catch (Exception e) {
-                log.error("❌ 기존 리프레시 토큰 복호화 실패. 새로 발급", e);
-                try {
-                    refreshToken = jwtProvider.createRefreshToken(user);
-                    String encrypted = jwtProvider.encrypt(refreshToken);
-                    redisTemplate.opsForValue().set(redisKey, encrypted, 30, TimeUnit.DAYS);
-                } catch (Exception ex) {
-                    log.error("❌ 리프레시 토큰 암호화 실패", ex);
-                    throw new RuntimeException("리프레시 토큰 암호화 실패", ex);
-                }
+                refreshToken = issueNewRefreshToken(user, redisKey);
             }
         } else {
-            log.info(" Redis에 리프레시 토큰 없음. 새로 발급");
-            try {
-                refreshToken = jwtProvider.createRefreshToken(user);
-                String encrypted = jwtProvider.encrypt(refreshToken);
-                redisTemplate.opsForValue().set(redisKey, encrypted, 30, TimeUnit.DAYS);
-            } catch (Exception e) {
-                log.error("❌ 리프레시 토큰 암호화 실패", e);
-                throw new RuntimeException("리프레시 토큰 암호화 실패", e);
-            }
+            refreshToken = issueNewRefreshToken(user, redisKey);
         }
 
-
-
-
-        // 쿠키로 전달
-        // 처음 로그인 시 쿠키의 지속 시간 설정
-        // AccessToken → 30분짜리
-        response.addHeader("Set-Cookie",
-                "accessToken=" + accessToken + "; " +
-                        "HttpOnly; " +
-                        "Path=/; " +
-                        "Max-Age=1800; " +
-                        "SameSite=Lax");
-
-        //  RefreshToken → 30일짜리
-        response.addHeader("Set-Cookie",
-                "refreshToken=" + refreshToken + "; " +
-                        "HttpOnly; " +
-                        "Path=/; " +
-                        "Max-Age=2592000; " +
-                        "SameSite=Lax");
-
+        // ✅ 토큰을 HTTP 응답 헤더로 전달
+        response.setHeader("Authorization", "Bearer " + accessToken); // accessToken
+        response.setHeader("Refresh", refreshToken); // refreshToken (프론트는 SecureStorage에 저장)
 
         log.info("✅ {} 로그인 완료! AccessToken: {}, RefreshToken: {}", registrationId, accessToken, refreshToken);
 
         return new CustomOAuth2User(user, attributes);
     }
 
+    private String issueNewRefreshToken(UserEntity user, String redisKey) {
+        try {
+            String newRefreshToken = jwtProvider.createRefreshToken(user);
+            String encrypted = jwtProvider.encrypt(newRefreshToken);
+            redisTemplate.opsForValue().set(redisKey, encrypted, 30, TimeUnit.DAYS);
+            return newRefreshToken;
+        } catch (Exception e) {
+            log.error("❌ 리프레시 토큰 발급/암호화 실패", e);
+            throw new RuntimeException("리프레시 토큰 발급 실패", e);
+        }
+    }
 }
