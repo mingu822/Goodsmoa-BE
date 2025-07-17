@@ -2,12 +2,14 @@ package com.goodsmoa.goodsmoa_BE.commission.converter;
 
 import com.goodsmoa.goodsmoa_BE.category.Entity.Category;
 import com.goodsmoa.goodsmoa_BE.commission.dto.apply.ReceivedListResponse;
+import com.goodsmoa.goodsmoa_BE.commission.dto.apply.ResponseContentDto;
 import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionListResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.apply.SubscriptionResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailRequest;
 import com.goodsmoa.goodsmoa_BE.commission.dto.detail.CommissionDetailResponse;
 import com.goodsmoa.goodsmoa_BE.commission.dto.post.*;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionDetailEntity;
+import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionDetailResponseEntity;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionPostEntity;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionSubscriptionEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
@@ -82,15 +84,22 @@ public class CommissionPostConverter {
     }
 
     // 신청완료 후 response 값
-    public SubscriptionResponse subscriptionResponse(CommissionPostEntity postEntity,List<CommissionDetailEntity> detailEntities,List<String> resContent,CommissionSubscriptionEntity subscriptionEntity) {
+    public SubscriptionResponse subscriptionResponse(CommissionPostEntity postEntity, List<CommissionDetailEntity> detailEntities, List<CommissionDetailResponseEntity> responses, CommissionSubscriptionEntity subscriptionEntity) {
+        List<ResponseContentDto> resContentList = responses.stream()
+                .map(res -> ResponseContentDto.builder()
+                        .id(res.getId())
+                        .content(res.getResContent())
+                        .build())
+                .toList();
         return SubscriptionResponse.builder()
                 .title(postEntity.getTitle())
+                .postId(postEntity.getId())
                 .categoryName(postEntity.getCategory().getName())
                 .thumbnailImage(postEntity.getThumbnailImage())
                 .minimumPrice(postEntity.getMinimumPrice())
                 .maximumPrice(postEntity.getMaximumPrice())
                 .commissionDetail(detailEntities.stream().map(commissionDetailConverter::detailToResponse).toList())
-                .resContent(resContent)
+                .resContentList(resContentList)
                 .requestStatus(subscriptionEntity.getRequestStatus().toString())
                 .clientId(subscriptionEntity.getUserId().getId())
                 .creatorId(subscriptionEntity.getCommissionId().getUser().getId())

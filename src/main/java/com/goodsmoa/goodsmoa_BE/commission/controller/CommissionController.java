@@ -129,16 +129,32 @@ public class CommissionController {
             @AuthenticationPrincipal UserEntity user,
             @RequestPart("subscriptionRequest") List<SubscriptionRequest> request,
             @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages) throws IOException {
+        log.info("request.get(0).getResContent() ::: "+request.get(0).getResContent());
         return service.subscriptionCommissionPost(user, request, contentImages);
     }
 
     // 커미션 신청 수정
-    @PutMapping("/subscription")
+    @PostMapping("/subscription/{id}")
     public ResponseEntity<SubscriptionResponse> subscriptionUpdate (
             @AuthenticationPrincipal UserEntity user,
-            @RequestPart("subscriptionRequest") List<SubscriptionRequest> request,
+            @RequestPart("subscriptionRequest") List<SubscriptionUpdateRequest> request,
+            @PathVariable Long id,
             @RequestPart(value = "contentImages", required = false) List<MultipartFile> contentImages) throws IOException {
-        return service.subscriptionCommissionPost(user, request, contentImages);
+        log.info("id ::: " + id);
+        log.info("requestId ::: " + request.get(0).getId());
+        log.info("getCommissionId ::: " + request.get(0).getCommissionId());
+        log.info("getCommissionId ::: " + request.get(0).getCommissionId());
+        log.info("getCommissionId ::: " + request.get(0).getCommissionId());
+        return service.subscriptionCommissionPostUpdate(user, request, id, contentImages);
+    }
+
+    // 커미션 신청 삭제
+    @DeleteMapping("/subscription/{id}")
+    public ResponseEntity<String> deleteSubscription(
+            @AuthenticationPrincipal UserEntity user,
+            @PathVariable Long id
+    ){
+        return service.deleteSubscription(user,id);
     }
 
     // 신청 상세 확인

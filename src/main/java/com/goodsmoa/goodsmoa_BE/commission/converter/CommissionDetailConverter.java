@@ -6,6 +6,7 @@ import com.goodsmoa.goodsmoa_BE.commission.dto.post.PostDetailResponse;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionDetailEntity;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionDetailResponseEntity;
 import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionPostEntity;
+import com.goodsmoa.goodsmoa_BE.commission.entity.CommissionSubscriptionEntity;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -36,10 +37,11 @@ public class CommissionDetailConverter {
                 .build();
     }
 
-    public CommissionDetailResponseEntity detailResponseToEntity(UserEntity user, CommissionDetailEntity entity) {
+    public CommissionDetailResponseEntity detailResponseToEntity(UserEntity user, CommissionDetailEntity entity, CommissionSubscriptionEntity save) {
         return CommissionDetailResponseEntity.builder()
                 .user(user)
                 .commissionDetailEntity(entity)
+                .subscription(save)
                 .build();
     }
 }

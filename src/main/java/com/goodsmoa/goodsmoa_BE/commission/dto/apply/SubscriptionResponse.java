@@ -16,6 +16,8 @@ public class SubscriptionResponse { // 신청 완료 후 보여주는 값
 
     private String title;
 
+    private Long postId;
+
     private String categoryName;
 
     private String thumbnailImage;
@@ -26,11 +28,12 @@ public class SubscriptionResponse { // 신청 완료 후 보여주는 값
 
     private List<CommissionDetailResponse> commissionDetail;
 
-    private List<String> resContent;
+    private List<ResponseContentDto> resContentList;
 
     private String requestStatus;
 
     private String clientId;
 
     private String creatorId;
+
 }

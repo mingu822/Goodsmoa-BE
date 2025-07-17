@@ -21,6 +21,10 @@ public class CommissionDetailResponseEntity {
     private CommissionDetailEntity commissionDetailEntity;
 
     @ManyToOne
+    @JoinColumn(name = "subscription_id", nullable = false)
+    private CommissionSubscriptionEntity subscription;
+
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
