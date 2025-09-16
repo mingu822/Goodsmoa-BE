@@ -13,13 +13,20 @@ import java.util.Map;
 @Getter
 public class CustomOAuth2User implements OAuth2User {
 
-    private final UserEntity user; // 우리 서버의 유저 정보 (User 엔티티)
-    private final Map<String, Object> attributes; // OAuth2에서 받은 사용자 정보 (카카오에서 받은 정보)
+    private final UserEntity user; // 우리 서버 DB 유저
+    private final Map<String, Object> attributes; // 카카오 등 OAuth2 provider 정보
 
+    private final String accessToken;   // 🔥 새로 추가
+    private final String refreshToken;  // 🔥 새로 추가
 
-    public CustomOAuth2User(UserEntity user, Map<String, Object> attributes) {
+    public CustomOAuth2User(UserEntity user,
+                            Map<String, Object> attributes,
+                            String accessToken,
+                            String refreshToken) {
         this.user = user;
         this.attributes = attributes;
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
     }
 
     @Override
@@ -27,10 +34,9 @@ public class CustomOAuth2User implements OAuth2User {
         return attributes;
     }
 
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(user.getRole())); // 🔥 그대로 사용 가능!
+        return List.of(new SimpleGrantedAuthority(user.getRole()));
     }
 
     @Override

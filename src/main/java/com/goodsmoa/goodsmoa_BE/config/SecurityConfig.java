@@ -1,8 +1,11 @@
 package com.goodsmoa.goodsmoa_BE.config;
 
 import java.util.Arrays;
+import java.util.Map;
 
+import com.goodsmoa.goodsmoa_BE.security.service.CustomOAuth2User;
 import com.goodsmoa.goodsmoa_BE.user.Service.UserService;
+import jakarta.servlet.http.Cookie;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -118,8 +121,48 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfo -> userInfo
                         .userService(customOAuth2UserService))
                 .successHandler((request, response, authentication) -> {
-                    response.sendRedirect("http://localhost:5177/");
-                }));
+                    CustomOAuth2User customUser = (CustomOAuth2User) authentication.getPrincipal();
+                    String accessToken = customUser.getAccessToken();
+                    String refreshToken = customUser.getRefreshToken();
+
+                    // 플랫폼 판별
+                    String platform = request.getParameter("platform");
+                    if (platform == null) {
+                        String userAgent = request.getHeader("User-Agent");
+                        if (userAgent != null && userAgent.toLowerCase().contains("okhttp")) {
+                            platform = "app";
+                        } else {
+                            platform = "web";
+                        }
+                    }
+
+                    if ("app".equalsIgnoreCase(platform)) {
+                        // ✅ 앱인 경우 → JSON 응답
+                        response.setContentType("application/json;charset=UTF-8");
+                        String json = String.format(
+                                "{\"accessToken\":\"%s\", \"refreshToken\":\"%s\"}",
+                                accessToken, refreshToken
+                        );
+                        response.getWriter().write(json);
+                        response.getWriter().flush();
+                    } else {
+                        // ✅ 웹인 경우 → 쿠키 저장 후 리다이렉트
+                        Cookie accessCookie = new Cookie("accessToken", accessToken);
+                        accessCookie.setHttpOnly(true);
+                        accessCookie.setPath("/");
+                        accessCookie.setMaxAge(60 * 30); // 30분
+                        response.addCookie(accessCookie);
+
+                        Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+                        refreshCookie.setHttpOnly(true);
+                        refreshCookie.setPath("/");
+                        refreshCookie.setMaxAge(60 * 60 * 24 * 30); // 30일
+                        response.addCookie(refreshCookie);
+
+                        response.sendRedirect("http://localhost:5177/");
+                    }
+                })
+        );
 
         return http.build();
     }

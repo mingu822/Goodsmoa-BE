@@ -1,14 +1,11 @@
 package com.goodsmoa.goodsmoa_BE.security.service;
 
-import com.goodsmoa.goodsmoa_BE.security.constrants.SecurityConstants;
 import com.goodsmoa.goodsmoa_BE.security.provider.JwtProvider;
 import com.goodsmoa.goodsmoa_BE.user.Entity.UserEntity;
 import com.goodsmoa.goodsmoa_BE.user.Repository.UserRepository;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,10 +16,10 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.TimeUnit;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -31,7 +28,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
-    private final HttpServletResponse response;
     private final RedisTemplate<String, String> redisTemplate;
 
     @Override
@@ -91,14 +87,29 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         }
 
         String role = user.getRole();
-        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
-
-        Authentication authentication = new UsernamePasswordAuthenticationToken(user, null, Collections.singletonList(authority));
+        Authentication authentication =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        user, null, Collections.singletonList(new SimpleGrantedAuthority(role))
+                );
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        // ✅ 토큰 생성
         String accessToken = jwtProvider.createAccessToken(user);
-        String refreshToken;
+        String refreshToken = issueOrGetRefreshToken(user);
 
+        // ✅ 토큰을 Authentication 객체의 details 에 담아 successHandler로 넘김
+        ((org.springframework.security.authentication.UsernamePasswordAuthenticationToken) authentication)
+                .setDetails(Map.of(
+                        "accessToken", accessToken,
+                        "refreshToken", refreshToken
+                ));
+
+        log.info("✅ {} 로그인 완료! AccessToken, RefreshToken 생성됨", registrationId);
+
+        return new CustomOAuth2User(user, attributes, accessToken, refreshToken);
+    }
+
+    private String issueOrGetRefreshToken(UserEntity user) {
         String redisKey = "RT:" + user.getId();
         String existingEncryptedRT = redisTemplate.opsForValue().get(redisKey);
 
@@ -106,35 +117,18 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             try {
                 String decrypted = jwtProvider.decrypt(existingEncryptedRT);
                 if (jwtProvider.validateToken(decrypted)) {
-                    refreshToken = decrypted;
-                } else {
-                    refreshToken = issueNewRefreshToken(user, redisKey);
+                    return decrypted;
                 }
-            } catch (Exception e) {
-                refreshToken = issueNewRefreshToken(user, redisKey);
-            }
-        } else {
-            refreshToken = issueNewRefreshToken(user, redisKey);
+            } catch (Exception ignored) {}
         }
 
-        // ✅ 토큰을 HTTP 응답 헤더로 전달
-        response.setHeader("Authorization", "Bearer " + accessToken); // accessToken
-        response.setHeader("Refresh", refreshToken); // refreshToken (프론트는 SecureStorage에 저장)
-
-        log.info("✅ {} 로그인 완료! AccessToken: {}, RefreshToken: {}", registrationId, accessToken, refreshToken);
-
-        return new CustomOAuth2User(user, attributes);
-    }
-
-    private String issueNewRefreshToken(UserEntity user, String redisKey) {
+        String newRefreshToken = jwtProvider.createRefreshToken(user);
         try {
-            String newRefreshToken = jwtProvider.createRefreshToken(user);
             String encrypted = jwtProvider.encrypt(newRefreshToken);
             redisTemplate.opsForValue().set(redisKey, encrypted, 30, TimeUnit.DAYS);
-            return newRefreshToken;
         } catch (Exception e) {
-            log.error("❌ 리프레시 토큰 발급/암호화 실패", e);
-            throw new RuntimeException("리프레시 토큰 발급 실패", e);
+            log.error("❌ 리프레시 토큰 저장 실패", e);
         }
+        return newRefreshToken;
     }
 }
